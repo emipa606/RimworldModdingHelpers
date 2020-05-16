@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Manifest>
+  <identifier>[modname]</identifier>
+  <version>1.0.0.0</version>
+  <dependencies />
+  <incompatibleWith />
+  <loadBefore />
+  <loadAfter />
+  <manifestUri>https://raw.githubusercontent.com/[username]/[modname]/master/About/Manifest.xml</manifestUri>
+  <downloadUri>https://github.com/[username]/[modname]/releases</downloadUri>
+</Manifest>

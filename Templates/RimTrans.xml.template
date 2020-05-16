@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectMod>
+  <ModPath>[modpath]</ModPath>
+  <Category>Internal</Category>
+  <GenerateOption>Standard</GenerateOption>
+  <Languages>
+    <li>
+      <LangPath>[modpath]\Languages\English</LangPath>
+      <RealName>English</RealName>
+      <NativeName>English</NativeName>
+      <IsCustom>false</IsCustom>
+      <CustomPath>[modpath]\Languages\English</CustomPath>
+      <IsChecked>true</IsChecked>
+    </li>
+  </Languages>
+</ProjectMod>

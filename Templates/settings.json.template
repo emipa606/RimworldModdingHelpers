@@ -1,0 +1,21 @@
+{
+    "rimworld_folder_path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\RimWorld",
+	"steam_path": "C:\\Program Files (x86)\\Steam\\Steam.exe",
+	"browser_path": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+	"text_editor_path": "C:\\Program Files\\Notepad++\\notepad++.exe",
+	"rimtrans_path": "C:\\Program Files\\RimTrans\\Trans.exe",
+	"mod_staging_folder": "C:\\ModPublishing\\StagingDirectory",
+	"github_username": "username",
+	"github_api_token": "00000000000000000000000000000",
+	"modsync_template": "ModSync.xml",
+	"manfest_template": "Manifest.xml",
+	"publisher_plus_template": "_PublisherPlus.xml",
+	"gitignore_template": "gitignore.txt",
+	"rimtrans_template": "RimTrans.xml",
+	"license_file": "LICENSE.md",
+	"xml_replacement_rules_file": "ReplaceRules.txt",
+	"modding_screen_height": "1080",
+	"playing_screen_height": "1440",
+	"modding_screen_witdh": "1920",
+	"playing_screen_witdh": "2560"
+}

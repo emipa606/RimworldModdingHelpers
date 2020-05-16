@@ -1,0 +1,221 @@
+# p| means <property></property>)
+# v| means >value<
+# s| means just string-replace
+p|apparelAllowHeadwearChance|apparelAllowHeadgearChance
+p|expandingIconTexture|factionIconPath
+p|canFlee
+p|homeIconPath|settlementTexturePath
+#p|Medicine|MedicineIndustrial
+p|Component|ComponentIndustrial
+p|baseSelectionWeight|settlementGenerationWeight
+p|baseNameMaker|settlementNameMaker
+#p|ThingDefs|Defs
+p|ThingCategoryDefs|Defs
+p|GameData|Defs
+p|DefPackage-SoundDef|Defs
+p|HerbalMedicine|MedicineHerbal
+p|DiplomacyPower|NegotiationAbility
+p|WorkGivers|Defs
+p|RecipeDefs|Defs
+p|FactionDefs|Defs
+p|PawnKindDefs|Defs
+p|NameMakerDefs|Defs
+p|BodyPartDefs|Defs
+p|Resources|Defs
+p|DefPackage-TraderKindDef|Defs
+p|isSolid|solid
+p|isBionic|betterThanNatural
+p|artificialBodyPartsMoney|techHediffsMoney
+p|artificialBodyPartsTags|techHediffsTags
+p|artificialBodyPartsChance|techHediffsChance
+p|ShootingAccuracy|ShootingAccuracyPawn
+p|Speed|speed
+p|DamageAmountBase|damageAmountBase
+p|worngraphicPath|wornGraphicPath
+p|pointsCost|combatPower
+p|DefName|defName
+p|ThingClass|thingClass
+p|Description|description
+p|CostList|costList
+p|AltitudeLayer|altitudeLayer
+p|warmupTicks|warmupTime
+p|Size|size
+p|DesignationCategory|designationCategory
+p|Passability|passability
+p|exceptedThingDefs|disallowedThingDefs
+p|specialshadowData|specialShadowData
+p|MaleGenderProbability|maleGenderProbability
+p|TownTrader|Town_Trader
+p|front|south
+p|back|north
+p|side|east
+p|ImmuneToAge|immuneToAge
+p|invFoodCount|invNutrition
+p|hatcherDaysToHatch|hatcherDaystoHatch
+p|disallowedSpecialFilters|specialFiltersToDisallow
+p|exceptedCategories|disallowedCategories
+p|HasHair|hasHair
+p|SoundCast|soundCast
+p|GetsGreyAt|getsGreyAt
+p|preventDeterioration|preventDeteriorationOnTop
+p|ArmorRating_Electric
+p|appreciative
+p|homeIconColor
+p|raidCommonality
+p|startElectricalFires
+p|pawnsSpecificBackstories
+p|acceptTerrainSourceFilth
+p|GlitterworldMedicine|MedicineUltratech
+p|projectileDef|defaultProjectile
+p|RecruitPrisonerChance|NegotiationAbility
+p|oldInjuryBaseChance|permanentInjuryChanceFactor
+p|bleedingRateMultiplier|bleedRate
+p|isAlive|alive
+p|isFlesh
+p|trainableIntelligence|trainability
+s|<def>LeftEye</def>|<def>Eye</def><customLabel>left eye</customLabel>
+s|<def>RightEye</def>|<def>Eye</def><customLabel>right eye</customLabel>
+s|<def>LeftEar</def>|<def>Ear</def><customLabel>left ear</customLabel>
+s|<def>RightEar</def>|<def>Ear</def><customLabel>right ear</customLabel>
+s|<def>LeftHand</def>|<def>Hand</def><customLabel>left hand</customLabel>
+s|<def>RightHand</def>|<def>Hand</def><customLabel>right hand</customLabel>
+s|<def>LeftLung</def>|<def>Lung</def><customLabel>left lung</customLabel>
+s|<def>RightLung</def>|<def>Lung</def><customLabel>right lung</customLabel>
+s|<def>LeftKidney</def>|<def>Kidney</def><customLabel>left kidney</customLabel>
+s|<def>RightKidney</def>|<def>Kidney</def><customLabel>right kidney</customLabel>
+s|<def>LeftShoulder</def>|<def>Shoulder</def><customLabel>left shoulder</customLabel>
+s|<def>RightShoulder</def>|<def>Shoulder</def><customLabel>right shoulder</customLabel>
+s|<def>LeftLeg</def>|<def>Leg</def><customLabel>left leg</customLabel>
+s|<def>RightLeg</def>|<def>Leg</def><customLabel>right leg</customLabel>
+s|<def>LeftArm</def>|<def>Arm</def><customLabel>left arm</customLabel>
+s|<def>RightArm</def>|<def>Arm</def><customLabel>right arm</customLabel>
+s|<def>LeftFoot</def>|<def>Foot</def><customLabel>left foot</customLabel>
+s|<def>RightFoot</def>|<def>Foot</def><customLabel>right foot</customLabel>
+s|<def>LeftClavicle</def>|<def>Clavicle</def><customLabel>left clavicle</customLabel>
+s|<def>RightClavicle</def>|<def>Clavicle</def><customLabel>right clavicle</customLabel>
+s|<def>LeftRadius</def>|<def>Radius</def><customLabel>left radius</customLabel>
+s|<def>RightRadius</def>|<def>Radius</def><customLabel>right radius</customLabel>
+s|<def>LeftFemur</def>|<def>Femur</def><customLabel>left femur</customLabel>
+s|<def>RightFemur</def>|<def>Femur</def><customLabel>right femur</customLabel>
+s|<def>LeftTibia</def>|<def>Tibia</def><customLabel>left tibia</customLabel>
+s|<def>RightTibia</def>|<def>Tibia</def><customLabel>right tibia</customLabel>
+s|<def>LeftHumerus</def>|<def>Humerus</def><customLabel>left humerus</customLabel>
+s|<def>RightHumerus</def>|<def>Humerus</def><customLabel>right humerus</customLabel>
+s|<def>LeftHandPinky</def>|<def>Finger</def><customLabel>left hand pinky</customLabel>
+s|<def>RightHandPinky</def>|<def>Finger</def><customLabel>right hand pinky</customLabel>
+s|<def>LeftHandRingFinger</def>|<def>Finger</def><customLabel>left hand ring finger</customLabel>
+s|<def>RightHandRingFinger</def>|<def>Finger</def><customLabel>right hand ring finger</customLabel>
+s|<def>LeftHandMiddleFinger</def>|<def>Finger</def><customLabel>left hand middle finger</customLabel>
+s|<def>RightHandMiddleFinger</def>|<def>Finger</def><customLabel>right hand middle finger</customLabel>
+s|<def>LeftHandIndexFinger</def>|<def>Finger</def><customLabel>left hand index finger</customLabel>
+s|<def>RightHandIndexFinger</def>|<def>Finger</def><customLabel>right hand index finger</customLabel>
+s|<def>LeftHandThumb</def>|<def>Finger</def><customLabel>left hand thumb</customLabel>
+s|<def>RightHandThumb</def>|<def>Finger</def><customLabel>right hand thumb</customLabel>
+s|<def>LeftFootLittleToe</def>|<def>Toe</def><customLabel>left foot little toe</customLabel>
+s|<def>RightFootLittleToe</def>|<def>Toe</def><customLabel>right foot little toe</customLabel>
+s|<def>LeftFootFourthToe</def>|<def>Toe</def><customLabel>left foot fourth toe</customLabel>
+s|<def>RightFootFourthToe</def>|<def>Toe</def><customLabel>right foot fourth toe</customLabel>
+s|<def>LeftFootMiddleToe</def>|<def>Toe</def><customLabel>left foot middle toe</customLabel>
+s|<def>RightFootMiddleToe</def>|<def>Toe</def><customLabel>right foot middle toe</customLabel>
+s|<def>LeftFootSecondToe</def>|<def>Toe</def><customLabel>left foot second toe</customLabel>
+s|<def>RightFootSecondToe</def>|<def>Toe</def><customLabel>right foot second toe</customLabel>
+s|<def>LeftFootBigToe</def>|<def>Toe</def><customLabel>left foot big toe</customLabel>
+s|<def>RightFootBigToe</def>|<def>Toe</def><customLabel>right foot big toe</customLabel>
+v|SmithingSpeed|GeneralLaborSpeed
+v|SculptingSpeed|GeneralLaborSpeed
+v|SmeltingSpeed|GeneralLaborSpeed
+v|TailoringSpeed|GeneralLaborSpeed
+v|UnskilledLaborSpeed|GeneralLaborSpeed
+v|DrugProductionSpeed|DrugSynthesisSpeed
+v|GlitterworldMedicine|MedicineUltratech
+v|HerbalMedicine|MedicineHerbal
+v|Component|ComponentIndustrial
+v|Puddle_Fuel|Filth_Fuel
+v|MortarShell|Shell_HighExplosive
+v|InteractPistol|Interact_Autopistol
+v|InteractRifle|Interact_Rifle
+v|InteractShotgun|Interact_Shotgun
+v|ShotShotgun|Shot_Shotgun
+v|ShotAssaultRifle|Shot_AssaultRifle
+v|ShotSurvivalRifle|Shot_BoltActionRifle
+v|BulletImpactFlesh|BulletImpact_Flesh
+v|BulletImpactMetal|BulletImpact_Metal
+v|ShotIncendiaryLauncher|Shot_IncendiaryLauncher
+v|InteractChargeRifle|Interact_ChargeRifle
+v|ShotChargeRifle|Shot_ChargeRifle
+v|ArtName_Sculpture|NamerArtSculpture
+v|Apparel_PersonalShield|Apparel_ShieldBelt
+v|ArtName_Furniture|NamerArtFurniture
+v|Raider|Outlander
+v|Civil|Outlander
+v|LeftEye|Eye
+v|LeftEar|Ear
+#v|LeftHand|Hand
+v|LeftLung|Lung
+v|LeftKidney|Kidney
+v|LeftShoulder|Shoulder
+v|LeftLeg|Leg
+v|LeftFoot|Foot
+v|LeftHandPinky|Finger
+v|LeftFootLittleToe|Toe
+v|BadassAnimal|AnimalFighter
+v|ArtName_WeaponGun|NamerArtWeaponGun
+v|ArtName_WeaponMelee|NamerArtWeaponMelee
+v|BuildingRubble|Filth_RubbleBuilding
+s|<li Class="StockGenerator_BuyWeirdOrganic" />
+s|<li Class="StockGenerator_BuyArt" />
+s|<kindDef>Normal</kindDef>|<kindDef>Combat</kindDef>
+s|<kindDef>FactionBase</kindDef>|<kindDef>Settlement</kindDef>
+s|<thingDef>Medicine</thingDef>|<thingDef>MedicineIndustrial</thingDef>
+s|<tradeability>Never</tradeability>|<tradeability>None</tradeability>
+s|<li>LeftHandRingFinger</li>
+s|<li>LeftHandMiddleFinger</li>
+s|<li>LeftHandIndexFinger</li>
+s|<li>LeftHandThumb</li>
+s|<li>RightHandPinky</li>
+s|<li>RightHandRingFinger</li>
+s|<li>RightHandMiddleFinger</li>
+s|<li>RightHandIndexFinger</li>
+s|<li>RightHandThumb</li>
+s|<li>LeftFootFourthToe</li>
+s|<li>LeftFootMiddleToe</li>
+s|<li>LeftFootSecondToe</li>
+s|<li>LeftFootBigToe</li>
+s|<li>RightFootLittleToe</li>
+s|<li>RightFootFourthToe</li>
+s|<li>RightFootMiddleToe</li>
+s|<li>RightFootSecondToe</li>
+s|<li>RightFootBigToe</li>
+s|<li>RightEye</li>
+s|<li>RightLung</li>
+s|<li>RightKidney</li>
+s|<li>RightShoulder</li>
+s|<li>RightLeg</li>
+#s|<li>RightHand</li>
+s|<li>RightFoot</li>
+s|<li>RightEar</li>
+s|<li>InstallScytherBlade</li>
+s|<armorCategory>Electric</armorCategory>
+s| </description>|</description>
+s|>NamerFactionBase|>NamerSettlement
+s|<Insulation_Cold>-|<Insulation_Cold>
+s|<backstoryCategory>|<backstoryFilters><li><categories><li>
+s|</backstoryCategory>|</li></categories></li></backstoryFilters>
+s|<li>StandardAnimal</li>|<li>AnimalCommon</li>
+s|<parent>BodyPartsArtificial</parent>|<parent>BodyPartsBionic</parent>
+s|<dontSuggestAmputation>true</dontSuggestAmputation>|<canSuggestAmputation>false</canSuggestAmputation>
+s|<dontSuggestAmputation>false</dontSuggestAmputation>|<canSuggestAmputation>true</canSuggestAmputation>
+s|<defName>Growing</defName>|<defName>Plants</defName>
+s|<acceptFilth>true</acceptFilth>|<filthAcceptanceMask><li>Unnatural</li></filthAcceptanceMask>
+s|<acceptFilth>true</acceptFilth>
+s|"BodyPartArtificialBase"|"BodyPartBionicBase"
+s|ParentName="MealRottable"|ParentName="MealCooked"
+s|ParentName="BaseHumanGun"|ParentName="BaseHumanMakeableGun"
+s|<diet>Omnivorous</diet>|<foodType>OmnivoreHuman</foodType>
+s|<soundInteract>BowLarge</soundInteract>|<soundInteract>Bow_Large</soundInteract>
+s|<soundInteract>BowGreat</soundInteract>|<soundInteract>Bow_Large</soundInteract>
+s|<soundCast>BowGreat</soundCast>|<soundCast>Bow_Large</soundCast>
+s|<soundCast>BowLarge</soundCast>|<soundCast>Bow_Large</soundCast>
+s|<texPath>Things/Pawn/Humanlike/Apparel/PersonalShield/PersonalShield</texPath>|<texPath>Things/Pawn/Humanlike/Apparel/ShieldBelt/ShieldBelt</texPath>
+s|<thinkTree>Humanlike</thinkTree>|<thinkTreeMain>Humanlike</thinkTreeMain><thinkTreeConstant>HumanlikeConstant</thinkTreeConstant>
+s|<startWickOnDamageTaken>Flame</startWickOnDamageTaken>|<startWickOnDamageTaken><li>Flame</li></startWickOnDamageTaken>
