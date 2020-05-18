@@ -383,7 +383,7 @@ function Publish-Mod {
 	}
 
 	# Generate english-language if missing
-	Verify-Translation -ModName $modNameClean
+	Set-Translation -ModName $modNameClean
 
 	# Reset Staging
 	Set-Location -Path $rootFolder
