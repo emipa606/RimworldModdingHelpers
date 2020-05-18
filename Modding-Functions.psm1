@@ -20,6 +20,7 @@ if(-not (Test-Path $gitignoreTemplate)) {
 	return
 }
 $Global:publisherPlusTemplate = "$PSScriptRoot\$($settings.publisher_plus_template)"
+$Global:rimTransTemplate = "$PSScriptRoot\$($settings.rimtrans_template)"
 $Global:modSyncTemplate = "$PSScriptRoot\$($settings.modsync_template)"
 $Global:licenseFile = "$PSScriptRoot\$($settings.license_file)"
 
@@ -71,11 +72,11 @@ function New-ModSyncFile {
     $modname,
     $version
   )
-  if(-not (Test-Path $settings.modsync_template)) {
-	  Write-Host "Cound not find ModSync-template: $($settings.modsync_template), skipping."
+  if(-not (Test-Path $modSyncTemplate)) {
+	  Write-Host "Cound not find ModSync-template: $($modSyncTemplate), skipping."
 	  return
   }
-  Copy-Item $settings.modsync_template $targetPath -Force
+  Copy-Item $modSyncTemplate $targetPath -Force
   ((Get-Content -path $targetPath -Raw).Replace("[guid]", [guid]::NewGuid().ToString())) | Set-Content -Path $targetPath
   ((Get-Content -path $targetPath -Raw).Replace("[modname]", $modname)) | Set-Content -Path $targetPath
   ((Get-Content -path $targetPath -Raw).Replace("[version]", $version)) | Set-Content -Path $targetPath
@@ -420,7 +421,7 @@ function Publish-Mod {
 		}
 	}
 	if(-not (Test-Path $gitIgnorePath) -or ((Get-Item $gitignoreTemplate).LastWriteTime -gt (Get-Item $gitIgnorePath).LastWriteTime)) {
-		Copy-Item -Path $rootFolder\.gitignore $gitIgnorePath -Force | Out-Null
+		Copy-Item -Path $gitignoreTemplate $gitIgnorePath -Force | Out-Null
 		$reapplyGitignore = $true
 	} 
 	if((Test-Path $modSyncTemplate) -and -not (Test-Path $modsyncFile)) {
@@ -511,15 +512,15 @@ function Set-Translation {
 		[string] $ModName
 	)
 	$rimTransExe = $settings.rimtrans_path
-	$templateFile = $settings.rimtrans_template
-	$currentFile = $templateFile.Replace(".xml", "_current.xml")
+	$currentFile = $rimTransTemplate.Replace(".xml", "_current.xml")
 	$command = "-p:$currentFile"
 
 	Write-Host "Generating default language-data"
 
-	(Get-Content $templateFile -Raw).Replace("[modpath]", "$localModFolder\$ModName") | Out-File $currentFile -Encoding utf8
+	(Get-Content $rimTransTemplate -Raw).Replace("[modpath]", "$localModFolder\$ModName") | Out-File $currentFile -Encoding utf8
 	
 	$process = Start-Process -FilePath $rimTransExe -ArgumentList $command -PassThru 
+	Start-Sleep -Seconds 1
 	$wshell = New-Object -ComObject wscript.shell;
 	$wshell.AppActivate('RimTrans')
 	$wshell.SendKeys('{ENTER}')
