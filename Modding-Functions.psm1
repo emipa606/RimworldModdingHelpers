@@ -120,7 +120,9 @@ function Get-ModPage {
 	$modId = Get-Content $modFileId -Raw
 	$applicationPath = $settings.browser_path
 	$arguments = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
-	Start-Process -FilePath $applicationPath -ArgumentList $arguments	
+	Start-Process -FilePath $applicationPath -ArgumentList $arguments
+	Start-Sleep -Seconds 1
+	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
 }
 
 # Start RimWorld two different ways
