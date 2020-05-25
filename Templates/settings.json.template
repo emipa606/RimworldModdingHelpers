@@ -12,6 +12,7 @@
 	"publisher_plus_template": "_PublisherPlus.xml",
 	"gitignore_template": "gitignore.txt",
 	"rimtrans_template": "RimTrans.xml",
+	"updatefeatures_template": "UpdateFeatures.xml",
 	"license_file": "LICENSE.md",
 	"xml_replacement_rules_file": "ReplaceRules.txt",
 	"modding_screen_height": "1080",

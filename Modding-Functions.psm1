@@ -21,6 +21,7 @@ if(-not (Test-Path $gitignoreTemplate)) {
 }
 $Global:publisherPlusTemplate = "$PSScriptRoot\$($settings.publisher_plus_template)"
 $Global:rimTransTemplate = "$PSScriptRoot\$($settings.rimtrans_template)"
+$Global:updatefeaturesTemplate = "$PSScriptRoot\$($settings.updatefeatures_template)"
 $Global:modSyncTemplate = "$PSScriptRoot\$($settings.modsync_template)"
 $Global:licenseFile = "$PSScriptRoot\$($settings.license_file)"
 
@@ -123,6 +124,40 @@ function Get-ModPage {
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
 	Start-Sleep -Seconds 1
 	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
+}
+
+# Adds an update post to the mod
+# If HugsLib is loaded this will be shown if new to user
+function Set-ModUpdateFeatures {
+	param (
+		[string] $ModName
+	)
+
+	if(-not (Test-Path "$localModFolder\$modName\News")) {
+		New-Item -Path "$localModFolder\$modName\News" -ItemType Directory | Out-Null
+	}
+	$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
+	$modId = Get-Content $modFileId -Raw
+	$updatefeaturesFileName = Split-Path $updatefeaturesTemplate -Leaf
+	if(-not (Test-Path "$localModFolder\$modName\News\$updatefeaturesFileName")) {
+		(Get-Content -Path $updatefeaturesTemplate -Raw).Replace("[modname]", $ModName).Replace("[modid]", $modId) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
+	}
+
+	$defaultNewsObject = "	<HugsLib.UpdateFeatureDef ParentName=""UpdateFeatureBase"">
+		<defName>[newsid]</defName>
+		<assemblyVersion>[version]</assemblyVersion>
+		<content>[news]</content>
+	</HugsLib.UpdateFeatureDef>
+</Defs>"
+	$news = Read-Host "Update-message"
+	$manifestFile = "$localModFolder\$modName\About\Manifest.xml"
+	$version = ((Get-Content $manifestFile -Raw).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+
+	$newsObject = $defaultNewsObject.Replace("[newsid]", "$($ModName.Replace(" ", "_"))_$($version.Replace(".", "_"))")
+	$newsObject = $newsObject.Replace("[version]", $version).Replace("[news]", $news)
+
+	(Get-Content -Path "$localModFolder\$modName\News\$updatefeaturesFileName" -Raw).Replace("</Defs>", $newsObject) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
+	Write-Host "Added update news"
 }
 
 # Start RimWorld two different ways
@@ -464,6 +499,11 @@ function Publish-Mod {
 		Write-Host "Done"
 		$message = "First publish"
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
+	}
+
+	$makeUpdate = Read-Host "Add update-message? Blank for no, anything else yes"
+	if($makeUpdate) {
+		Set-ModUpdateFeatures -ModName $modNameClean
 	}
 
 	# Clone current repository to staging
