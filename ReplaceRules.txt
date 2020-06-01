@@ -70,9 +70,14 @@ p|projectileDef|defaultProjectile
 p|RecruitPrisonerChance|NegotiationAbility
 p|oldInjuryBaseChance|permanentInjuryChanceFactor
 p|bleedingRateMultiplier|bleedRate
+p|wildSpawn_EcoSystemWeight|ecoSystemWeight
+p|wildSpawn_GroupSizeRange|wildGroupSize
 p|isAlive|alive
+p|wildSpawn_spawnWild
 p|isFlesh
+p|Weapon_Bulk
 p|trainableIntelligence|trainability
+p|MeleeWeapon_Cooldown|MeleeWeapon_CooldownMultiplier
 s|<def>LeftEye</def>|<def>Eye</def><customLabel>left eye</customLabel>
 s|<def>RightEye</def>|<def>Eye</def><customLabel>right eye</customLabel>
 s|<def>LeftEar</def>|<def>Ear</def><customLabel>left ear</customLabel>
@@ -121,6 +126,20 @@ s|<def>LeftFootSecondToe</def>|<def>Toe</def><customLabel>left foot second toe</
 s|<def>RightFootSecondToe</def>|<def>Toe</def><customLabel>right foot second toe</customLabel>
 s|<def>LeftFootBigToe</def>|<def>Toe</def><customLabel>left foot big toe</customLabel>
 s|<def>RightFootBigToe</def>|<def>Toe</def><customLabel>right foot big toe</customLabel>
+s|<def>LeftAntenna</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
+s|<def>RightAntenna</def>|<def>Antenna</def><customLabel>right antenna</customLabel>
+s|<def>FrontLeftInsectLeg</def>|<def>InsectLeg</def><customLabel>front left leg</customLabel>
+s|<def>FrontRightInsectLeg</def>|<def>InsectLeg</def><customLabel>front right leg</customLabel>
+s|<def>MiddleLeftInsectLeg</def>|<def>InsectLeg</def><customLabel>middle left leg</customLabel>
+s|<def>MiddleRightInsectLeg</def>|<def>InsectLeg</def><customLabel>middle right leg</customLabel>
+s|<def>RearLeftInsectLeg</def>|<def>InsectLeg</def><customLabel>rear left leg</customLabel>
+s|<def>RearRightInsectLeg</def>|<def>InsectLeg</def><customLabel>rear right leg</customLabel>
+s|<def>FrontLeftLeg</def>|<def>Leg</def><customLabel>front left leg</customLabel>
+s|<def>FrontRightLeg</def>|<def>Leg</def><customLabel>front right leg</customLabel>
+s|<def>RearLeftLeg</def>|<def>Leg</def><customLabel>rear left leg</customLabel>
+s|<def>RearRightLeg</def>|<def>Leg</def><customLabel>rear right leg</customLabel>
+s|<def>LeftElytra</def>|<def>Elytra</def><customLabel>left elytra</customLabel>
+s|<def>RightElytra</def>|<def>Elytra</def><customLabel>right elytra</customLabel>
 v|SmithingSpeed|GeneralLaborSpeed
 v|SculptingSpeed|GeneralLaborSpeed
 v|SmeltingSpeed|GeneralLaborSpeed
@@ -131,8 +150,10 @@ v|GlitterworldMedicine|MedicineUltratech
 v|HerbalMedicine|MedicineHerbal
 v|Component|ComponentIndustrial
 v|Puddle_Fuel|Filth_Fuel
+v|FilthFireFoam|Filth_FireFoam
 v|MortarShell|Shell_HighExplosive
 v|InteractPistol|Interact_Autopistol
+v|InteractRevolver|Interact_Revolver
 v|InteractRifle|Interact_Rifle
 v|InteractShotgun|Interact_Shotgun
 v|ShotShotgun|Shot_Shotgun
@@ -146,6 +167,7 @@ v|ShotChargeRifle|Shot_ChargeRifle
 v|ArtName_Sculpture|NamerArtSculpture
 v|Apparel_PersonalShield|Apparel_ShieldBelt
 v|ArtName_Furniture|NamerArtFurniture
+v|MinifiedFurniture|MinifiedThing
 v|Raider|Outlander
 v|Civil|Outlander
 v|LeftEye|Eye
