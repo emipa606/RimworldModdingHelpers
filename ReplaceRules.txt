@@ -184,6 +184,7 @@ v|BadassAnimal|AnimalFighter
 v|ArtName_WeaponGun|NamerArtWeaponGun
 v|ArtName_WeaponMelee|NamerArtWeaponMelee
 v|BuildingRubble|Filth_RubbleBuilding
+v|ScenPart_StartingThing_Defined|StartingThing_Defined
 s|<li Class="StockGenerator_BuyWeirdOrganic" />
 s|<li Class="StockGenerator_BuyArt" />
 s|<kindDef>Normal</kindDef>|<kindDef>Combat</kindDef>

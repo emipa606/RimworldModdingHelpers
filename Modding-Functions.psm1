@@ -501,7 +501,7 @@ function Publish-Mod {
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
 	}
 
-	$makeUpdate = Read-Host "Add update-message? Blank for no, anything else yes"
+	$makeUpdate = Read-Host "Add update-message? Blank for no, anything else yes'"
 	if($makeUpdate) {
 		Set-ModUpdateFeatures -ModName $modNameClean
 	}
@@ -546,6 +546,15 @@ function Publish-Mod {
 	Write-Host "Published $modName!"
 	Set-Location $modFolder
 }
+
+# Simple push function for git
+function Push-ModContent {
+	$message = Read-Host "Commit-Message"
+	git add .
+	git commit -m $message
+	git push origin master
+}
+
 
 # Helper function
 # Generates default language files for english
