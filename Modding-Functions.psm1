@@ -135,6 +135,25 @@ function Set-ModUpdateFeatures {
 		[string] $ModName
 	)
 
+	Write-Host "Add update-message? Write the message, two blank rows ends message. To skip just press enter.'"
+	$continueMessage = $true
+	$currentNews = @()
+	$lastRow = ""
+	while ($continueMessage) {		
+		$newsRow = Read-Host
+		if($newsRow -eq "" -and $currentNews.Count -eq 0) {
+			return
+		}
+		if($newsRow -eq "" -and $lastRow -eq "") {
+			$continueMessage = $false
+			continue
+		}
+		$currentNews += $newsRow
+		$lastRow = $newsRow
+	}
+
+	$news = $currentNews -join "`r`n"
+
 	if(-not (Test-Path "$localModFolder\$modName\News")) {
 		New-Item -Path "$localModFolder\$modName\News" -ItemType Directory | Out-Null
 	}
@@ -151,7 +170,6 @@ function Set-ModUpdateFeatures {
 		<content>[news]</content>
 	</HugsLib.UpdateFeatureDef>
 </Defs>"
-	$news = Read-Host "Update-message"
 	$manifestFile = "$localModFolder\$modName\About\Manifest.xml"
 	$version = ((Get-Content $manifestFile -Raw).Replace("<version>", "|").Split("|")[1].Split("<")[0])
 
@@ -478,6 +496,7 @@ function Publish-Mod {
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build + 1)"
 		((Get-Content -path $manifestFile -Raw).Replace($oldVersion,$newVersion)) | Set-Content -Path $manifestFile
 		((Get-Content -path $modsyncFile -Raw).Replace($oldVersion,$newVersion)) | Set-Content -Path $modsyncFile
+		Set-ModUpdateFeatures -ModName $modNameClean
 	} else {
 		Read-Host "Repository could not be found, create $modNameClean?"
 		$repoData = @{
@@ -501,11 +520,6 @@ function Publish-Mod {
 		Write-Host "Done"
 		$message = "First publish"
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
-	}
-
-	$makeUpdate = Read-Host "Add update-message? Blank for no, anything else yes'"
-	if($makeUpdate) {
-		Set-ModUpdateFeatures -ModName $modNameClean
 	}
 
 	# Clone current repository to staging
