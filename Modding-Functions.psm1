@@ -24,6 +24,8 @@ $Global:rimTransTemplate = "$PSScriptRoot\$($settings.rimtrans_template)"
 $Global:updatefeaturesTemplate = "$PSScriptRoot\$($settings.updatefeatures_template)"
 $Global:modSyncTemplate = "$PSScriptRoot\$($settings.modsync_template)"
 $Global:licenseFile = "$PSScriptRoot\$($settings.license_file)"
+$Global:discordUpdateMessage = "$PSScriptRoot\$($settings.discord_update_message)"
+$Global:discordHookUrl = $settings.discord_hook_url
 
 # Helper-function
 # Select folder dialog, for selecting mod-folder manually
@@ -555,6 +557,40 @@ function Push-ModContent {
 	git push origin master
 }
 
+
+# Simple update-notification for Discord
+function Push-UpdateNotification {
+	param([switch]$Test)
+	$currentDirectory = (Get-Location).Path
+	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+		return			
+	}
+	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	$modFolder = "$localModFolder\$modName"
+	$aboutFile = "$modFolder\About\About.xml"
+	$aboutContent = Get-Content $aboutFile -Raw
+	$modFileId = "$modFolder\About\PublishedFileId.txt"
+	$modId = Get-Content $modFileId -Raw
+	$modFullName = ($aboutContent.Replace("<name>", "|").Split("|")[1].Split("<")[0])
+	$modUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
+
+	$content = (Get-Content $discordUpdateMessage -Raw).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl)
+	if($Test) {
+		Write-Host "Would have posted the following message to Discord-channel:`n$content"
+	} else {
+		$payload = [PSCustomObject]@{
+			content = $content
+			username = "Update Bot"
+		}
+		try {
+			Invoke-RestMethod -Uri $discordHookUrl -Method Post -Headers @{ "Content-Type" = "application/json" } -Body ($payload | ConvertTo-Json) | Out-Null
+			Write-Host "Message posted to Discord"
+		} catch {
+			Write-Host "Failed to post message to Discord"
+		}
+	}
+}
 
 # Helper function
 # Generates default language files for english

@@ -73,6 +73,7 @@ p|bleedingRateMultiplier|bleedRate
 p|wildSpawn_EcoSystemWeight|ecoSystemWeight
 p|wildSpawn_GroupSizeRange|wildGroupSize
 p|isAlive|alive
+p|attractionFactor|romanceChanceFactor
 p|wildSpawn_spawnWild
 p|isFlesh
 p|Weapon_Bulk
@@ -218,6 +219,7 @@ s|<li>RightLeg</li>
 s|<li>RightFoot</li>
 s|<li>RightEar</li>
 s|<li>InstallScytherBlade</li>
+s|<soldThought>SoldMyLovedOne</soldThought>|<soldThoughts><li>SoldMyLovedOne</li></soldThoughts>
 s|<armorCategory>Electric</armorCategory>
 s| </description>|</description>
 s|>NamerFactionBase|>NamerSettlement
