@@ -231,10 +231,12 @@ function Update-Defs {
 	}
 	$files = Get-ChildItem *.xml -Recurse
 	$replacements = Get-Content $replacementsFile
+	$infoBlob = ""
 	foreach($file in $files) {
 		$fileContent = Get-Content -path $file.FullName -Raw
 		$xmlRemove = @()
 		$output = ""
+		$localInfo = ""
 		foreach($row in $replacements) {
 			if($row.Length -eq 0) {
 				continue
@@ -249,9 +251,13 @@ function Update-Defs {
 			} else {
 				$replaceText = ""
 			}
-			if($type -eq "p") {		# Property
+			if($type -eq "p" -or $type -eq "pi") {		# Property
 				$exists = $fileContent | Select-String -Pattern "<$searchText>" -AllMatches -CaseSensitive
 				if($exists.Matches.Count -eq 0) {
+					continue
+				}
+				if($type -eq "pi") {
+					$localInfo += "`n$($exists.Matches.Count): INFO PROPERTY $searchText - $replaceText"
 					continue
 				}
 				if($replaceText.Length -gt 0) {
@@ -269,9 +275,13 @@ function Update-Defs {
 				}
 				continue
 			}
-			if($type -eq "v") {		# Value
+			if($type -eq "v" -or $type -eq "vi") {		# Value
 				$exists = $fileContent | Select-String -Pattern ">$searchText<" -AllMatches -CaseSensitive
 				if($exists.Matches.Count -eq 0) {
+					continue
+				}				
+				if($type -eq "vi") {
+					$localInfo += "`n$($exists.Matches.Count): INFO VALUE $searchText - $replaceText"
 					continue
 				}
 				$output += "`n$($exists.Matches.Count): REPLACE VALUE $searchText WITH $replaceText"
@@ -281,9 +291,13 @@ function Update-Defs {
 				$fileContent = $fileContent.Replace(">$searchText<", ">$replaceText<")
 				continue
 			}
-			if($type -eq "s") {		#String
+			if($type -eq "s" -or $type -eq "si") {		#String
 				$exists = $fileContent | Select-String -Pattern "$searchText" -AllMatches -CaseSensitive
 				if($exists.Matches.Count -eq 0) {
+					continue
+				}			
+				if($type -eq "si") {
+					$localInfo += "`n$($exists.Matches.Count): INFO STRING $searchText - $replaceText"
 					continue
 				}
 				$output += "`n$($exists.Matches.Count): REPLACE STRING $searchText WITH $replaceText"
@@ -314,7 +328,9 @@ function Update-Defs {
 			[void]$xmlContent.RemoveChild($firstNode)
 			[void]$xmlContent.AppendChild($newNode)
 		}
-
+		if($localInfo -ne "") {
+			$infoBlob += "$($file.BaseName)`n$localInfo`n"
+		}
 		if($Test) {
 			continue
 		}
@@ -324,6 +340,9 @@ function Update-Defs {
 			}
 		}
 		$xmlContent.Save($file.FullName)
+	}
+	if($infoBlob -ne "") {
+		Write-Host $infoBlob.Replace("#n", "`n")
 	}
 }
 

@@ -1,6 +1,7 @@
 # p| means <property></property>)
 # v| means >value<
 # s| means just string-replace
+# [pv or s]i| means inform about stuff that needs changing manually
 p|apparelAllowHeadwearChance|apparelAllowHeadgearChance
 p|expandingIconTexture|factionIconPath
 p|canFlee
@@ -54,7 +55,14 @@ p|invFoodCount|invNutrition
 p|hatcherDaysToHatch|hatcherDaystoHatch
 p|disallowedSpecialFilters|specialFiltersToDisallow
 p|exceptedCategories|disallowedCategories
+p|BaseTraderKinds|baseTraderKinds
+p|BaseNameMaker|settlementNameMaker
+p|PawnsSpecificBackstories|pawnsSpecificBackstories
+p|ForcedRaceTraitEntries|forcedRaceTraitEntries
+p|designationHotkey|designationHotKey
+p|EntertainmentStrengthFactor|JoyGainFactor
 p|HasHair|hasHair
+p|defname|defName
 p|SoundCast|soundCast
 p|GetsGreyAt|getsGreyAt
 p|preventDeterioration|preventDeteriorationOnTop
@@ -74,11 +82,17 @@ p|wildSpawn_EcoSystemWeight|ecoSystemWeight
 p|wildSpawn_GroupSizeRange|wildGroupSize
 p|isAlive|alive
 p|attractionFactor|romanceChanceFactor
+p|optimalityOffset|optimalityOffsetHumanlikes
 p|wildSpawn_spawnWild
 p|isFlesh
 p|Weapon_Bulk
 p|trainableIntelligence|trainability
+p|BaseSelectionWeight|settlementGenerationWeight
 p|MeleeWeapon_Cooldown|MeleeWeapon_CooldownMultiplier
+s|<def>LeftAntennae</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
+s|<def>RightAntennae</def>|<def>Antenna</def><customLabel>right antenna</customLabel>
+s|<def>LeftAntenna</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
+s|<def>RightAntenna</def>|<def>Antenna</def><customLabel>right antenna</customLabel>
 s|<def>LeftEye</def>|<def>Eye</def><customLabel>left eye</customLabel>
 s|<def>RightEye</def>|<def>Eye</def><customLabel>right eye</customLabel>
 s|<def>LeftEar</def>|<def>Ear</def><customLabel>left ear</customLabel>
@@ -147,6 +161,8 @@ v|SmeltingSpeed|GeneralLaborSpeed
 v|TailoringSpeed|GeneralLaborSpeed
 v|UnskilledLaborSpeed|GeneralLaborSpeed
 v|DrugProductionSpeed|DrugSynthesisSpeed
+v|BrewingSpeed|DrugCookingSpeed
+v|GamingDexterity|Gaming_Dexterity
 v|GlitterworldMedicine|MedicineUltratech
 v|HerbalMedicine|MedicineHerbal
 v|Component|ComponentIndustrial
@@ -157,9 +173,11 @@ v|InteractPistol|Interact_Autopistol
 v|InteractRevolver|Interact_Revolver
 v|InteractRifle|Interact_Rifle
 v|InteractShotgun|Interact_Shotgun
+v|InteractSMG|Interact_SMG
 v|ShotShotgun|Shot_Shotgun
 v|ShotAssaultRifle|Shot_AssaultRifle
 v|ShotSurvivalRifle|Shot_BoltActionRifle
+v|ShotMinigun|Shot_Minigun
 v|BulletImpactFlesh|BulletImpact_Flesh
 v|BulletImpactMetal|BulletImpact_Metal
 v|ShotIncendiaryLauncher|Shot_IncendiaryLauncher
@@ -169,6 +187,7 @@ v|ArtName_Sculpture|NamerArtSculpture
 v|Apparel_PersonalShield|Apparel_ShieldBelt
 v|ArtName_Furniture|NamerArtFurniture
 v|MinifiedFurniture|MinifiedThing
+v|ArtilleryHitThickRoof|Artillery_HitThickRoof
 v|Raider|Outlander
 v|Civil|Outlander
 v|LeftEye|Eye
@@ -219,6 +238,7 @@ s|<li>RightLeg</li>
 s|<li>RightFoot</li>
 s|<li>RightEar</li>
 s|<li>InstallScytherBlade</li>
+s|<li Class="Rule_PersonName">|<li Class="Rule_NamePerson">
 s|<soldThought>SoldMyLovedOne</soldThought>|<soldThoughts><li>SoldMyLovedOne</li></soldThoughts>
 s|<armorCategory>Electric</armorCategory>
 s| </description>|</description>
@@ -244,3 +264,5 @@ s|<soundCast>BowLarge</soundCast>|<soundCast>Bow_Large</soundCast>
 s|<texPath>Things/Pawn/Humanlike/Apparel/PersonalShield/PersonalShield</texPath>|<texPath>Things/Pawn/Humanlike/Apparel/ShieldBelt/ShieldBelt</texPath>
 s|<thinkTree>Humanlike</thinkTree>|<thinkTreeMain>Humanlike</thinkTreeMain><thinkTreeConstant>HumanlikeConstant</thinkTreeConstant>
 s|<startWickOnDamageTaken>Flame</startWickOnDamageTaken>|<startWickOnDamageTaken><li>Flame</li></startWickOnDamageTaken>
+pi|useOnlyPawnkindBackstories|This is in vanilla as the property <backstoryCategory> under PawnKindDefs
+vi|Rib|Ribs are now replaced by Ribcage: #n<li>#n<def>Ribcage</def>#n<coverage>0.036</coverage>#n<depth>Inside</depth>#n<groups>#n<li>Torso</li>#n</groups>#n</li>
