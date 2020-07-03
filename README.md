@@ -19,3 +19,4 @@ Other than that there are a couple of quality of life-functions:
 - Quickly loading the mod-page in a browser
 - Starting RimWorld, either for playing or modding with separate modlists and settings
 - Get the latest version of a mod from a github-repo for fetching non-steam mods
+- Adding news to a mod, shown if the user has HugsLib loaded
