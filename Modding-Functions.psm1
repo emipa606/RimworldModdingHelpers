@@ -4,7 +4,7 @@ if(-not (Test-Path $settingsFilePath)) {
 	Write-Host "Could not find settingsfile: $settingsFilePath, exiting."
 	return
 }
-$Global:settings = Get-Content -Path $settingsFilePath -raw | ConvertFrom-Json
+$Global:settings = Get-Content -Path $settingsFilePath -raw -Encoding UTF8 | ConvertFrom-Json
 $Global:localModFolder = "$($settings.rimworld_folder_path)\Mods"
 $Global:playingModsConfig = "$PSScriptRoot\ModsConfig_Playing.xml"
 $Global:moddingModsConfig = "$PSScriptRoot\ModsConfig_Modding.xml"
@@ -80,11 +80,11 @@ function New-ModSyncFile {
 	  return
   }
   Copy-Item $modSyncTemplate $targetPath -Force
-  ((Get-Content -path $targetPath -Raw).Replace("[guid]", [guid]::NewGuid().ToString())) | Set-Content -Path $targetPath
-  ((Get-Content -path $targetPath -Raw).Replace("[modname]", $modname)) | Set-Content -Path $targetPath
-  ((Get-Content -path $targetPath -Raw).Replace("[version]", $version)) | Set-Content -Path $targetPath
-  ((Get-Content -path $targetPath -Raw).Replace("[username]", $settings.github_username)) | Set-Content -Path $targetPath
-  ((Get-Content -path $targetPath -Raw).Replace("[modwebpath]", $modWebPath)) | Set-Content -Path $targetPath  
+  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[guid]", [guid]::NewGuid().ToString())) | Set-Content -Path $targetPath
+  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[modname]", $modname)) | Set-Content -Path $targetPath
+  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[version]", $version)) | Set-Content -Path $targetPath
+  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[username]", $settings.github_username)) | Set-Content -Path $targetPath
+  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[modwebpath]", $modWebPath)) | Set-Content -Path $targetPath  
 }
 
 # Texturename function
@@ -120,7 +120,7 @@ function Get-ModPage {
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
-	$modId = Get-Content $modFileId -Raw
+	$modId = Get-Content $modFileId -Raw -Encoding UTF8
 	$applicationPath = $settings.browser_path
 	$arguments = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
@@ -158,10 +158,10 @@ function Set-ModUpdateFeatures {
 		New-Item -Path "$localModFolder\$modName\News" -ItemType Directory | Out-Null
 	}
 	$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
-	$modId = Get-Content $modFileId -Raw
+	$modId = Get-Content $modFileId -Raw -Encoding UTF8
 	$updatefeaturesFileName = Split-Path $updatefeaturesTemplate -Leaf
 	if(-not (Test-Path "$localModFolder\$modName\News\$updatefeaturesFileName")) {
-		(Get-Content -Path $updatefeaturesTemplate -Raw).Replace("[modname]", $ModName).Replace("[modid]", $modId) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
+		(Get-Content -Path $updatefeaturesTemplate -Raw -Encoding UTF8).Replace("[modname]", $ModName).Replace("[modid]", $modId) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
 	}
 
 	$defaultNewsObject = "	<HugsLib.UpdateFeatureDef ParentName=""UpdateFeatureBase"">
@@ -171,12 +171,12 @@ function Set-ModUpdateFeatures {
 	</HugsLib.UpdateFeatureDef>
 </Defs>"
 	$manifestFile = "$localModFolder\$modName\About\Manifest.xml"
-	$version = ((Get-Content $manifestFile -Raw).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+	$version = ((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
 
 	$newsObject = $defaultNewsObject.Replace("[newsid]", "$($ModName.Replace(" ", "_"))_$($version.Replace(".", "_"))")
 	$newsObject = $newsObject.Replace("[version]", $version).Replace("[news]", $news)
 
-	(Get-Content -Path "$localModFolder\$modName\News\$updatefeaturesFileName" -Raw).Replace("</Defs>", $newsObject) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
+	(Get-Content -Path "$localModFolder\$modName\News\$updatefeaturesFileName" -Raw -Encoding UTF8).Replace("</Defs>", $newsObject) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
 	Write-Host "Added update news"
 }
 
@@ -196,19 +196,19 @@ function Start-RimWorld {
 	$prefsFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\Prefs.xml"
 	$modFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\ModsConfig.xml"
 
-	$currentActiveMods = Get-Content $modFile
+	$currentActiveMods = Get-Content $modFile -Encoding UTF8
 	if($currentActiveMods.Length -gt 20) {
-		$currentActiveMods | Set-Content -Path $playingModsConfig
+		$currentActiveMods | Set-Content -Path $playingModsConfig -Encoding UTF8
 	} else {
-		$currentActiveMods | Set-Content -Path $moddingModsConfig
+		$currentActiveMods | Set-Content -Path $moddingModsConfig -Encoding UTF8
 	}
 
 	if($play) {
 		Copy-Item $playingModsConfig $modFile -Confirm:$false
-		(Get-Content $prefsFile -Raw).Replace("<devMode>True</devMode>", "<devMode>False</devMode>").Replace("<screenWidth>$($settings.modding_screen_witdh)</screenWidth>", "<screenWidth>$($settings.playing_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.modding_screen_height)</screenHeight>", "<screenHeight>$($settings.playing_screen_height)</screenHeight>").Replace("<fullscreen>False</fullscreen>", "<fullscreen>True</fullscreen>") | Set-Content $prefsFile
+		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<devMode>True</devMode>", "<devMode>False</devMode>").Replace("<screenWidth>$($settings.modding_screen_witdh)</screenWidth>", "<screenWidth>$($settings.playing_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.modding_screen_height)</screenHeight>", "<screenHeight>$($settings.playing_screen_height)</screenHeight>").Replace("<fullscreen>False</fullscreen>", "<fullscreen>True</fullscreen>") | Set-Content $prefsFile
 	} else {
 		Copy-Item $moddingModsConfig $modFile -Confirm:$false
-		(Get-Content $prefsFile -Raw).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
+		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
 
 	Start-Sleep -Seconds 2
@@ -230,10 +230,10 @@ function Update-Defs {
 		return			
 	}
 	$files = Get-ChildItem *.xml -Recurse
-	$replacements = Get-Content $replacementsFile
+	$replacements = Get-Content $replacementsFile -Encoding UTF8
 	$infoBlob = ""
 	foreach($file in $files) {
-		$fileContent = Get-Content -path $file.FullName -Raw
+		$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
 		$xmlRemove = @()
 		$output = ""
 		$localInfo = ""
@@ -381,7 +381,7 @@ function Set-ModXml {
 	$files = Get-ChildItem "$modFolder\*.xml" -Recurse
 	foreach($file in $files) {
 		try {
-			[xml]$fileContent = Get-Content -path $file.FullName -Raw
+			[xml]$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
 			Write-Host $_
@@ -450,7 +450,7 @@ function Publish-Mod {
 	$files = Get-ChildItem "$modFolder\*.xml" -Recurse
 	foreach($file in $files) {
 		try {
-			[xml]$fileContent = Get-Content -path $file.FullName -Raw
+			[xml]$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
 			Write-Host $_
@@ -469,21 +469,21 @@ function Publish-Mod {
 	Set-Location -Path $stagingDirectory
 
 	# Prepare mod-directory
-	$aboutContent = Get-Content $aboutFile -Raw
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 	$modFullName = ($aboutContent.Replace("<name>", "|").Split("|")[1].Split("<")[0])
 
 	# Mod Manifest
 	if(-not (Test-Path $manifestFile)) {
 		Copy-Item -Path $manifestTemplate $manifestFile -Force | Out-Null
-		((Get-Content -path $manifestFile -Raw).Replace("[modname]",$modNameClean).Replace("[username]",$settings.github_username)) | Set-Content -Path $manifestFile
+		((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace("[modname]",$modNameClean).Replace("[username]",$settings.github_username)) | Set-Content -Path $manifestFile
 	} else {
-		$manifestContent = Get-Content -path $manifestFile -Raw
+		$manifestContent = Get-Content -path $manifestFile -Raw -Encoding UTF8
 		$currentIdentifier = $manifestContent.Replace("<identifier>", "|").Split("|")[1].Split("<")[0]
 		if($currentIdentifier -ne $modNameClean) {
-			((Get-Content -path $manifestFile -Raw).Replace($currentIdentifier,$modNameClean)) | Set-Content -Path $manifestFile
+			((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace($currentIdentifier,$modNameClean)) | Set-Content -Path $manifestFile
 		}
 	}
-	$version = [version]((Get-Content $manifestFile -Raw).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+	$version = [version]((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
 	if(Test-Path $licenseFile) {
 		if(Test-Path $modFolder\LICENSE) {
 			Remove-Item -Path "$modFolder\LICENSE" -Force
@@ -505,7 +505,7 @@ function Publish-Mod {
 	}
 	if((Test-Path $publisherPlusTemplate) -and -not (Test-Path $modPublisherPath)) {
 		Copy-Item -Path $publisherPlusTemplate $modPublisherPath -Force | Out-Null
-		((Get-Content -path $modPublisherPath -Raw).Replace("[modpath]",$modFolder)) | Set-Content -Path $modPublisherPath
+		((Get-Content -path $modPublisherPath -Raw -Encoding UTF8).Replace("[modpath]",$modFolder)) | Set-Content -Path $modPublisherPath
 	}
 
 	# Create repo if does not exists
@@ -513,8 +513,8 @@ function Publish-Mod {
 		$message = Read-Host "Commit-Message"
 		$oldVersion = "$($version.Major).$($version.Minor).$($version.Build)"
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build + 1)"
-		((Get-Content -path $manifestFile -Raw).Replace($oldVersion,$newVersion)) | Set-Content -Path $manifestFile
-		((Get-Content -path $modsyncFile -Raw).Replace($oldVersion,$newVersion)) | Set-Content -Path $modsyncFile
+		((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $manifestFile
+		((Get-Content -path $modsyncFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $modsyncFile
 		Set-ModUpdateFeatures -ModName $modNameClean
 	} else {
 		Read-Host "Repository could not be found, create $modNameClean?"
@@ -547,7 +547,7 @@ function Publish-Mod {
 	# Copy replace modfiles
 	if(-not (Test-Path $readmeFile) -or (Get-Content $readmeFile).Count -lt 10) {
 	"# $modNameClean`n`r" > $readmeFile
-	((Get-Content $aboutFile -Raw).Replace("<description>", "|").Split("|")[1].Split("<")[0]) >> $readmeFile
+	((Get-Content $aboutFile -Raw -Encoding UTF8).Replace("<description>", "|").Split("|")[1].Split("<")[0]) >> $readmeFile
 	}
 	robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git
 	Set-Location -Path $stagingDirectory\$modNameClean
@@ -602,13 +602,13 @@ function Push-UpdateNotification {
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	$modFolder = "$localModFolder\$modName"
 	$aboutFile = "$modFolder\About\About.xml"
-	$aboutContent = Get-Content $aboutFile -Raw
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 	$modFileId = "$modFolder\About\PublishedFileId.txt"
-	$modId = Get-Content $modFileId -Raw
+	$modId = Get-Content $modFileId -Raw -Encoding UTF8
 	$modFullName = ($aboutContent.Replace("<name>", "|").Split("|")[1].Split("<")[0])
 	$modUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
 
-	$content = (Get-Content $discordUpdateMessage -Raw).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl)
+	$content = (Get-Content $discordUpdateMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl)
 	if($Test) {
 		Write-Host "Would have posted the following message to Discord-channel:`n$content"
 	} else {
@@ -637,7 +637,7 @@ function Set-Translation {
 
 	Write-Host "Generating default language-data"
 
-	(Get-Content $rimTransTemplate -Raw).Replace("[modpath]", "$localModFolder\$ModName") | Out-File $currentFile -Encoding utf8
+	(Get-Content $rimTransTemplate -Raw -Encoding UTF8).Replace("[modpath]", "$localModFolder\$ModName") | Out-File $currentFile -Encoding utf8
 	
 	$process = Start-Process -FilePath $rimTransExe -ArgumentList $command -PassThru 
 	Start-Sleep -Seconds 1

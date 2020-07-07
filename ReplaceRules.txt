@@ -86,6 +86,10 @@ p|optimalityOffset|optimalityOffsetHumanlikes
 p|wildSpawn_spawnWild
 p|isFlesh
 p|Weapon_Bulk
+p|workSpeedPenaltyOutdoors
+p|workSpeedPenaltyTemperature
+p|wildCommonalityMaxFraction
+p|wildClusterSizeRange
 p|trainableIntelligence|trainability
 p|BaseSelectionWeight|settlementGenerationWeight
 p|MeleeWeapon_Cooldown|MeleeWeapon_CooldownMultiplier
@@ -183,6 +187,8 @@ v|BulletImpactMetal|BulletImpact_Metal
 v|ShotIncendiaryLauncher|Shot_IncendiaryLauncher
 v|InteractChargeRifle|Interact_ChargeRifle
 v|ShotChargeRifle|Shot_ChargeRifle
+v|PowerOnSmall|Power_OnSmall
+v|PowerOffSmall|Power_OffSmall
 v|ArtName_Sculpture|NamerArtSculpture
 v|Apparel_PersonalShield|Apparel_ShieldBelt
 v|ArtName_Furniture|NamerArtFurniture
@@ -205,6 +211,7 @@ v|ArtName_WeaponGun|NamerArtWeaponGun
 v|ArtName_WeaponMelee|NamerArtWeaponMelee
 v|BuildingRubble|Filth_RubbleBuilding
 v|ScenPart_StartingThing_Defined|StartingThing_Defined
+v|World/WorldObjects/TribalFactionBase|World/WorldObjects/TribalSettlement
 s|<li Class="StockGenerator_BuyWeirdOrganic" />
 s|<li Class="StockGenerator_BuyArt" />
 s|<kindDef>Normal</kindDef>|<kindDef>Combat</kindDef>
@@ -265,4 +272,5 @@ s|<texPath>Things/Pawn/Humanlike/Apparel/PersonalShield/PersonalShield</texPath>
 s|<thinkTree>Humanlike</thinkTree>|<thinkTreeMain>Humanlike</thinkTreeMain><thinkTreeConstant>HumanlikeConstant</thinkTreeConstant>
 s|<startWickOnDamageTaken>Flame</startWickOnDamageTaken>|<startWickOnDamageTaken><li>Flame</li></startWickOnDamageTaken>
 pi|useOnlyPawnkindBackstories|This is in vanilla as the property <backstoryCategory> under PawnKindDefs
+pi|tradeTags|Should problably be replaced with the following:#n<tradeTagsSell>#n<li>AnimalFarm</li>#n<li>AnimalPet</li>#n</tradeTagsSell>#n<tradeTagsBuy>#n<li>AnimalUncommon</li>#n<li>AnimalExotic</li>#n</tradeTagsBuy>
 vi|Rib|Ribs are now replaced by Ribcage: #n<li>#n<def>Ribcage</def>#n<coverage>0.036</coverage>#n<depth>Inside</depth>#n<groups>#n<li>Torso</li>#n</groups>#n</li>
