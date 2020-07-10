@@ -180,6 +180,29 @@ function Set-ModUpdateFeatures {
 	Write-Host "Added update news"
 }
 
+
+# Adds an changelog post to the mod
+function Set-ModChangeNote {
+	param (
+		[string] $ModName,
+		[string] $ModNameClean,
+		[string] $Changenote
+	)
+	$baseLine = "# Changelog for $ModName"
+	$changelogFilePath = "$localModFolder\$ModNameClean\About\Changelog.txt"
+	if(-not (Test-Path $changelogFilePath)) {
+		$baseLine  | Out-File $changelogFilePath
+	}
+
+	$replaceLine = "$baseLine
+
+$Changenote
+"
+	(Get-Content -Path $changelogFilePath -Raw -Encoding UTF8).Replace($baseLine, $replaceLine) | Out-File $changelogFilePath -NoNewline
+	Write-Host "Added changelog"
+}
+
+
 # Start RimWorld two different ways
 # Default start is as mod-publish mode
 #	- Windowed mode
@@ -540,6 +563,9 @@ function Publish-Mod {
 		$message = "First publish"
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
 	}
+
+	$version = [version]((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+	Set-ModChangeNote -ModName $modName -ModNameClean $modNameClean -Changenote "$version - $message"
 
 	# Clone current repository to staging
 	git clone https://github.com/$($settings.github_username)/$modNameClean
