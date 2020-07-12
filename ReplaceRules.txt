@@ -212,6 +212,11 @@ v|ArtName_WeaponGun|NamerArtWeaponGun
 v|ArtName_WeaponMelee|NamerArtWeaponMelee
 v|BuildingRubble|Filth_RubbleBuilding
 v|Human_Meat|Meat_Human
+v|SmoothHard|SmoothableStone
+v|ChemicalDamageBrain|ChemicalDamageSevere
+v|BingingDrugExtreme|Binging_DrugMajor
+v|WanderPsychotic|Wander_Psychotic
+v|Things/Item/Health/HealthItemBionic|Things/Item/Health/HealthItem
 v|World/FactionHomes/DefaultHome|World/WorldObjects/DefaultSettlement
 v|ScenPart_StartingThing_Defined|StartingThing_Defined
 v|World/WorldObjects/TribalFactionBase|World/WorldObjects/TribalSettlement
@@ -249,6 +254,7 @@ s|<li>RightLeg</li>
 s|<li>RightFoot</li>
 s|<li>RightEar</li>
 s|<li>InstallScytherBlade</li>
+s|<acceptFilth>false</acceptFilth>|<filthAcceptanceMask><li>None</li></filthAcceptanceMask>
 s|<li Class="Rule_PersonName">|<li Class="Rule_NamePerson">
 s|<soldThought>SoldMyLovedOne</soldThought>|<soldThoughts><li>SoldMyLovedOne</li></soldThoughts>
 s|<armorCategory>Electric</armorCategory>
@@ -276,6 +282,7 @@ s|<soundCast>BowLarge</soundCast>|<soundCast>Bow_Large</soundCast>
 s|<texPath>Things/Pawn/Humanlike/Apparel/PersonalShield/PersonalShield</texPath>|<texPath>Things/Pawn/Humanlike/Apparel/ShieldBelt/ShieldBelt</texPath>
 s|<thinkTree>Humanlike</thinkTree>|<thinkTreeMain>Humanlike</thinkTreeMain><thinkTreeConstant>HumanlikeConstant</thinkTreeConstant>
 s|<startWickOnDamageTaken>Flame</startWickOnDamageTaken>|<startWickOnDamageTaken><li>Flame</li></startWickOnDamageTaken>
+si|<ingestHoldOffsetStanding>\(|Sould be replaced with#n<ingestHoldOffsetStanding>#n<northDefault>#n<offset>(value)</offset>#n</northDefault>#n</ingestHoldOffsetStanding>
 pi|useOnlyPawnkindBackstories|This is in vanilla as the property <backstoryCategory> under PawnKindDefs
 pi|tradeTags|Should problably be replaced with the following:#n<tradeTagsSell>#n<li>AnimalFarm</li>#n<li>AnimalPet</li>#n</tradeTagsSell>#n<tradeTagsBuy>#n<li>AnimalUncommon</li>#n<li>AnimalExotic</li>#n</tradeTagsBuy>
 vi|Rib|Ribs are now replaced by Ribcage: #n<li>#n<def>Ribcage</def>#n<coverage>0.036</coverage>#n<depth>Inside</depth>#n<groups>#n<li>Torso</li>#n</groups>#n</li>
