@@ -240,6 +240,65 @@ function Start-RimWorld {
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
 }
 
+# Updates a mods content to a new version
+# Looks for the previous versions sub-folder and clones it to the new version if found
+# Adds the new version to the supported versions in the About-file
+# Updates references in any C# projects so the dll-file is created in the new folder
+function Set-ModIncrement {
+	param([switch]$Test)
+	$currentDirectory = (Get-Location).Path
+	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+		return			
+	}	
+	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	$modFolder = "$localModFolder\$modName"
+	$versionFile = "$localModFolder\..\Version.txt"
+	$aboutFile = "$modFolder\About\About.xml"
+	$currentVersion = [version]([regex]::Match((Get-Content $versionFile -Raw -Encoding UTF8), "[0-9]+\.[0-9]+")).Value
+	$currentVersionString = "$($currentVersion.Major).$($currentVersion.Minor)"
+	if((Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
+		Write-Host "Mod already has support for $currentVersionString according to the About-file"
+		return
+	}
+
+	$lastVersion = "$($currentVersion.Major).$($currentVersion.Minor - 1)"
+	Write-Host "Current game version: $currentVersionString, looking for $lastVersion-folder"
+	$cloneFromPreviousVersion = Test-Path "$modFolder\$lastVersion"
+	if($cloneFromPreviousVersion) {
+		Write-Host "$lastVersion-folder found, will clone it to $currentVersionString"
+		if(-not $Test) {
+			Copy-Item -Path "$modFolder\$lastVersion" -Destination "$modFolder\$currentVersionString" -Recurse -Force
+		}
+	} else {
+		Write-Host "No $lastVersion-folder found, will not generate new version-dir"
+	}
+
+	Write-Host "Will add $currentVersionString to supported versions in About.xml"
+	if(-not $Test) {
+		((Get-Content -path $aboutFile -Raw -Encoding UTF8).Replace("</supportedVersions>","<li>$currentVersionString</li></supportedVersions>")) | Set-Content -Path $aboutFile
+		[xml]$fileContent = Get-Content -path $aboutFile -Raw -Encoding UTF8
+		$fileContent.Save($aboutFile)
+	}
+	
+	if(Test-Path "$modFolder\Source") {		
+		$csprojFile = Get-ChildItem "$modFolder\Source\*.csproj" -Recurse
+		if($csprojFile.Length -gt 0) {
+			Write-Host "Mod has VS project to update"
+			foreach ($file in $csprojFile) {
+				Write-Host "Updating $($file.FullName.Replace($modFolder, "."))"
+				if(-not $Test) {
+					(Get-Content -path $file.FullName -Raw -Encoding UTF8).Replace("$lastVersion\Assemblies", "$currentVersionString\Assemblies") | Set-Content -Path $file.FullName
+					[xml]$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
+					$fileContent.Save($file.FullName)
+				}
+			}
+		}
+	}
+	Write-Host "Done"
+}
+
+
 # Main mod-updating function
 # Goes through all xml-files from current directory and replaces old strings/properties/valuenames.
 # Can be run with the -Test parameter to just return a report of stuff that need updating, this can

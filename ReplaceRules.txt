@@ -3,7 +3,7 @@
 # s| means just string-replace
 # [pv or s]i| means inform about stuff that needs changing manually
 p|apparelAllowHeadwearChance|apparelAllowHeadgearChance
-p|expandingIconTexture|factionIconPath
+#p|expandingIconTexture|factionIconPath
 p|canFlee
 p|homeIconPath|settlementTexturePath
 #p|Medicine|MedicineIndustrial
@@ -56,6 +56,7 @@ p|hatcherDaysToHatch|hatcherDaystoHatch
 p|disallowedSpecialFilters|specialFiltersToDisallow
 p|exceptedCategories|disallowedCategories
 p|BaseTraderKinds|baseTraderKinds
+p|basehealthScale|baseHealthScale
 p|BaseNameMaker|settlementNameMaker
 p|PawnsSpecificBackstories|pawnsSpecificBackstories
 p|ForcedRaceTraitEntries|forcedRaceTraitEntries
@@ -91,6 +92,7 @@ p|workSpeedPenaltyTemperature
 p|wildCommonalityMaxFraction
 p|wildClusterSizeRange
 p|trainableIntelligence|trainability
+p|explosionDamage|defaultDamage
 p|BaseSelectionWeight|settlementGenerationWeight
 p|MeleeWeapon_Cooldown|MeleeWeapon_CooldownMultiplier
 s|<def>LeftAntennae</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
@@ -197,6 +199,7 @@ v|ArtilleryHitThickRoof|Artillery_HitThickRoof
 v|InteractGrenade|Interact_Grenade
 v|Raider|Outlander
 v|Civil|Outlander
+v|ITab_TransporterContents|ITab_ContentsTransporter
 v|LeftEye|Eye
 v|LeftEar|Ear
 #v|LeftHand|Hand
@@ -216,6 +219,7 @@ v|SmoothHard|SmoothableStone
 v|ChemicalDamageBrain|ChemicalDamageSevere
 v|BingingDrugExtreme|Binging_DrugMajor
 v|WanderPsychotic|Wander_Psychotic
+v|FilthFuel|Filth_Fuel
 v|Things/Item/Health/HealthItemBionic|Things/Item/Health/HealthItem
 v|World/FactionHomes/DefaultHome|World/WorldObjects/DefaultSettlement
 v|ScenPart_StartingThing_Defined|StartingThing_Defined
@@ -284,5 +288,6 @@ s|<thinkTree>Humanlike</thinkTree>|<thinkTreeMain>Humanlike</thinkTreeMain><thin
 s|<startWickOnDamageTaken>Flame</startWickOnDamageTaken>|<startWickOnDamageTaken><li>Flame</li></startWickOnDamageTaken>
 si|<ingestHoldOffsetStanding>\(|Sould be replaced with#n<ingestHoldOffsetStanding>#n<northDefault>#n<offset>(value)</offset>#n</northDefault>#n</ingestHoldOffsetStanding>
 pi|useOnlyPawnkindBackstories|This is in vanilla as the property <backstoryCategory> under PawnKindDefs
-pi|tradeTags|Should problably be replaced with the following:#n<tradeTagsSell>#n<li>AnimalFarm</li>#n<li>AnimalPet</li>#n</tradeTagsSell>#n<tradeTagsBuy>#n<li>AnimalUncommon</li>#n<li>AnimalExotic</li>#n</tradeTagsBuy>
+#pi|tradeTags|Should problably be replaced with the following:#n<tradeTagsSell>#n<li>AnimalFarm</li>#n<li>AnimalPet</li>#n</tradeTagsSell>#n<tradeTagsBuy>#n<li>AnimalUncommon</li>#n<li>AnimalExotic</li>#n</tradeTagsBuy>
 vi|Rib|Ribs are now replaced by Ribcage: #n<li>#n<def>Ribcage</def>#n<coverage>0.036</coverage>#n<depth>Inside</depth>#n<groups>#n<li>Torso</li>#n</groups>#n</li>
+pi|expandingIconTexture|This should probably be replaced with factionIconPath if its in a FactionDef
