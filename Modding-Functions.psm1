@@ -25,7 +25,9 @@ $Global:updatefeaturesTemplate = "$PSScriptRoot\$($settings.updatefeatures_templ
 $Global:modSyncTemplate = "$PSScriptRoot\$($settings.modsync_template)"
 $Global:licenseFile = "$PSScriptRoot\$($settings.license_file)"
 $Global:discordUpdateMessage = "$PSScriptRoot\$($settings.discord_update_message)"
-$Global:discordHookUrl = $settings.discord_hook_url
+$Global:discordPublishMessage = "$PSScriptRoot\$($settings.discord_publish_message)"
+$Global:discordUpdateHookUrl = $settings.discord_update_hook_url
+$Global:discordPublishHookUrl = $settings.discord_publish_hook_url
 
 # Helper-function
 # Select folder dialog, for selecting mod-folder manually
@@ -663,8 +665,11 @@ function Publish-Mod {
 		Body = (ConvertTo-Json $releaseData -Compress)
 	}
 	Invoke-RestMethod @releaseParams | Out-Null
-	Write-Host "Published $modName!"
 	Set-Location $modFolder
+	if($message -ne "First publish") {
+		Push-UpdateNotification -Changenote $message
+	}
+	Write-Host "Published $modName!"
 }
 
 # Simple push function for git
@@ -678,7 +683,7 @@ function Push-ModContent {
 
 # Simple update-notification for Discord
 function Push-UpdateNotification {
-	param([switch]$Test)
+	param([switch]$Test, [string]$Changenote)
 	$currentDirectory = (Get-Location).Path
 	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
 		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
@@ -693,7 +698,14 @@ function Push-UpdateNotification {
 	$modFullName = ($aboutContent.Replace("<name>", "|").Split("|")[1].Split("<")[0])
 	$modUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
 
-	$content = (Get-Content $discordUpdateMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl)
+	if($Changenote.Length -gt 0) {
+		$discordHookUrl = $discordUpdateHookUrl
+		$content = (Get-Content $discordUpdateMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl).Replace("[changenote]", $Changenote)
+	} else {
+		$discordHookUrl = $discordPublishHookUrl
+		$content = (Get-Content $discordPublishMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl)
+	}
+	
 	if($Test) {
 		Write-Host "Would have posted the following message to Discord-channel:`n$content"
 	} else {
