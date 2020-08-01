@@ -8,6 +8,7 @@ $Global:settings = Get-Content -Path $settingsFilePath -raw -Encoding UTF8 | Con
 $Global:localModFolder = "$($settings.rimworld_folder_path)\Mods"
 $Global:playingModsConfig = "$PSScriptRoot\ModsConfig_Playing.xml"
 $Global:moddingModsConfig = "$PSScriptRoot\ModsConfig_Modding.xml"
+$Global:testingModsConfig = "$PSScriptRoot\ModsConfig_Testing.xml"
 $Global:replacementsFile = "$PSScriptRoot\ReplaceRules.txt"
 $Global:manifestTemplate = "$PSScriptRoot\$($settings.manfest_template)"
 if(-not (Test-Path $manifestTemplate)) {
@@ -216,8 +217,14 @@ $Changenote
 # Each mode has its own modlist
 function Start-RimWorld {
 	[CmdletBinding()]
-	param ([switch]$play)
+	param ([switch]$play,
+			[string]$testMod)
 
+	if($test -and $play) {
+		Write-Host "You cant test and play at the same time."
+		return
+	}
+	
 	$prefsFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\Prefs.xml"
 	$modFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\ModsConfig.xml"
 
@@ -228,10 +235,42 @@ function Start-RimWorld {
 		$currentActiveMods | Set-Content -Path $moddingModsConfig -Encoding UTF8
 	}
 
+	if($testMod) {
+		Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
+		Copy-Item $testingModsConfig $modFile -Confirm:$false		
+		$aboutFile = "$localModFolder\$testMod\About\About.xml"
+		$aboutFileContent = Get-Content $aboutFile -Raw -Encoding UTF8
+		$identifiersList = $aboutFileContent.Replace("<packageId>", "|").Split("|")
+		$identifiersToAdd = @()
+		$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib"
+		foreach($identifier in $identifiersList) {
+			$identifierString = $identifier.Split("<")[0].ToLower()
+			if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString)) {
+				continue
+			}
+			if($identifiersToAdd.Contains($identifierString)) {
+				$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $identifierString }
+			} else {
+				$identifiersToAdd += $identifierString
+			}
+		}
+		$first = $identifiersToAdd[0]
+		$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $first }
+		$modIdentifiers = ""
+		foreach($identifier in $identifiersToAdd) {
+			$modIdentifiers += "<li>$identifier</li>"
+			Write-Host "Adding $identifier as prerequirement"
+		}		
+		$modIdentifiers += "<li>$first</li></activeMods>"
+		Write-Host "Adding $first as mod to test"		
+		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", $modIdentifiers) | Set-Content $modFile
+		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
+	}
 	if($play) {
 		Copy-Item $playingModsConfig $modFile -Confirm:$false
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<devMode>True</devMode>", "<devMode>False</devMode>").Replace("<screenWidth>$($settings.modding_screen_witdh)</screenWidth>", "<screenWidth>$($settings.playing_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.modding_screen_height)</screenHeight>", "<screenHeight>$($settings.playing_screen_height)</screenHeight>").Replace("<fullscreen>False</fullscreen>", "<fullscreen>True</fullscreen>") | Set-Content $prefsFile
-	} else {
+	}
+	if(-not $testMod -and -not $play ) {
 		Copy-Item $moddingModsConfig $modFile -Confirm:$false
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
@@ -300,6 +339,16 @@ function Set-ModIncrement {
 	Write-Host "Done"
 }
 
+# Wrapper for the different functions needed for updating mods
+function Update-NextMod {
+	Get-NotUpdatedMods -FirstOnly
+	$continue = Read-Host "$(Split-Path (Get-Location).Path -Leaf) - Continue? (Blank yes)"
+	if($continue.Length -gt 0) {
+		return
+	}
+	Set-ModIncrement
+	Test-Mod
+}
 
 # Main mod-updating function
 # Goes through all xml-files from current directory and replaces old strings/properties/valuenames.
@@ -658,8 +707,8 @@ function Publish-Mod {
 		Uri = "https://api.github.com/repos/$($settings.github_username)/$modNameClean/releases";
 		Method = 'POST';
 		Headers = @{
-		Authorization = 'Basic ' + [Convert]::ToBase64String(
-		[Text.Encoding]::ASCII.GetBytes($gitApiToken + ":x-oauth-basic"));
+			Authorization = 'Basic ' + [Convert]::ToBase64String(
+			[Text.Encoding]::ASCII.GetBytes($gitApiToken + ":x-oauth-basic"));
 		}
 		ContentType = 'application/json';
 		Body = (ConvertTo-Json $releaseData -Compress)
@@ -667,7 +716,7 @@ function Publish-Mod {
 	Invoke-RestMethod @releaseParams | Out-Null
 	Set-Location $modFolder
 	if($message -ne "First publish") {
-		Push-UpdateNotification -Changenote $message
+		Push-UpdateNotification -Changenote "$version - $message"
 	}
 	Write-Host "Published $modName!"
 }
@@ -680,6 +729,37 @@ function Push-ModContent {
 	git push origin master
 }
 
+# Test the mod in the current directory
+function Test-Mod {
+	$currentDirectory = (Get-Location).Path
+	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+		return			
+	}
+	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	Write-Host "Testing $modName"
+	Start-RimWorld -testMod $modName
+}
+
+# Returns a list of mods that has not been updated to the latest version
+# With switch FirstOnly the current directory is changed to the next not-updated mod root path
+function Get-NotUpdatedMods {
+	param([switch]$FirstOnly)
+	$versionFile = "$localModFolder\..\Version.txt"
+	$currentVersion = [version]([regex]::Match((Get-Content $versionFile -Raw -Encoding UTF8), "[0-9]+\.[0-9]+")).Value
+	$currentVersionString = "$($currentVersion.Major).$($currentVersion.Minor)"
+	$allMods = Get-ChildItem -Directory $localModFolder
+	foreach($folder in $allMods) {
+		$aboutFile = "$($folder.FullName)\About\About.xml"
+		if(-not (Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
+			if($FirstOnly) {
+				Set-Location $folder.FullName
+				return
+			}
+			Write-Host $folder.Name
+		}
+	}
+}
 
 # Simple update-notification for Discord
 function Push-UpdateNotification {
