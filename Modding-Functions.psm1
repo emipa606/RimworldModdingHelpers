@@ -241,7 +241,7 @@ function Start-RimWorld {
 		$aboutFileContent = Get-Content $aboutFile -Raw -Encoding UTF8
 		$identifiersList = $aboutFileContent.Replace("<packageId>", "|").Split("|")
 		$identifiersToAdd = @()
-		$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib"
+		$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty"
 		foreach($identifier in $identifiersList) {
 			$identifierString = $identifier.Split("<")[0].ToLower()
 			if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString) -or $identifierString.Contains(" ")) {
@@ -340,7 +340,12 @@ function Set-ModIncrement {
 
 # Wrapper for the different functions needed for updating mods
 function Update-NextMod {
+	Set-Location $localModFolder
 	Get-NotUpdatedMods -FirstOnly
+	if(Get-Location -eq $localModFolder) {
+		Write-Host "No mods need updating"
+		return
+	}
 	$continue = Read-Host "$(Split-Path (Get-Location).Path -Leaf) - Continue? (Blank yes)"
 	if($continue.Length -gt 0) {
 		return
