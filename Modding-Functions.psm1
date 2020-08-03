@@ -188,11 +188,10 @@ function Set-ModUpdateFeatures {
 function Set-ModChangeNote {
 	param (
 		[string] $ModName,
-		[string] $ModNameClean,
 		[string] $Changenote
 	)
 	$baseLine = "# Changelog for $ModName"
-	$changelogFilePath = "$localModFolder\$ModNameClean\About\Changelog.txt"
+	$changelogFilePath = "$localModFolder\$ModName\About\Changelog.txt"
 	if(-not (Test-Path $changelogFilePath)) {
 		$baseLine  | Out-File $changelogFilePath
 	}
@@ -245,7 +244,7 @@ function Start-RimWorld {
 		$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib"
 		foreach($identifier in $identifiersList) {
 			$identifierString = $identifier.Split("<")[0].ToLower()
-			if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString)) {
+			if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString) -or $identifierString.Contains(" ")) {
 				continue
 			}
 			if($identifiersToAdd.Contains($identifierString)) {
@@ -593,7 +592,7 @@ function Publish-Mod {
 	}
 
 	# Generate english-language if missing
-	Set-Translation -ModName $modNameClean
+	Set-Translation -ModName $modName
 
 	# Reset Staging
 	Set-Location -Path $rootFolder
@@ -675,7 +674,7 @@ function Publish-Mod {
 	}
 
 	$version = [version]((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
-	Set-ModChangeNote -ModName $modName -ModNameClean $modNameClean -Changenote "$version - $message"
+	Set-ModChangeNote -ModName $modName -Changenote "$version - $message"
 
 	# Clone current repository to staging
 	git clone https://github.com/$($settings.github_username)/$modNameClean
@@ -750,6 +749,9 @@ function Get-NotUpdatedMods {
 	$currentVersionString = "$($currentVersion.Major).$($currentVersion.Minor)"
 	$allMods = Get-ChildItem -Directory $localModFolder
 	foreach($folder in $allMods) {
+		if(-not (Test-Path "$($folder.FullName)\About\PublishedFileId.txt")) {
+			continue
+		}
 		$aboutFile = "$($folder.FullName)\About\About.xml"
 		if(-not (Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
 			if($FirstOnly) {
