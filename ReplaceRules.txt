@@ -277,6 +277,7 @@ s|<acceptFilth>true</acceptFilth>|<filthAcceptanceMask><li>Unnatural</li></filth
 s|<acceptFilth>true</acceptFilth>
 s|"BodyPartArtificialBase"|"BodyPartBionicBase"
 s|ParentName="MealRottable"|ParentName="MealCooked"
+s|<useSkinColor>true</useSkinColor>|<colorChannel>skin</colorChannel>
 s|ParentName="BaseHumanGun"|ParentName="BaseHumanMakeableGun"
 s|<diet>Omnivorous</diet>|<foodType>OmnivoreHuman</foodType>
 s|<soundInteract>BowLarge</soundInteract>|<soundInteract>Bow_Large</soundInteract>

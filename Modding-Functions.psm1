@@ -342,7 +342,7 @@ function Set-ModIncrement {
 function Update-NextMod {
 	Set-Location $localModFolder
 	Get-NotUpdatedMods -FirstOnly
-	if(Get-Location -eq $localModFolder) {
+	if((Get-Location).Path -eq $localModFolder) {
 		Write-Host "No mods need updating"
 		return
 	}
