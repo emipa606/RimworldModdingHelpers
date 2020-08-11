@@ -371,6 +371,9 @@ function Update-Defs {
 	$infoBlob = ""
 	foreach($file in $files) {
 		$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
+		if(-not $fileContent.StartsWith("<?xml")) {
+			$fileContent = "<?xml version=""1.0"" encoding=""utf-8""?>" + $fileContent
+		}
 		$xmlRemove = @()
 		$output = ""
 		$localInfo = ""
@@ -517,8 +520,12 @@ function Set-ModXml {
 	# Clean up XML-files
 	$files = Get-ChildItem "$modFolder\*.xml" -Recurse
 	foreach($file in $files) {
+		$fileContentRaw = Get-Content -path $file.FullName -Raw -Encoding UTF8		
+		if(-not $fileContent.StartsWith("<?xml")) {
+			$fileContentRaw = "<?xml version=""1.0"" encoding=""utf-8""?>" + $fileContentRaw
+		}
 		try {
-			[xml]$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
+			[xml]$fileContent = $fileContentRaw
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
 			Write-Host $_
@@ -586,8 +593,12 @@ function Publish-Mod {
 	# Clean up XML-files
 	$files = Get-ChildItem "$modFolder\*.xml" -Recurse
 	foreach($file in $files) {
+		$fileContentRaw = Get-Content -path $file.FullName -Raw -Encoding UTF8		
+		if(-not $fileContentRaw.StartsWith("<?xml")) {
+			$fileContentRaw = "<?xml version=""1.0"" encoding=""utf-8""?>" + $fileContentRaw
+		}
 		try {
-			[xml]$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
+			[xml]$fileContent = $fileContentRaw
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
 			Write-Host $_

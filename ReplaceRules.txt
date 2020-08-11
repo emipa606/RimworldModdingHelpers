@@ -39,6 +39,11 @@ p|ThingClass|thingClass
 p|Description|description
 p|CostList|costList
 p|AltitudeLayer|altitudeLayer
+p|EdgeType|edgeType
+p|RenderPrecedence|renderPrecedence
+p|drawsize|drawSize
+p|DrawGUIOverlay|drawGUIOverlay
+p|PathCost|pathCost
 p|warmupTicks|warmupTime
 p|Size|size
 p|DesignationCategory|designationCategory
