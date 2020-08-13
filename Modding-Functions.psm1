@@ -700,7 +700,7 @@ function Publish-Mod {
 	"# $modNameClean`n`r" > $readmeFile
 	((Get-Content $aboutFile -Raw -Encoding UTF8).Replace("<description>", "|").Split("|")[1].Split("<")[0]) >> $readmeFile
 	}
-	robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git
+	robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git /NFL /NDL /NJH /NJS /NP
 	Set-Location -Path $stagingDirectory\$modNameClean
 
 	# Reapply gitignore-file if necessary
