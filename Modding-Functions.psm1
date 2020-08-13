@@ -55,17 +55,23 @@ Function Get-RepositoryStatus {
     # First we create the request.
     $HTTP_Request = [System.Net.WebRequest]::Create("https://github.com/$($settings.github_username)/$repositoryName")
 
-    # We then get a response from the site.
-    $HTTP_Response = $HTTP_Request.GetResponse()
+	try {
+		# We then get a response from the site.
+		$HTTP_Response = $HTTP_Request.GetResponse()
 
-    # We then get the HTTP code as an integer.
-    $HTTP_Status = [int]$HTTP_Response.StatusCode
+		# We then get the HTTP code as an integer.
+		$HTTP_Status = [int]$HTTP_Response.StatusCode
 
-    If ($HTTP_Response -ne $null) { $HTTP_Response.Close() }
+		If ($null -ne $HTTP_Response) { 
+			$HTTP_Response.Close() 
+		}
 
-    If ($HTTP_Status -eq 200) {
-        return $true
-    }
+		If ($HTTP_Status -eq 200) {
+			return $true
+		}
+	} catch {
+		return $false
+	}
     return $false
 }
 
