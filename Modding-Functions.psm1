@@ -75,6 +75,7 @@ Function Get-RepositoryStatus {
     return $false
 }
 
+
 # Helper-function
 # Generates a new ModSync-file for a mod
 function New-ModSyncFile {
@@ -223,7 +224,8 @@ $Changenote
 function Start-RimWorld {
 	[CmdletBinding()]
 	param ([switch]$play,
-			[string]$testMod)
+			[string]$testMod,
+			[string]$testAuthor)
 
 	if($test -and $play) {
 		Write-Host "You cant test and play at the same time."
@@ -239,43 +241,59 @@ function Start-RimWorld {
 	} else {
 		$currentActiveMods | Set-Content -Path $moddingModsConfig -Encoding UTF8
 	}
+	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
 
-	if($testMod) {
-		Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
+	if($testAuthor) {
 		Copy-Item $testingModsConfig $modFile -Confirm:$false		
-		$aboutFile = "$localModFolder\$testMod\About\About.xml"
-		$aboutFileContent = Get-Content $aboutFile -Raw -Encoding UTF8
-		$identifiersList = $aboutFileContent.Replace("<packageId>", "|").Split("|")
-		$identifiersToAdd = @()
-		$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty"
-		foreach($identifier in $identifiersList) {
-			$identifierString = $identifier.Split("<")[0].ToLower()
-			if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString) -or $identifierString.Contains(" ")) {
-				continue
+		$modsToTest = Get-AllModsFromAuthor -author $testAuthor -onlyPublished
+		$modIdentifiersPrereq = ""
+		$modIdentifiers = ""
+		foreach($modname in $modsToTest) {
+			$identifiersToAdd = Get-IdentifiersFromMod -modname $modname
+			if($identifiersToAdd.Length -eq 0) {
+				Write-Host "No mod identifiers found, exiting."
+				return
 			}
-			if($identifiersToAdd.Contains($identifierString)) {
-				$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $identifierString }
-			} else {
-				$identifiersToAdd += $identifierString
+			foreach($identifier in $identifiersToAdd) {
+				if($modIdentifiersPrereq.Contains($identifier) -or $modIdentifiers.Contains($identifier) ) {
+					continue
+				}
+				if($identifier -eq $identifiersToAdd[$identifiersToAdd.Length - 1]) {
+					Write-Host "Adding $identifier as mod to test"
+					$modIdentifiers += "<li>$identifier</li>"
+				} else {
+					Write-Host "Adding $identifier as prerequirement"
+					$modIdentifiersPrereq += "<li>$identifier</li>"
+				}
 			}
+		}		
+		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiersPrereq</activeMods>").Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
+		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
+	}
+	if($testMod) {
+		Copy-Item $testingModsConfig $modFile -Confirm:$false		
+		$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod
+		if($identifiersToAdd.Length -eq 0) {
+			Write-Host "No mod identifiers found, exiting."
+			return
 		}
-		$first = $identifiersToAdd[0]
-		$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $first }
 		$modIdentifiers = ""
 		foreach($identifier in $identifiersToAdd) {
+			if($identifier -eq $identifiersToAdd[$identifiersToAdd.Length - 1]) {
+				Write-Host "Adding $identifier as mod to test"
+			} else {
+				Write-Host "Adding $identifier as prerequirement"
+			}
 			$modIdentifiers += "<li>$identifier</li>"
-			Write-Host "Adding $identifier as prerequirement"
 		}		
-		$modIdentifiers += "<li>$first</li></activeMods>"
-		Write-Host "Adding $first as mod to test"		
-		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", $modIdentifiers) | Set-Content $modFile
+		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
 	if($play) {
 		Copy-Item $playingModsConfig $modFile -Confirm:$false
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<devMode>True</devMode>", "<devMode>False</devMode>").Replace("<screenWidth>$($settings.modding_screen_witdh)</screenWidth>", "<screenWidth>$($settings.playing_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.modding_screen_height)</screenHeight>", "<screenHeight>$($settings.playing_screen_height)</screenHeight>").Replace("<fullscreen>False</fullscreen>", "<fullscreen>True</fullscreen>") | Set-Content $prefsFile
 	}
-	if(-not $testMod -and -not $play ) {
+	if(-not $testMod -and -not $play -and -not $testAuthor ) {
 		Copy-Item $moddingModsConfig $modFile -Confirm:$false
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
@@ -284,6 +302,54 @@ function Start-RimWorld {
 	$applicationPath = $settings.steam_path
 	$arguments = "-applaunch 294100"
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
+}
+
+# Returns an array of all mod-directories of mods by a specific author
+function Get-AllModsFromAuthor {
+	param ([string]$author,
+			[switch]$onlyPublished)
+	$allMods = Get-ChildItem -Directory $localModFolder
+	$returnArray = @()
+	foreach($folder in $allMods) {
+		if(-not (Test-Path "$($folder.FullName)\About\About.xml")) {
+			continue
+		}
+		if($onlyPublished -and -not (Test-Path "$($folder.FullName)\About\PublishedFileId.txt")) {
+			continue
+		}
+		$aboutFile = "$($folder.FullName)\About\About.xml"
+		if((Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<author>$author</author>")) {
+			$returnArray += $folder.Name
+		}
+	}
+	return $returnArray
+}
+
+# Scans a mods About-file for mod-identifiers and returns an array of them, with the selected mods identifier last
+function Get-IdentifiersFromMod {
+	param ([string]$modname)
+	$aboutFile = "$localModFolder\$modname\About\About.xml"
+	if(-not (Test-Path $aboutFile)) {
+		Write-Host "Could not find About-file for mod named $modname"
+		return @()
+	}
+	$aboutFileContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	$identifiersList = $aboutFileContent.Replace("<packageId>", "|").Split("|")
+	$identifiersToAdd = @()
+	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty"
+	foreach($identifier in $identifiersList) {
+		$identifierString = $identifier.Split("<")[0].ToLower()
+		if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString) -or $identifierString.Contains(" ")) {
+			continue
+		}
+		if($identifiersToAdd.Contains($identifierString)) {
+			$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $identifierString }
+		} else {
+			$identifiersToAdd += $identifierString
+		}
+	}
+	[array]::Reverse($identifiersToAdd)
+	return $identifiersToAdd
 }
 
 # Updates a mods content to a new version
