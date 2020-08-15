@@ -254,16 +254,21 @@ function Start-RimWorld {
 				Write-Host "No mod identifiers found, exiting."
 				return
 			}
-			foreach($identifier in $identifiersToAdd) {
-				if($modIdentifiersPrereq.Contains($identifier) -or $modIdentifiers.Contains($identifier) ) {
-					continue
-				}
-				if($identifier -eq $identifiersToAdd[$identifiersToAdd.Length - 1]) {
-					Write-Host "Adding $identifier as mod to test"
-					$modIdentifiers += "<li>$identifier</li>"
-				} else {
-					Write-Host "Adding $identifier as prerequirement"
-					$modIdentifiersPrereq += "<li>$identifier</li>"
+			if($identifiersToAdd.Count -eq 1) {
+				Write-Host "Adding $identifiersToAdd as mod to test"
+				$modIdentifiers += "<li>$identifiersToAdd</li>"
+			} else {
+				foreach($identifier in $identifiersToAdd) {
+					if($modIdentifiersPrereq.Contains($identifier) -or $modIdentifiers.Contains($identifier) ) {
+						continue
+					}
+					if($identifier -eq $identifiersToAdd[$identifiersToAdd.Length - 1]) {
+						Write-Host "Adding $identifier as mod to test"
+						$modIdentifiers += "<li>$identifier</li>"
+					} else {
+						Write-Host "Adding $identifier as prerequirement"
+						$modIdentifiersPrereq += "<li>$identifier</li>"
+					}
 				}
 			}
 		}		
@@ -278,14 +283,19 @@ function Start-RimWorld {
 			return
 		}
 		$modIdentifiers = ""
-		foreach($identifier in $identifiersToAdd) {
-			if($identifier -eq $identifiersToAdd[$identifiersToAdd.Length - 1]) {
-				Write-Host "Adding $identifier as mod to test"
-			} else {
-				Write-Host "Adding $identifier as prerequirement"
-			}
-			$modIdentifiers += "<li>$identifier</li>"
-		}		
+		if($identifiersToAdd.Count -eq 1) {
+			Write-Host "Adding $identifiersToAdd as mod to test"
+			$modIdentifiers += "<li>$identifiersToAdd</li>"
+		} else {			
+			foreach($identifier in $identifiersToAdd) {
+				if($identifier -eq $identifiersToAdd[$identifiersToAdd.Length - 1]) {
+					Write-Host "Adding $identifier as mod to test"
+				} else {
+					Write-Host "Adding $identifier as prerequirement"
+				}
+				$modIdentifiers += "<li>$identifier</li>"
+			}	
+		}	
 		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
@@ -321,6 +331,41 @@ function Get-AllModsFromAuthor {
 		if((Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<author>$author</author>")) {
 			$returnArray += $folder.Name
 		}
+	}
+	return $returnArray
+}
+
+# Returns a list of all mods where files have been modified since the last publish.
+function Get-AllNonPublishedMods {
+	param ([switch]$detailed,
+			[switch]$ignoreAbout)
+	$allMods = Get-ChildItem -Directory $localModFolder
+	$returnArray = @()
+	foreach($folder in $allMods) {
+		if(-not (Test-Path "$($folder.FullName)\About\ModSync.xml")) {
+			continue
+		}
+		if(-not (Test-Path "$($folder.FullName)\About\PublishedFileId.txt")) {
+			continue
+		}
+		$modsyncFileModified = (Get-Item "$($folder.FullName)\About\ModSync.xml").LastWriteTime
+
+		if($ignoreAbout) {
+			$newerFiles = Get-ChildItem $folder.FullName -File -Recurse -Exclude "About.xml" | Where-Object { $_.LastWriteTime -gt $modsyncFileModified.AddMinutes(5)}
+		} else {
+			$newerFiles = Get-ChildItem $folder.FullName -File -Recurse  | Where-Object { $_.LastWriteTime -gt $modsyncFileModified.AddMinutes(5)}
+		}
+		if($newerFiles.Count -gt 0) {
+			$returnString = "`n$($folder.Name) has $($newerFiles.Count) files newer than publish-date"
+			if($detailed) {
+				$returnString += ":"
+				foreach($file in $newerFiles) {
+					$minutesString = "$([math]::floor(($file.LastWriteTime - $modsyncFileModified).TotalMinutes)) minutes newer"
+					$returnString += "`n$($file.FullName.Replace($localModFolder, '').Replace('\$($folder.Name)', '')) - $minutesString"
+				}
+			}
+			$returnArray += $returnString
+		}		
 	}
 	return $returnArray
 }
@@ -711,7 +756,7 @@ function Publish-Mod {
 		if(-not (Test-Path $modFolder\LICENSE.md)) {
 			Copy-Item -Path $licenseFile $modFolder\LICENSE.md -Force | Out-Null
 		} else {
-			if((Get-Item -Path $modFolder\LICENSE.md).LastAccessTime -lt (Get-Item $licenseFile).LastAccessTime) {
+			if((Get-Item -Path $modFolder\LICENSE.md).LastWriteTime -lt (Get-Item $licenseFile).LastWriteTime) {
 				Copy-Item -Path $licenseFile $modFolder\LICENSE.md -Force | Out-Null
 			}
 		}
