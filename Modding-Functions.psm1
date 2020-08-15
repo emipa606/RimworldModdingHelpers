@@ -896,6 +896,21 @@ function Get-NotUpdatedMods {
 	}
 }
 
+function Get-WrongManifest {
+	$allMods = Get-ChildItem -Directory $localModFolder
+	foreach($folder in $allMods) {
+		if(-not (Test-Path "$($folder.FullName)\About\Manifest.xml")) {
+			continue
+		}
+		$manifestFile = "$($folder.FullName)\About\Manifest.xml"
+		if((Get-Content -path $manifestFile -Raw -Encoding UTF8).Contains("<li>")) {
+			explorer.exe $manifestFile
+			Set-Location $folder.FullName
+			return
+		}
+	}
+}
+
 # Simple update-notification for Discord
 function Push-UpdateNotification {
 	param([switch]$Test, [string]$Changenote)
