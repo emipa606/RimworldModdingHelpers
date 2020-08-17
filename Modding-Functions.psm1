@@ -845,12 +845,47 @@ function Publish-Mod {
 		ContentType = 'application/json';
 		Body = (ConvertTo-Json $releaseData -Compress)
 	}
-	Invoke-RestMethod @releaseParams | Out-Null
+	$createdRelease = Invoke-RestMethod @releaseParams
+	
+	Get-ZipFile -modname $modName -filename "$($modNameClean)_$newVersion.zip"
+	$zipFile = Get-Item "$localModFolder\$modname\$($modNameClean)_$newVersion.zip"
+	$fileName = $zipFile.Name
+	$uploadParams = @{
+		Uri = "https://uploads.github.com/repos/$($settings.github_username)/$modNameClean/releases/$($createdRelease.id)/assets?name=$fileName&label=$fileName";
+		Method = 'POST';
+		Headers = @{
+			Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($gitApiToken + ":x-oauth-basic"));
+		}
+	}
+
+	$uploadedFile = Invoke-RestMethod @uploadParams -InFile $zipFile.FullName -ContentType "application/zip"
+	Write-Host "Zip-file status: $($uploadedFile.state)"
+	Remove-Item $zipFile.FullName -Force
+
 	Set-Location $modFolder
 	if($message -ne "First publish") {
 		Push-UpdateNotification -Changenote "$version - $message"
 	}
 	Write-Host "Published $modName!"
+}
+
+# Generates a zip-file of a mod, looking in the _PublisherPlus.xml for exlusions
+function Get-ZipFile {
+	param([string]$modname,
+		[string]$filename)
+	$exclusions = "$localModFolder\$modname\_PublisherPlus.xml"
+	$exclusionsToAdd = " -xr!""_PublisherPlus.xml"""
+	if((Test-Path $exclusions)) {
+		$splittedContent = (Get-Content $exclusions -Raw -Encoding UTF8).Replace("<exclude>", "|").Split("|")
+		for ($i = 1; $i -lt $splittedContent.Count; $i++) {
+			$excusion = $splittedContent[$i].Replace("</exclude>", "|").Split("|")[0].Replace("$localModFolder\$modname\", "")
+			$exclusionsToAdd += " -xr!""$excusion"""
+		}
+	}
+	$outFile = "$localModFolder\$modname\$filename"
+	$7zipPath = $settings.zip_path
+	$arguments = "a ""$outFile"" ""$localModFolder\$modname\"" -r -bd $exclusionsToAdd "
+	Start-Process -FilePath $7zipPath -ArgumentList $arguments -Wait
 }
 
 # Simple push function for git
@@ -896,6 +931,7 @@ function Get-NotUpdatedMods {
 	}
 }
 
+# Scans all mods for Manifests containing logic for load-order. Since vanilla added this its no longer needed.
 function Get-WrongManifest {
 	$allMods = Get-ChildItem -Directory $localModFolder
 	foreach($folder in $allMods) {
