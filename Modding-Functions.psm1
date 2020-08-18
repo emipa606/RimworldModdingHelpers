@@ -638,7 +638,7 @@ function Set-ModXml {
 	$files = Get-ChildItem "$modFolder\*.xml" -Recurse
 	foreach($file in $files) {
 		$fileContentRaw = Get-Content -path $file.FullName -Raw -Encoding UTF8		
-		if(-not $fileContent.StartsWith("<?xml")) {
+		if(-not $fileContentRaw.StartsWith("<?xml")) {
 			$fileContentRaw = "<?xml version=""1.0"" encoding=""utf-8""?>" + $fileContentRaw
 		}
 		try {
