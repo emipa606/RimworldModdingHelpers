@@ -46,6 +46,7 @@ p|DrawGUIOverlay|drawGUIOverlay
 p|PathCost|pathCost
 p|warmupTicks|warmupTime
 p|Size|size
+p|TickerType|tickerType
 p|DesignationCategory|designationCategory
 p|Passability|passability
 p|exceptedThingDefs|disallowedThingDefs
@@ -91,6 +92,7 @@ p|attractionFactor|romanceChanceFactor
 p|optimalityOffset|optimalityOffsetHumanlikes
 p|wildSpawn_spawnWild
 p|isFlesh
+p|reproduceMtbDays
 p|Weapon_Bulk
 p|workSpeedPenaltyOutdoors
 p|workSpeedPenaltyTemperature
@@ -202,6 +204,7 @@ v|ArtName_Furniture|NamerArtFurniture
 v|MinifiedFurniture|MinifiedThing
 v|ArtilleryHitThickRoof|Artillery_HitThickRoof
 v|InteractGrenade|Interact_Grenade
+v|BulletImpactWood|BulletImpact_Wood
 v|Raider|Outlander
 v|Civil|Outlander
 v|ITab_TransporterContents|ITab_ContentsTransporter
