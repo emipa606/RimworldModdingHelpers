@@ -6,6 +6,7 @@ if(-not (Test-Path $settingsFilePath)) {
 }
 $Global:settings = Get-Content -Path $settingsFilePath -raw -Encoding UTF8 | ConvertFrom-Json
 $Global:localModFolder = "$($settings.rimworld_folder_path)\Mods"
+$Global:oldRimworldFolder = $settings.old_rimworld_folders
 $Global:playingModsConfig = "$PSScriptRoot\ModsConfig_Playing.xml"
 $Global:moddingModsConfig = "$PSScriptRoot\ModsConfig_Modding.xml"
 $Global:testingModsConfig = "$PSScriptRoot\ModsConfig_Testing.xml"
@@ -225,22 +226,44 @@ function Start-RimWorld {
 	[CmdletBinding()]
 	param ([switch]$play,
 			[string]$testMod,
-			[string]$testAuthor)
+			[string]$testAuthor,
+			[Parameter()][ValidateSet('1.0','1.1','latest')][string[]]$version
+			)
 
 	if($test -and $play) {
 		Write-Host "You cant test and play at the same time."
 		return
 	}
-	
+	if(-not $oldRimworldFolder -and $version -eq "latest") {
+		Write-Host "No old RimWorld-folder defined, cannot start old version."
+		return		
+	}
+	if($version -and -not ($play -or $testMod)) {
+		Write-Host "Only testing or playing is supported for old versions of RimWorld"
+		return		
+	}
+
 	$prefsFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\Prefs.xml"
 	$modFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\ModsConfig.xml"
-
-	$currentActiveMods = Get-Content $modFile -Encoding UTF8
-	if($currentActiveMods.Length -gt 20) {
-		$currentActiveMods | Set-Content -Path $playingModsConfig -Encoding UTF8
+	if($version -and $version -ne "latest") {
+		$oldVersions = Get-ChildItem $oldRimworldFolder -Directory | Select-Object -ExpandProperty Name
+		if(-not $oldVersions.Contains($version)) {
+			Write-Host "No RimWorld-folder matching version $version found in $oldRimworldFolder."
+			return		
+		}		
+		$prefsFile = "$oldRimworldFolder\$version\DataFolder\Config\Prefs.xml"
+		$modFile = "$oldRimworldFolder\$version\DataFolder\Config\ModsConfig.xml"
+		$testModFile = "$oldRimworldFolder\ModsConfig_$version.xml"
+		$oldModFolder = "$oldRimworldFolder\$version\Mods"
 	} else {
-		$currentActiveMods | Set-Content -Path $moddingModsConfig -Encoding UTF8
-	}
+		$currentActiveMods = Get-Content $modFile -Encoding UTF8
+		if($currentActiveMods.Length -gt 20) {
+			$currentActiveMods | Set-Content -Path $playingModsConfig -Encoding UTF8
+		} else {
+			$currentActiveMods | Set-Content -Path $moddingModsConfig -Encoding UTF8
+		}		
+	}	
+
 	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
 
 	if($testAuthor) {
@@ -276,8 +299,18 @@ function Start-RimWorld {
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
 	if($testMod) {
-		Copy-Item $testingModsConfig $modFile -Confirm:$false		
-		$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod
+		if($version -and $version -ne "latest") {			
+			Copy-Item $testModFile $modFile -Confirm:$false
+			if($version -eq "1.0") {
+				$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod -oldmod
+			} else {
+				$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod
+			}
+			Copy-Item -Path "$localModFolder\$modname" -Destination "$oldModFolder\" -Confirm:$false -Recurse -Force
+		} else {
+			Copy-Item $testingModsConfig $modFile -Confirm:$false		
+			$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod
+		}
 		if($identifiersToAdd.Length -eq 0) {
 			Write-Host "No mod identifiers found, exiting."
 			return
@@ -300,7 +333,9 @@ function Start-RimWorld {
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
 	if($play) {
-		Copy-Item $playingModsConfig $modFile -Confirm:$false
+		if(-not $version -or $version -eq "latest") {	
+			Copy-Item $playingModsConfig $modFile -Confirm:$false
+		}
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<devMode>True</devMode>", "<devMode>False</devMode>").Replace("<screenWidth>$($settings.modding_screen_witdh)</screenWidth>", "<screenWidth>$($settings.playing_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.modding_screen_height)</screenHeight>", "<screenHeight>$($settings.playing_screen_height)</screenHeight>").Replace("<fullscreen>False</fullscreen>", "<fullscreen>True</fullscreen>") | Set-Content $prefsFile
 	}
 	if(-not $testMod -and -not $play -and -not $testAuthor ) {
@@ -309,9 +344,20 @@ function Start-RimWorld {
 	}
 
 	Start-Sleep -Seconds 2
-	$applicationPath = $settings.steam_path
-	$arguments = "-applaunch 294100"
+	$currentLocation = Get-Location
+	if($version -and $version -ne "latest") {	
+		$applicationPath = "$oldRimworldFolder\$version\RimWorldWin64.exe"
+		$arguments = "-savedatafolder=DataFolder"
+		Set-Location "$oldRimworldFolder\$version"
+	} else {
+		$applicationPath = $settings.steam_path
+		$arguments = "-applaunch 294100"
+	}
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
+	if($currentLocation -ne (Get-Location)) {
+		Start-Sleep -Seconds 5
+		Set-Location $currentLocation
+	}
 }
 
 # Returns an array of all mod-directories of mods by a specific author
@@ -372,7 +418,7 @@ function Get-AllNonPublishedMods {
 
 # Scans a mods About-file for mod-identifiers and returns an array of them, with the selected mods identifier last
 function Get-IdentifiersFromMod {
-	param ([string]$modname)
+	param ([string]$modname, [switch]$oldmod)
 	$aboutFile = "$localModFolder\$modname\About\About.xml"
 	if(-not (Test-Path $aboutFile)) {
 		Write-Host "Could not find About-file for mod named $modname"
@@ -381,6 +427,10 @@ function Get-IdentifiersFromMod {
 	$aboutFileContent = Get-Content $aboutFile -Raw -Encoding UTF8
 	$identifiersList = $aboutFileContent.Replace("<packageId>", "|").Split("|")
 	$identifiersToAdd = @()
+	if($oldmod) {
+		$identifiersToAdd += $modName
+		return $identifiersToAdd
+	}
 	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty"
 	foreach($identifier in $identifiersList) {
 		$identifierString = $identifier.Split("<")[0].ToLower()
@@ -898,6 +948,13 @@ function Push-ModContent {
 
 # Test the mod in the current directory
 function Test-Mod {
+	param([Parameter()]
+    [ValidateSet('1.0','1.1','latest')]
+    [string[]]
+	$version = "latest")
+	if(-not $version) {
+		$version = "latest"
+	}
 	$currentDirectory = (Get-Location).Path
 	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
 		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
@@ -905,7 +962,7 @@ function Test-Mod {
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	Write-Host "Testing $modName"
-	Start-RimWorld -testMod $modName
+	Start-RimWorld -testMod $modName -version $version
 }
 
 # Returns a list of mods that has not been updated to the latest version

@@ -23,5 +23,6 @@
 	"playing_screen_height": "1440",
 	"modding_screen_witdh": "1920",
 	"playing_screen_witdh": "2560",
-	"zip_path": "C:\\ModPublishing\\7za.exe"
+	"zip_path": "C:\\ModPublishing\\7za.exe",
+	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"
 }
