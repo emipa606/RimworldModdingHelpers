@@ -934,7 +934,7 @@ function Get-ZipFile {
 	}
 	$outFile = "$localModFolder\$modname\$filename"
 	$7zipPath = $settings.zip_path
-	$arguments = "a ""$outFile"" ""$localModFolder\$modname\"" -r -bd $exclusionsToAdd "
+	$arguments = "a ""$outFile"" ""$localModFolder\$modname\"" -r -mx=9 -mmt=10 -bd $exclusionsToAdd "
 	Start-Process -FilePath $7zipPath -ArgumentList $arguments -Wait
 }
 
