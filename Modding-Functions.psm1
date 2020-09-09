@@ -227,6 +227,7 @@ function Start-RimWorld {
 	param ([switch]$play,
 			[string]$testMod,
 			[string]$testAuthor,
+			[switch]$alsoLoadBefore,
 			[Parameter()][ValidateSet('1.0','1.1','latest')][string[]]$version
 			)
 
@@ -272,7 +273,11 @@ function Start-RimWorld {
 		$modIdentifiersPrereq = ""
 		$modIdentifiers = ""
 		foreach($modname in $modsToTest) {
-			$identifiersToAdd = Get-IdentifiersFromMod -modname $modname
+			if($alsoLoadBefore) {
+				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -alsoLoadBefore
+			} else {
+				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname			
+			}
 			if($identifiersToAdd.Length -eq 0) {
 				Write-Host "No mod identifiers found, exiting."
 				return
@@ -304,12 +309,20 @@ function Start-RimWorld {
 			if($version -eq "1.0") {
 				$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod -oldmod
 			} else {
-				$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod
+				if($alsoLoadBefore) {
+					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -alsoLoadBefore
+				} else {
+					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname			
+				}
 			}
 			Copy-Item -Path "$localModFolder\$modname" -Destination "$oldModFolder\" -Confirm:$false -Recurse -Force
 		} else {
-			Copy-Item $testingModsConfig $modFile -Confirm:$false		
-			$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod
+			Copy-Item $testingModsConfig $modFile -Confirm:$false	
+			if($alsoLoadBefore) {
+				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -alsoLoadBefore
+			} else {
+				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname			
+			}
 		}
 		if($identifiersToAdd.Length -eq 0) {
 			Write-Host "No mod identifiers found, exiting."
@@ -418,7 +431,7 @@ function Get-AllNonPublishedMods {
 
 # Scans a mods About-file for mod-identifiers and returns an array of them, with the selected mods identifier last
 function Get-IdentifiersFromMod {
-	param ([string]$modname, [switch]$oldmod)
+	param ([string]$modname, [switch]$oldmod, [switch]$alsoLoadBefore)
 	$aboutFile = "$localModFolder\$modname\About\About.xml"
 	if(-not (Test-Path $aboutFile)) {
 		Write-Host "Could not find About-file for mod named $modname"
@@ -441,6 +454,20 @@ function Get-IdentifiersFromMod {
 			$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $identifierString }
 		} else {
 			$identifiersToAdd += $identifierString
+		}
+	}
+	if($alsoLoadBefore -and $aboutFileContent.Contains("<loadAfter>")){
+		$identifiersList = $aboutFileContent.Replace("<loadAfter>", "|").Split("|")[1].Replace("</loadAfter>", "|").Split("|")[0].Replace("<li>", "|").Split("|")
+		foreach($identifier in $identifiersList) {
+			$identifierString = $identifier.Split("<")[0].ToLower()
+			if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString) -or $identifierString.Contains(" ")) {
+				continue
+			}
+			if($identifiersToAdd.Contains($identifierString)) {
+				$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $identifierString }
+			} else {
+				$identifiersToAdd += $identifierString
+			}
 		}
 	}
 	[array]::Reverse($identifiersToAdd)
@@ -951,7 +978,8 @@ function Test-Mod {
 	param([Parameter()]
     [ValidateSet('1.0','1.1','latest')]
     [string[]]
-	$version = "latest")
+	$version = "latest",
+	[switch] $alsoLoadBefore)
 	if(-not $version) {
 		$version = "latest"
 	}
@@ -962,7 +990,11 @@ function Test-Mod {
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	Write-Host "Testing $modName"
-	Start-RimWorld -testMod $modName -version $version
+	if($alsoLoadBefore){
+		Start-RimWorld -testMod $modName -version $version -alsoLoadBefore		
+	} else {
+		Start-RimWorld -testMod $modName -version $version		
+	}
 }
 
 # Returns a list of mods that has not been updated to the latest version
