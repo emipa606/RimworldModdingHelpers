@@ -228,7 +228,7 @@ function Start-RimWorld {
 			[string]$testMod,
 			[string]$testAuthor,
 			[switch]$alsoLoadBefore,
-			[Parameter()][ValidateSet('1.0','1.1','latest')][string[]]$version
+			[Parameter()][ValidateSet('1.0','1.1','1.2-Publish','latest')][string[]]$version
 			)
 
 	if($test -and $play) {
@@ -315,7 +315,11 @@ function Start-RimWorld {
 					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname			
 				}
 			}
+			if(Test-Path "$oldModFolder\$modname") {
+				Remove-Item -Path "$oldModFolder\$modname" -Recurse -Force
+			}
 			Copy-Item -Path "$localModFolder\$modname" -Destination "$oldModFolder\" -Confirm:$false -Recurse -Force
+			(Get-Content "$localModFolder\$modname\_PublisherPlus.xml" -Raw -Encoding UTF8).Replace("E:\SteamLibrary\steamapps\common\RimWorld\Mods", $oldModFolder) | Set-Content "$oldModFolder\$modname\_PublisherPlus.xml" -Encoding UTF8
 		} else {
 			Copy-Item $testingModsConfig $modFile -Confirm:$false	
 			if($alsoLoadBefore) {
@@ -976,7 +980,7 @@ function Push-ModContent {
 # Test the mod in the current directory
 function Test-Mod {
 	param([Parameter()]
-    [ValidateSet('1.0','1.1','latest')]
+    [ValidateSet('1.0','1.1','1.2-Publish','latest')]
     [string[]]
 	$version = "latest",
 	[switch] $alsoLoadBefore)
