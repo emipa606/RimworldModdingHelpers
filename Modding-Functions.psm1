@@ -228,7 +228,7 @@ function Start-RimWorld {
 			[string]$testMod,
 			[string]$testAuthor,
 			[switch]$alsoLoadBefore,
-			[Parameter()][ValidateSet('1.0','1.1','1.2-Publish','latest')][string[]]$version
+			[Parameter()][ValidateSet('1.0','1.1','latest')][string[]]$version
 			)
 
 	if($test -and $play) {
@@ -319,7 +319,9 @@ function Start-RimWorld {
 				Remove-Item -Path "$oldModFolder\$modname" -Recurse -Force
 			}
 			Copy-Item -Path "$localModFolder\$modname" -Destination "$oldModFolder\" -Confirm:$false -Recurse -Force
-			(Get-Content "$localModFolder\$modname\_PublisherPlus.xml" -Raw -Encoding UTF8).Replace("E:\SteamLibrary\steamapps\common\RimWorld\Mods", $oldModFolder) | Set-Content "$oldModFolder\$modname\_PublisherPlus.xml" -Encoding UTF8
+			if(Test-Path "$localModFolder\$modname\_PublisherPlus.xml") {
+				(Get-Content "$localModFolder\$modname\_PublisherPlus.xml" -Raw -Encoding UTF8).Replace("E:\SteamLibrary\steamapps\common\RimWorld\Mods", $oldModFolder) | Set-Content "$oldModFolder\$modname\_PublisherPlus.xml" -Encoding UTF8
+			}
 		} else {
 			Copy-Item $testingModsConfig $modFile -Confirm:$false	
 			if($alsoLoadBefore) {
@@ -467,14 +469,19 @@ function Get-IdentifiersFromMod {
 			if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString) -or $identifierString.Contains(" ")) {
 				continue
 			}
-			if($identifiersToAdd.Contains($identifierString)) {
-				$identifiersToAdd = $identifiersToAdd | Where-Object { $_ -ne $identifierString }
-			} else {
+			if(-not $identifiersToAdd.Contains($identifierString)) {
 				$identifiersToAdd += $identifierString
 			}
 		}
 	}
-	[array]::Reverse($identifiersToAdd)
+	if($identifiersToAdd.Count -gt 1) {
+		$mainIdentifier = $identifiersToAdd[0]
+		$oldList = $identifiersToAdd
+		$identifiersToAdd = @()
+		$oldList | ForEach-Object { if($_ -ne $mainIdentifier) { $identifiersToAdd += $_}}
+		$identifiersToAdd += $mainIdentifier 
+	}
+	#[array]::Reverse($identifiersToAdd)
 	return $identifiersToAdd
 }
 
@@ -980,7 +987,7 @@ function Push-ModContent {
 # Test the mod in the current directory
 function Test-Mod {
 	param([Parameter()]
-    [ValidateSet('1.0','1.1','1.2-Publish','latest')]
+    [ValidateSet('1.0','1.1','latest')]
     [string[]]
 	$version = "latest",
 	[switch] $alsoLoadBefore)

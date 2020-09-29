@@ -102,6 +102,10 @@ p|trainableIntelligence|trainability
 p|explosionDamage|defaultDamage
 p|BaseSelectionWeight|settlementGenerationWeight
 p|MeleeWeapon_Cooldown|MeleeWeapon_CooldownMultiplier
+p|SmithingSpeed|GeneralLaborSpeed
+p|SculptingSpeed|GeneralLaborSpeed
+p|SmeltingSpeed|GeneralLaborSpeed
+p|TailoringSpeed|GeneralLaborSpeed
 s|<def>LeftAntennae</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
 s|<def>RightAntennae</def>|<def>Antenna</def><customLabel>right antenna</customLabel>
 s|<def>LeftAntenna</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
@@ -168,6 +172,7 @@ s|<def>RearLeftLeg</def>|<def>Leg</def><customLabel>rear left leg</customLabel>
 s|<def>RearRightLeg</def>|<def>Leg</def><customLabel>rear right leg</customLabel>
 s|<def>LeftElytra</def>|<def>Elytra</def><customLabel>left elytra</customLabel>
 s|<def>RightElytra</def>|<def>Elytra</def><customLabel>right elytra</customLabel>
+s|<canBeSpawningInventory>false</canBeSpawningInventory>|<generateCommonality>0</generateCommonality>
 v|SmithingSpeed|GeneralLaborSpeed
 v|SculptingSpeed|GeneralLaborSpeed
 v|SmeltingSpeed|GeneralLaborSpeed
