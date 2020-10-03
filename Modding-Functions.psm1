@@ -139,6 +139,23 @@ function Get-ModPage {
 	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
 }
 
+
+# Easy load of a mods git-repo
+function Get-ModRepository {
+	$currentDirectory = (Get-Location).Path
+	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+		return			
+	}
+	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	$applicationPath = $settings.browser_path
+	$modNameClean = $modName.Replace("+", "Plus")
+	$arguments = "https://github.com/$($settings.github_username)/$modNameClean"
+	Start-Process -FilePath $applicationPath -ArgumentList $arguments
+	Start-Sleep -Seconds 1
+	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
+}
+
 # Adds an update post to the mod
 # If HugsLib is loaded this will be shown if new to user
 function Set-ModUpdateFeatures {
@@ -710,6 +727,75 @@ function Get-LatestGitVersion {
 	}
 }
 
+# Merges a repository with another, preserving history
+function Merge-GitRepositories {
+	$currentDirectory = (Get-Location).Path
+	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+		return			
+	}
+	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	$modFolder = "$localModFolder\$modName"
+	$manifestFile = "$modFolder\About\Manifest.xml"
+	$stagingDirectory = $settings.mod_staging_folder
+	$rootFolder = Split-Path $stagingDirectory
+	$version = [version]((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+	$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
+
+	Set-Location -Path $rootFolder
+	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+	Set-Location -Path $stagingDirectory
+
+	$modNameNew = $modName.Replace("+", "Plus")
+	$modNameOld = "$($modNameNew)_Old"
+	if(-not (Get-RepositoryStatus -repositoryName $modNameNew)){
+		Write-Host "No repository found for $modNameNew"
+		Set-Location $currentDirectory
+		return			
+	}
+	if(-not (Get-RepositoryStatus -repositoryName $modNameOld)){
+		Write-Host "No repository found for $modNameOld"
+		Set-Location $currentDirectory
+		return			
+	}
+
+	git clone https://github.com/$($settings.github_username)/$modNameNew
+	git clone https://github.com/$($settings.github_username)/$modNameOld
+
+
+	Set-Location -Path $stagingDirectory\$modNameNew
+	$newBranch = ((cmd.exe /c git branch) | Out-String).Split(" ")[1].Split("`r")[0]
+
+	Set-Location -Path $stagingDirectory\$modNameOld
+	$oldBranch = ((cmd.exe /c git branch) | Out-String).Split(" ")[1].Split("`r")[0]
+
+	git checkout $oldBranch
+	git fetch --tags
+	git branch -m master-holder
+	git remote rm origin
+	git remote add origin https://github.com/$($settings.github_username)/$modNameNew
+	git fetch
+	git checkout $newBranch
+	git pull origin $newBranch
+	git rm -rf *
+	git commit -m "Deleted obsolete files"
+	git merge master-holder --allow-unrelated-histories
+	git push origin $newBranch
+	git push --tags
+	
+	$applicationPath = $settings.browser_path
+	$arguments = "https://github.com/$($settings.github_username)/$modNameNew/tags"
+	Start-Process -FilePath $applicationPath -ArgumentList $arguments
+	Get-ZipFile -modname $modName -filename "$($modNameNew)_$newVersion.zip"
+	Move-Item "$localModFolder\$modname\$($modNameNew)_$newVersion.zip" "$stagingDirectory\$($modNameNew)_$newVersion.zip"
+	Remove-Item .\debug.log -Force -ErrorAction SilentlyContinue
+	Read-Host "Waiting for zip to be uploaded from $stagingDirectory, continue when done (Press ENTER)"
+	Remove-Item "$stagingDirectory\$($modNameNew)_$newVersion.zip" -Force
+
+	Set-Location $currentDirectory
+}
+
 # XML-cleaning function
 # Resaves all XML-files using validated XML. Also warns if there seems to be overwritten base-defs
 # Useful to run on a mod to remove all extra whitespaces and redundant formatting
@@ -915,8 +1001,8 @@ function Publish-Mod {
 
 	git add .
 	git commit -m $message
-	git push origin master
-	git tag -a $newVersion -m $message master
+	git push origin
+	git tag -a $newVersion -m $message
 	git push --tags
 
 	$releaseData = @{
