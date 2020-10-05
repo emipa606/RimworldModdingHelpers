@@ -195,6 +195,8 @@ v|InteractSMG|Interact_SMG
 v|ShotShotgun|Shot_Shotgun
 v|ShotAssaultRifle|Shot_AssaultRifle
 v|ShotSurvivalRifle|Shot_BoltActionRifle
+v|ShotHeavySMG|Shot_HeavySMG
+v|ShotBoltActionRifle|Shot_BoltActionRifle
 v|ShotMinigun|Shot_Minigun
 v|BulletImpactFlesh|BulletImpact_Flesh
 v|BulletImpactMetal|BulletImpact_Metal

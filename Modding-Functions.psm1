@@ -1037,7 +1037,7 @@ function Publish-Mod {
 	Remove-Item $zipFile.FullName -Force
 
 	Set-Location $modFolder
-	if($message -ne "First publish") {
+	if($message -ne "First publish" -and (Test-Path "$modFolder\About\PublishedFileId.txt")) {
 		Push-UpdateNotification -Changenote "$version - $message"
 	}
 	Write-Host "Published $modName!"
