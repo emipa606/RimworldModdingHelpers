@@ -156,6 +156,107 @@ function Get-ModRepository {
 	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
 }
 
+# Fetchs a mods subscriber-number
+function Get-ModSubscribers{
+	param(
+		$modName,
+		$modLink
+	)
+	if(-not $modLink) {
+		if(-not $modName) {
+			$currentDirectory = (Get-Location).Path
+			if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+				Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+				return			
+			}
+			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		}
+		$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
+		if(-not (Test-Path $modFileId)) {
+			Write-Host "$modFileId not found, exiting"
+			return
+		}
+		$modId = Get-Content $modFileId -Raw -Encoding UTF8
+		$url = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
+	} else {
+		$url = $modLink
+	}
+	$page = Invoke-WebRequest -Uri $url -UseBasicParsing
+	$HTML = New-Object -Com "HTMLFile"
+	$HTML.IHTMLDocument2_write($page.Content)
+	$tables = $HTML.all.tags("table")
+	if(-not $tables) {
+		return
+	}
+	$cells = $tables[0].cells
+	if(-not $cells) {
+		return
+	} 
+	return $cells[2].InnerText.Replace(",", "")
+}
+
+# Fetchs a mods subscriber-number
+function Get-ModVersions{
+	param(
+		$modName,
+		$modLink
+	)
+	if(-not $modLink) {
+		if(-not $modName) {
+			$currentDirectory = (Get-Location).Path
+			if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+				Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+				return			
+			}
+			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		}
+		$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
+		if(-not (Test-Path $modFileId)) {
+			Write-Host "$modFileId not found, exiting"
+			return
+		}
+		$modId = Get-Content $modFileId -Raw -Encoding UTF8
+		$url = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
+	} else {
+		$url = $modLink
+	}
+	$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
+	$HTML = New-Object -Com "HTMLFile"
+	$HTML.IHTMLDocument2_write($page.Content)
+	$divs = ($HTML.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
+	if($divs) {
+		$versions = $divs[0].InnerText.Split(",")
+		return $versions | Where-Object { $_ -ne "Mod"}  
+	}
+}
+
+function Get-ModSteamStatus{
+	[CmdletBinding()]
+	param (
+		$modName,
+		$modLink
+	)
+	$versionFile = "$localModFolder\..\Version.txt"
+	$currentVersion = [version]([regex]::Match((Get-Content $versionFile -Raw -Encoding UTF8), "[0-9]+\.[0-9]+")).Value
+	$currentVersionString = "$($currentVersion.Major).$($currentVersion.Minor)"
+	if($modLink){
+		$modVersions  = Get-ModVersions -modLink $modLink
+	}
+	if($modName) {		
+		$modVersions  = Get-ModVersions -modName $modName
+	}
+	if(-not $modVersions) {
+		Write-Verbose "Can not find mod on Steam, exiting"
+		return $false
+	}
+
+	Write-Verbose "Found mod-versions on steam: $modversions, and current game-version is $currentVersionString"
+	if($modVersions -match $currentVersionString) {
+		return $true
+	}
+	return $false
+}
+
 # Adds an update post to the mod
 # If HugsLib is loaded this will be shown if new to user
 function Set-ModUpdateFeatures {
@@ -1069,6 +1170,7 @@ function Push-ModContent {
 	git commit -m $message
 	git push origin master
 }
+
 
 # Test the mod in the current directory
 function Test-Mod {
