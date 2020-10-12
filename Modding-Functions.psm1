@@ -30,6 +30,10 @@ $Global:discordUpdateMessage = "$PSScriptRoot\$($settings.discord_update_message
 $Global:discordPublishMessage = "$PSScriptRoot\$($settings.discord_publish_message)"
 $Global:discordUpdateHookUrl = $settings.discord_update_hook_url
 $Global:discordPublishHookUrl = $settings.discord_publish_hook_url
+if(-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
+	"{}" | Out-File -Encoding utf8 -FilePath "$($settings.mod_staging_folder)\..\modlist.json"
+}
+$Global:modlist = Get-Content "$($settings.mod_staging_folder)\..\modlist.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 
 # Helper-function
 # Select folder dialog, for selecting mod-folder manually
@@ -124,16 +128,29 @@ function Update-Textures {
 # Easy load of a mods steam-page
 # Gets the published ID for a mod and then opens it in the selected browser
 function Get-ModPage {
-	$currentDirectory = (Get-Location).Path
-	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return			
+	param(
+		[string]$modName,
+		[switch]$getLink
+	)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
+	if(-not (Test-Path $modFileId)) {
+		Write-Host "No id found for mod at $modFileId, exiting."
+		return
+	}
 	$modId = Get-Content $modFileId -Raw -Encoding UTF8
-	$applicationPath = $settings.browser_path
 	$arguments = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
+	if($getLink) {
+		return $arguments
+	}
+	$applicationPath = $settings.browser_path
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
 	Start-Sleep -Seconds 1
 	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
@@ -142,15 +159,24 @@ function Get-ModPage {
 
 # Easy load of a mods git-repo
 function Get-ModRepository {
-	$currentDirectory = (Get-Location).Path
-	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return			
+	param(
+		[string]$modName,
+		[switch]$getLink
+	)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
-	$applicationPath = $settings.browser_path
 	$modNameClean = $modName.Replace("+", "Plus")
 	$arguments = "https://github.com/$($settings.github_username)/$modNameClean"
+	if($getLink) {
+		return $arguments
+	}	
+	$applicationPath = $settings.browser_path
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
 	Start-Sleep -Seconds 1
 	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
@@ -181,18 +207,7 @@ function Get-ModSubscribers{
 	} else {
 		$url = $modLink
 	}
-	$page = Invoke-WebRequest -Uri $url -UseBasicParsing
-	$HTML = New-Object -Com "HTMLFile"
-	$HTML.IHTMLDocument2_write($page.Content)
-	$tables = $HTML.all.tags("table")
-	if(-not $tables) {
-		return
-	}
-	$cells = $tables[0].cells
-	if(-not $cells) {
-		return
-	} 
-	return $cells[2].InnerText.Replace(",", "")
+	return Get-HtmlPageStuff -url $url -subscribers
 }
 
 # Fetchs a mods subscriber-number
@@ -220,14 +235,7 @@ function Get-ModVersions{
 	} else {
 		$url = $modLink
 	}
-	$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
-	$HTML = New-Object -Com "HTMLFile"
-	$HTML.IHTMLDocument2_write($page.Content)
-	$divs = ($HTML.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
-	if($divs) {
-		$versions = $divs[0].InnerText.Split(",")
-		return $versions | Where-Object { $_ -ne "Mod"}  
-	}
+	return Get-HtmlPageStuff -url $url
 }
 
 function Get-ModSteamStatus{
@@ -246,7 +254,7 @@ function Get-ModSteamStatus{
 		$modVersions  = Get-ModVersions -modName $modName
 	}
 	if(-not $modVersions) {
-		Write-Verbose "Can not find mod on Steam, exiting"
+		Write-Verbose "Can not find mod on Steam. Modname: $modName, ModLink: $modLink, exiting"
 		return $false
 	}
 
@@ -675,6 +683,86 @@ function Update-NextMod {
 	}
 	Set-ModIncrement
 	Test-Mod
+}
+
+# Checks for updated versions of updated mods
+function Update-ModsStatistics {
+	[CmdletBinding()]
+	param([switch]$localOnly)
+	$allMods = Get-ChildItem -Directory $localModFolder
+	$templateModObject = @"
+{
+	"Name":  "",
+	"Subscribers":  0,
+	"Archived":  false,
+	"Steamlink": "",
+	"Githublink": "",
+	"ID": 0,
+	"Selfmade": true,
+	"Version": "0.0",
+	"LastUpdated": ""
+}
+"@	
+	$i = 0
+	$total = $allMods.Count
+	Write-Host "`n`n`n`n`n`n"
+
+	foreach($folder in $allMods) {
+		$i++
+		$percent =  [math]::Round($i / $total * 100)
+		$modName = $folder.Name
+		Write-Progress -Activity "Updating $($modName)" -Status "$i of $total" -PercentComplete $percent;
+		$modFileId = "$($folder.FullName)\About\PublishedFileId.txt"
+		if(-not (Test-Path $modFileId)) {
+			Write-Verbose "$modName not published, skipping"
+			continue
+		}
+		$aboutFile = "$($folder.FullName)\About\About.xml"		
+		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+		if(-not $aboutContent.Contains("<packageId>Mlie")) {
+			Write-Verbose "$modName is not created by me, skipping"
+			continue
+		}
+		if(-not $modlist.$modName) {
+			$modlist | Add-Member -MemberType NoteProperty -Name "$modName" -Value $(ConvertFrom-Json $templateModObject)
+			$modlist.$modName.Name = "$($aboutContent.Replace("<name>", "|").Split("|")[1].Split("<")[0])"
+		}
+		$manifestFile = "$($folder.FullName)\About\Manifest.xml"
+		$steamLink = Get-ModPage -modName $modName -getLink
+		$githubLink = Get-ModRepository -modName $modName -getLink
+		$modlist.$modName.Steamlink = $steamLink
+		$modlist.$modName.Githublink = $githubLink
+		if(-not $localOnly) {
+			$modlist.$modName.Subscribers = Get-ModSubscribers -modLink $steamLink		
+		}
+		$modlist.$modName.ID = Get-Content $modFileId -Raw -Encoding UTF8
+		if(Test-Path $manifestFile) {
+			$modlist.$modName.Version = ((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+			$modlist.$modName.LastUpdated = Get-Date (Get-Item $manifestFile).LastWriteTime -Format "yyyy-MM-dd HH:mm:ss"
+		}
+		if($modlist.$modName.Name -match "Continued" -or $aboutContent -match "Update of") {
+			$modlist.$modName.Selfmade = $false				
+			if(-not $localOnly) {
+				$description = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])
+				[regex]$regex = 'https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=[0-9]+'
+				$originalLink = $regex.Matches($description).Value
+				if($originalLink.Count -gt 1) {
+					$originalLink = $originalLink[0]
+				}
+				if($originalLink) {
+					Write-Verbose "Testing status for original: $originalLink"
+					if(Get-ModSteamStatus -modLink $originalLink) {
+						Write-Host "$modName is no longer needed, original has been updated."
+						Get-ModRepository -modName $modName
+						Get-ModPage -modName $modName
+						$modlist.$modName.Archived = $true
+					}
+				}
+			}
+		}
+	}
+	
+	$modlist | ConvertTo-Json | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
 }
 
 # Main mod-updating function
@@ -1217,6 +1305,42 @@ function Get-NotUpdatedMods {
 			Write-Host $folder.Name
 		}
 	}
+}
+
+# Helper function to scrape page
+function Get-HtmlPageStuff {
+	param (
+		$url,
+		[switch] $subscribers
+	)
+	$returnValue = ""
+	$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
+	$HTML = New-Object -Com "HTMLFile" -Verbose:$false
+	$HTML.IHTMLDocument2_write($page.Content)
+	if($subscribers) {
+		$tables = $HTML.all.tags("table")
+		if($tables) {
+			$cells = $tables[0].cells
+			if($cells) {
+				$returnValue = $cells[2].InnerText.Replace(",", "")
+			}  
+		}
+	} else {
+		$divs = ($HTML.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
+		if($divs) {
+			$versions = $divs[0].InnerText.Split(",")
+			$returnValue =  $versions | Where-Object { $_ -ne "Mod"}  
+		}
+	}
+	
+	$HTML.close()
+	try {
+		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($HTML) | Out-Null	
+	} catch {
+		Write-Verbose "COM object could not be released.";
+	}
+
+	return $returnValue
 }
 
 # Scans all mods for Manifests containing logic for load-order. Since vanilla added this its no longer needed.
