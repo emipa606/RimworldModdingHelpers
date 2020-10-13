@@ -765,6 +765,71 @@ function Update-ModsStatistics {
 	$modlist | ConvertTo-Json | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
 }
 
+# Returns a list of all files that have the selected string in their XML
+function Get-StringFromModFiles {
+	[CmdletBinding()]
+	param($searchString,
+		$threads = 10,
+		[switch]$firstOnly) 
+	$searchStringConverted = [regex]::escape($searchString)
+	$allMods = Get-ChildItem -Directory $localModFolder
+	$allMatchingFiles = @()
+	$i = 0
+	$total = $allMods.Count
+	foreach($job in Get-Job){
+		Stop-Job $job | Out-Null
+		Remove-Job $job | Out-Null
+	}
+	foreach($folder in $allMods) {
+		$i++
+		$percent =  [math]::Round($i / $total * 100)
+		Write-Progress -Activity "Searching $($folder.name), $($allMatchingFiles.Count) matches found" -Status "$i of $total" -PercentComplete $percent;
+		while((Get-Job -State 'Running').Count -gt $threads) {
+			Start-Sleep -Milliseconds 100
+		}
+		$ScriptBlock = {
+			# 1: $folder.FullName 2: $searchStringConverted
+			$foundFiles = @()
+			$searchString = $args[1]
+			Get-ChildItem -Path $args[0] -Recurse -File -Filter "*.xml" | ForEach-Object { if((Get-Content $_.FullName) -match $searchString) { $foundFiles += $_ } }
+			return $foundFiles
+		}
+		$arguments = @("$($folder.FullName)",$searchStringConverted)
+		Start-Job -Name "Find_$($folder.Name)" -ScriptBlock $ScriptBlock -ArgumentList $arguments | Out-Null
+		foreach($job in Get-Job -State Completed){
+			$result = Receive-Job $job
+			$allMatchingFiles += $result
+			Remove-Job $job | Out-Null
+		}
+		foreach($job in Get-Job -State Blocked){
+			Write-Host -ForegroundColor Red  "$($job.Name) failed to exit, stopping it."
+			Stop-Job $job | Out-Null
+			Remove-Job $job | Out-Null
+		}
+		if($firstOnly -and $allMatchingFiles.Count -gt 0){
+			break
+		}
+	}
+	foreach($job in Get-Job -State Completed){
+		$result = Receive-Job $job
+		$allMatchingFiles += $result
+		Remove-Job $job | Out-Null
+	}
+	foreach($job in Get-Job -State Blocked){
+		Write-Host -ForegroundColor Red  "$($job.Name) failed to exit, stopping it."
+		Stop-Job $job | Out-Null
+		Remove-Job $job | Out-Null
+	}
+	if($firstOnly -and $allMatchingFiles.Count -gt 0){
+		$number = ((Get-Content $allMatchingFiles[0].FullName | select-string $searchStringConverted).LineNumber)[0]
+		$applicationPath = $settings.text_editor_path
+		$arguments = """$($allMatchingFiles[0].FullName)""","-n$number"
+		Start-Process -FilePath $applicationPath -ArgumentList $arguments
+		return $allMatchingFiles[0]
+	}
+	return $allMatchingFiles
+}
+
 # Main mod-updating function
 # Goes through all xml-files from current directory and replaces old strings/properties/valuenames.
 # Can be run with the -Test parameter to just return a report of stuff that need updating, this can
