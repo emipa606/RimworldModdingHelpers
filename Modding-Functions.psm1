@@ -765,6 +765,54 @@ function Update-ModsStatistics {
 	$modlist | ConvertTo-Json | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
 }
 
+function Update-ModDescription {
+	param($searchString,
+		$replaceString,
+		$modName,
+		[switch]$all)
+
+	if(-not $searchString) {
+		Write-Host "Searchstring must be defined"
+		return	
+	}
+	if(-not $replaceString) {
+		$result = Read-Host "Replacestring is not defined, continue? (y/n)"
+		if($result -eq "y") {
+			return
+		}	
+	}
+	$modFolders = @()
+	if(-not $all) {
+		if(-not $modName) {
+			$currentDirectory = (Get-Location).Path
+			if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+				Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+				return			
+			}
+			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		}
+
+		$modFolder = "$localModFolder\$modName"
+		if(-not (Test-Path $modFolder)) {
+			Write-Host "$modFolder can not be found, exiting"
+			return	
+		}
+		$modFolders += $modFolder
+	} else {
+		(Get-ChildItem -Directory $localModFolder).FullName | ForEach-Object { $modFolders += $_ }
+	}
+	
+	Write-Host "Will replace $searchString with $replaceString in $($modFolders.Count) mods" 
+	$modFolders | ForEach-Object {
+		if(-not (Test-Path "$($_)\About\PublishedFileId.txt")) {
+			continue
+		}
+		$modId = Get-Content "$($_)\About\PublishedFileId.txt" -Raw
+		E:\ModPublishing\SteamDescriptionEdit\Compiled\SteamUpdateTool.exe $modId REPLACE $searchString $replaceString
+	}
+	
+}
+
 # Returns a list of all files that have the selected string in their XML
 function Get-StringFromModFiles {
 	[CmdletBinding()]
@@ -1291,10 +1339,46 @@ function Publish-Mod {
 	Remove-Item $zipFile.FullName -Force
 
 	Set-Location $modFolder
-	if($message -ne "First publish" -and (Test-Path "$modFolder\About\PublishedFileId.txt")) {
-		Push-UpdateNotification -Changenote "$version - $message"
+	Start-SteamPublish -modFolder $modFolder
+
+	if(Test-Path "$modFolder\About\PublishedFileId.txt") {
+		if($message -eq "First publish") {
+			Push-UpdateNotification
+		} else {
+			Push-UpdateNotification -Changenote "$version - $message"
+		}
 	}
 	Write-Host "Published $modName!"
+}
+
+function Start-SteamPublish {
+	param($modFolder)
+
+	if(-not (Test-Path $modFolder) -and -not (Test-Path "$modfolder\About\PublishedFileId.txt")) {
+		Write-Host "$modfolder or PublishedFileId.txt does not exist"
+		return
+	}
+
+	$stagingDirectory = $settings.mod_staging_folder
+	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+
+	Write-Host "Copying mod-files to publish-dir"
+	$exclusions = @()
+	$exclusionFile = "$modfolder\_PublisherPlus.xml"
+	if((Test-Path $exclusionFile)) {
+		$splittedContent = (Get-Content $exclusionFile -Raw -Encoding UTF8).Replace("<exclude>", "|").Split("|")
+		for ($i = 1; $i -lt $splittedContent.Count; $i++) {
+			$exclusion = $splittedContent[$i].Replace("</exclude>", "|").Split("|")[0].Replace("$modFolder\", "")
+			$exclusions += $exclusion
+		}
+		$exclusions += $exclusionFile.Replace("$modFolder\", "")
+	}
+	Copy-Item -Path "$modFolder\*" -Destination $stagingDirectory -Recurse -Exclude $exclusions
+
+	Write-Host "Starting steam-publish"
+	$publishToolPath = "E:\\ModPublishing\\SteamUpdateTool\\Compiled\\RimworldModReleaseTool.exe"
+	Start-Process -FilePath $publishToolPath -ArgumentList $stagingDirectory -Wait -NoNewWindow	 
 }
 
 # Generates a zip-file of a mod, looking in the _PublisherPlus.xml for exlusions
@@ -1306,14 +1390,14 @@ function Get-ZipFile {
 	if((Test-Path $exclusions)) {
 		$splittedContent = (Get-Content $exclusions -Raw -Encoding UTF8).Replace("<exclude>", "|").Split("|")
 		for ($i = 1; $i -lt $splittedContent.Count; $i++) {
-			$excusion = $splittedContent[$i].Replace("</exclude>", "|").Split("|")[0].Replace("$localModFolder\$modname\", "")
-			$exclusionsToAdd += " -xr!""$excusion"""
+			$exclusion = $splittedContent[$i].Replace("</exclude>", "|").Split("|")[0].Replace("$localModFolder\$modname\", "")
+			$exclusionsToAdd += " -xr!""$exclusion"""
 		}
 	}
 	$outFile = "$localModFolder\$modname\$filename"
 	$7zipPath = $settings.zip_path
 	$arguments = "a ""$outFile"" ""$localModFolder\$modname\"" -r -mx=9 -mmt=10 -bd $exclusionsToAdd "
-	Start-Process -FilePath $7zipPath -ArgumentList $arguments -Wait
+	Start-Process -FilePath $7zipPath -ArgumentList $arguments -Wait -NoNewWindow
 }
 
 # Simple push function for git

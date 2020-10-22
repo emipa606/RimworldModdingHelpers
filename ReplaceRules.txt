@@ -33,6 +33,7 @@ p|ShootingAccuracy|ShootingAccuracyPawn
 p|Speed|speed
 p|DamageAmountBase|damageAmountBase
 p|worngraphicPath|wornGraphicPath
+p|turretBurstwarmupTime|turretBurstWarmupTime
 p|pointsCost|combatPower
 p|DefName|defName
 p|ThingClass|thingClass
@@ -88,6 +89,7 @@ p|bleedingRateMultiplier|bleedRate
 p|wildSpawn_EcoSystemWeight|ecoSystemWeight
 p|wildSpawn_GroupSizeRange|wildGroupSize
 p|isAlive|alive
+p|GrizzlyBear|Bear_Grizzly
 p|attractionFactor|romanceChanceFactor
 p|optimalityOffset|optimalityOffsetHumanlikes
 p|wildSpawn_spawnWild
@@ -101,6 +103,7 @@ p|wildClusterSizeRange
 p|trainableIntelligence|trainability
 p|explosionDamage|defaultDamage
 p|BaseSelectionWeight|settlementGenerationWeight
+p|factionBaseSelectionWeight|settlementSelectionWeight
 p|MeleeWeapon_Cooldown|MeleeWeapon_CooldownMultiplier
 p|SmithingSpeed|GeneralLaborSpeed
 p|SculptingSpeed|GeneralLaborSpeed
@@ -187,6 +190,7 @@ v|Component|ComponentIndustrial
 v|Puddle_Fuel|Filth_Fuel
 v|FilthFireFoam|Filth_FireFoam
 v|MortarShell|Shell_HighExplosive
+v|TurretMortarBase|TurretMortar_Base
 v|InteractPistol|Interact_Autopistol
 v|InteractRevolver|Interact_Revolver
 v|InteractRifle|Interact_Rifle
@@ -200,11 +204,13 @@ v|ShotBoltActionRifle|Shot_BoltActionRifle
 v|ShotMinigun|Shot_Minigun
 v|BulletImpactFlesh|BulletImpact_Flesh
 v|BulletImpactMetal|BulletImpact_Metal
+v|BulletImpactGround|BulletImpact_Ground
 v|ShotIncendiaryLauncher|Shot_IncendiaryLauncher
 v|InteractChargeRifle|Interact_ChargeRifle
 v|ShotChargeRifle|Shot_ChargeRifle
 v|PowerOnSmall|Power_OnSmall
 v|PowerOffSmall|Power_OffSmall
+v|FilthBloodInsect|Filth_BloodInsect
 v|ArtName_Sculpture|NamerArtSculpture
 v|Apparel_PersonalShield|Apparel_ShieldBelt
 v|ArtName_Furniture|NamerArtFurniture
