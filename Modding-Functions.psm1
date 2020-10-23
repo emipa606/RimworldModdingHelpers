@@ -769,7 +769,8 @@ function Update-ModDescription {
 	param($searchString,
 		$replaceString,
 		$modName,
-		[switch]$all)
+		[switch]$all,
+		$waittime = 500)
 
 	if(-not $searchString) {
 		Write-Host "Searchstring must be defined"
@@ -803,12 +804,24 @@ function Update-ModDescription {
 	}
 	
 	Write-Host "Will replace $searchString with $replaceString in $($modFolders.Count) mods" 
-	$modFolders | ForEach-Object {
-		if(-not (Test-Path "$($_)\About\PublishedFileId.txt")) {
+	
+	$applicationPath = "E:\\ModPublishing\\SteamDescriptionEdit\\Compiled\\SteamDescriptionEdit.exe"
+	foreach($folder in ($modFolders | Get-Random -Count $modFolders.Count)) {	
+		Start-Sleep -Milliseconds $waittime
+		if(-not (Test-Path "$($folder)\About\PublishedFileId.txt")) {
 			continue
 		}
-		$modId = Get-Content "$($_)\About\PublishedFileId.txt" -Raw
-		E:\ModPublishing\SteamDescriptionEdit\Compiled\SteamUpdateTool.exe $modId REPLACE $searchString $replaceString
+		$modId = Get-Content "$($folder)\About\PublishedFileId.txt" -Raw		
+		$aboutFile = "$($folder)\About\About.xml"		
+		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+		$description = "$($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])"
+		if($description.Contains($searchString)) {
+			$arguments = @($modId,"REPLACE",$searchString,$replaceString)   
+			Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
+			((Get-Content -path $aboutFile -Raw -Encoding UTF8).Replace($searchString,$replaceString)) | Set-Content -Path $aboutFile -Encoding UTF8
+		} else {
+			Write-Host "Description for $(Split-Path $folder -Leaf) does not contain $searchString"
+		}
 	}
 	
 }
@@ -828,7 +841,7 @@ function Get-StringFromModFiles {
 		Stop-Job $job | Out-Null
 		Remove-Job $job | Out-Null
 	}
-	foreach($folder in $allMods) {
+	foreach($folder in ($allMods | Get-Random -Count $total)) {
 		$i++
 		$percent =  [math]::Round($i / $total * 100)
 		Write-Progress -Activity "Searching $($folder.name), $($allMatchingFiles.Count) matches found" -Status "$i of $total" -PercentComplete $percent;
@@ -1152,7 +1165,8 @@ function Set-ModXml {
 function Publish-Mod {
 	[CmdletBinding()]
 	param (		
-		[switch]$SelectFolder
+		[switch]$SelectFolder,
+		[switch]$SkipNotifications
 	)
 	if($SelectFolder) {
 		$modFolder = Get-Folder 
@@ -1216,12 +1230,12 @@ function Publish-Mod {
 	# Mod Manifest
 	if(-not (Test-Path $manifestFile)) {
 		Copy-Item -Path $manifestTemplate $manifestFile -Force | Out-Null
-		((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace("[modname]",$modNameClean).Replace("[username]",$settings.github_username)) | Set-Content -Path $manifestFile
+		((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace("[modname]",$modNameClean).Replace("[username]",$settings.github_username)) | Set-Content -Path $manifestFile -Encoding UTF8
 	} else {
 		$manifestContent = Get-Content -path $manifestFile -Raw -Encoding UTF8
 		$currentIdentifier = $manifestContent.Replace("<identifier>", "|").Split("|")[1].Split("<")[0]
 		if($currentIdentifier -ne $modNameClean) {
-			((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace($currentIdentifier,$modNameClean)) | Set-Content -Path $manifestFile
+			((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace($currentIdentifier,$modNameClean)) | Set-Content -Path $manifestFile -Encoding UTF8
 		}
 	}
 	$version = [version]((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
@@ -1249,6 +1263,7 @@ function Publish-Mod {
 		((Get-Content -path $modPublisherPath -Raw -Encoding UTF8).Replace("[modpath]",$modFolder)) | Set-Content -Path $modPublisherPath
 	}
 
+	$firstPublish = $fale
 	# Create repo if does not exists
 	if(Get-RepositoryStatus -repositoryName $modNameClean) {
 		$message = Read-Host "Commit-Message"
@@ -1258,6 +1273,7 @@ function Publish-Mod {
 		((Get-Content -path $modsyncFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $modsyncFile
 		Set-ModUpdateFeatures -ModName $modNameClean
 	} else {
+		$firstPublish = $true
 		Read-Host "Repository could not be found, create $modNameClean?"
 		$repoData = @{
 			name = $modNameClean;
@@ -1341,9 +1357,10 @@ function Publish-Mod {
 	Set-Location $modFolder
 	Start-SteamPublish -modFolder $modFolder
 
-	if(Test-Path "$modFolder\About\PublishedFileId.txt") {
-		if($message -eq "First publish") {
+	if(-not $SkipNotifications -and (Test-Path "$modFolder\About\PublishedFileId.txt")) {
+		if($firstPublish) {
 			Push-UpdateNotification
+			Get-ModPage
 		} else {
 			Push-UpdateNotification -Changenote "$version - $message"
 		}
@@ -1354,11 +1371,15 @@ function Publish-Mod {
 function Start-SteamPublish {
 	param($modFolder)
 
-	if(-not (Test-Path $modFolder) -and -not (Test-Path "$modfolder\About\PublishedFileId.txt")) {
-		Write-Host "$modfolder or PublishedFileId.txt does not exist"
+	if(-not (Test-Path $modFolder)) {
+		Write-Host "$modfolder does not exist"
 		return
 	}
 
+	$copyPublishedFileId = $false
+	if(!(Test-Path "$modFolder\About\PublishedFileId.txt")) {
+		$copyPublishedFileId = $true
+	}
 	$stagingDirectory = $settings.mod_staging_folder
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
@@ -1378,7 +1399,10 @@ function Start-SteamPublish {
 
 	Write-Host "Starting steam-publish"
 	$publishToolPath = "E:\\ModPublishing\\SteamUpdateTool\\Compiled\\RimworldModReleaseTool.exe"
-	Start-Process -FilePath $publishToolPath -ArgumentList $stagingDirectory -Wait -NoNewWindow	 
+	Start-Process -FilePath $publishToolPath -ArgumentList $stagingDirectory -Wait -NoNewWindow
+	if($copyPublishedFileId -and (Test-Path "$stagingDirectory\About\PublishedFileId.txt")) {
+		Copy-Item -Path "$stagingDirectory\About\PublishedFileId.txt" -Destination "$modfolder\About\PublishedFileId.txt" -Force
+	}
 }
 
 # Generates a zip-file of a mod, looking in the _PublisherPlus.xml for exlusions
