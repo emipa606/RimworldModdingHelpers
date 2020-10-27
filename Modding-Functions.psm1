@@ -765,6 +765,149 @@ function Update-ModsStatistics {
 	$modlist | ConvertTo-Json | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
 }
 
+function Update-ModPreviewImage {
+	[CmdletBinding()]
+	param($modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+	$modFolder = "$localModFolder\$modName"
+	$modIdFile = "$($modFolder)\About\PublishedFileId.txt"
+	if(-not (Test-Path $modIdFile)) {
+		Write-Host "$modIdFile does not exist"
+		return
+	}
+	$aboutFile = "$modFolder\About\About.xml"
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	$description = (($aboutContent -split "<description>")[1] -split "</description>")[0]
+	$previewFile = "$($modFolder)\About\Preview.png"
+	if(-not (Test-Path $previewFile) -or (Get-Item $previewFile).LastWriteTime -gt (Get-Date -Date "2020-09-12")) {
+		Write-Host "Preview-image does not exist or has already been updated."
+		return
+	}
+	Write-Verbose "Found $previewFile and it has not been updated since design-change"
+	if($description -match "https://steamcommunity.com/sharedfiles/filedetails") {
+		$previousModId = (($description -split "https://steamcommunity.com/sharedfiles/filedetails/\?id=")[1] -split "[^0-9]")[0]
+	} else {		
+		Write-Host "$modName is not a continuation or the original in not on steam."
+		return
+	}
+
+	$imageUrl = Get-HtmlPageStuff -url "https://steamcommunity.com/sharedfiles/filedetails/?id=$previousModId" -previewUrl
+	if(-not $imageUrl) {
+		"No previous image found for $modName"
+		return
+	}
+	if(-not (Test-Path "$($modFolder)\Source")) {
+		New-Item -Path "$($modFolder)\Source" -ItemType Directory | Out-Null
+	}
+	Write-Verbose "Fetching image from $imageUrl"
+	$imagePath = "$($modFolder)\Source\original_preview.png"
+	Invoke-WebRequest $imageUrl -OutFile $imagePath
+	
+	$gimpPath = "C:\\Users\\inade\\AppData\\Local\\Programs\\GIMP 2\\bin\\gimp-2.10.exe"
+	$arguments = @($imagePath)
+	Start-Process -FilePath $gimpPath -ArgumentList $arguments -NoNewWindow
+	Read-Host "Waitning for image to be updated"
+}
+
+function Update-ModDescriptionFromPreviousMod {
+	param($modName,
+		[switch]$localSearch,
+		[switch]$noConfimation)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+	$modFolder = "$localModFolder\$modName"
+	$aboutFile = "$($modFolder)\About\About.xml"		
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	if(-not ($aboutContent -match "NOW7jU1.png\[\/img\]")) {
+		Write-Host "Local description for $modName does not contain NOW7jU1.png[/img]"
+		return		
+	}
+
+	$applicationPath = "E:\\ModPublishing\\SteamDescriptionEdit\\Compiled\\SteamDescriptionEdit.exe"	
+	$stagingDirectory = $settings.mod_staging_folder
+	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
+	if($localSearch) {
+		$currentDescription = ((($aboutContent -split "<description>")[1]) -split "</description>")[0]
+	} else {
+		$modId = Get-Content "$($modFolder)\About\PublishedFileId.txt" -Raw
+		Remove-Item -Path $tempDescriptionFile -Force -ErrorAction SilentlyContinue
+		$arguments = @($modId,"SAVE",$tempDescriptionFile)  
+		Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
+		if(-not (Test-Path $tempDescriptionFile)) {
+			Write-Host "No description found on steam for $modName"
+			return			
+		}
+		$currentDescription = Get-Content -Path $tempDescriptionFile -Raw -Encoding UTF8
+		if($currentDescription.Length -eq 0) {
+			Write-Host "Description found on steam for $modName was empty"
+			return		
+		}
+	}
+	if($currentDescription -match "https://steamcommunity.com/sharedfiles/filedetails") {
+		$previousModId = (($currentDescription -split "https://steamcommunity.com/sharedfiles/filedetails/\?id=")[1] -split "[^0-9]")[0]
+		if(-not $previousModId) {
+			Write-Host "No previous mod found for $modName, using existing instead"
+			$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]", 0)[1]
+		} else {
+			Remove-Item -Path $tempDescriptionFile -Force -ErrorAction SilentlyContinue
+			$arguments = @($previousModId,"SAVE",$tempDescriptionFile)  
+			Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
+			if(-not (Test-Path $tempDescriptionFile)) {
+				Write-Host "No description found for previous mod for $modName, using id $previousModId, will keep existing"			
+				$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]")[1]
+			} else {
+				$lastPart = Get-Content -Path $tempDescriptionFile -Raw -Encoding UTF8
+				if($lastPart.Length -eq 0) {
+					Write-Host "Description found on steam for previous mod for $modName was empty, using existing instead"
+					$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]")[1]
+				}
+			}
+		}
+
+	} else {		
+		Write-Host "Description found on steam for $modName does not contain an old mod-link on steam, will just update format"
+		$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]")[1]
+	}
+	$firstPart = "$(($currentDescription -split "NOW7jU1.png\[\/img\]")[0])NOW7jU1.png[/img]"
+	$lastPart = $lastPart.Trim()
+	$fullDescription = "$firstPart`n$lastPart".Replace("&", "and").Replace("<", "").Replace(">", "")
+
+	if(-not $noConfimation) {
+		Write-Verbose "First: $firstPart"
+		Write-Verbose "Last: $lastPart"	
+		Write-Host $fullDescription
+		Write-Host -ForegroundColor Green "Continue? (CTRL+C to abort)"
+		Read-Host
+	}
+	
+	$firstFilePart = ($aboutContent -split "<description>")[0]
+	$secondFilePart = ($aboutContent -split "</description>")[1]
+	"$firstFilePart<description>$fullDescription</description>$secondFilePart" | Out-File $aboutFile -Encoding utf8
+
+	if(-not $localSearch) {
+		$fullDescription | Out-File $tempDescriptionFile -Encoding utf8
+		$arguments = @($modId,"SET",$tempDescriptionFile)  
+		Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
+		Set-Location $modFolder
+		Get-ModPage
+	}
+}
+
+
+
 function Update-ModDescription {
 	param($searchString,
 		$replaceString,
@@ -1111,16 +1254,54 @@ function Merge-GitRepositories {
 	Set-Location $currentDirectory
 }
 
+function Get-NextModDependancy {
+	param($modId,
+		$modName,
+		[switch]$alsoBefore,
+		[switch]$test)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder)) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		if($currentDirectory -ne $localModFolder) {
+			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		}
+	}
+	if($modName) {
+		$folders = Get-ChildItem $localModFolder -Directory | Where-Object {$_.Name -gt $modname}
+	} else {
+		$folders = Get-ChildItem $localModFolder -Directory
+	}
+	foreach ($folder in $folders) {
+		$identifiers = Get-IdentifiersFromMod -modname $folder.Name -alsoLoadBefore:$alsoBefore
+		if($identifiers.Contains($modId.ToLower())) {
+			Set-Location $folder.FullName
+			Write-Host "Found $modId in mod $($folder.Name)"
+			if($test) {
+				Test-Mod
+			}
+			return
+		}
+	}
+	Write-Host "$modId not found."
+}
+
 # XML-cleaning function
 # Resaves all XML-files using validated XML. Also warns if there seems to be overwritten base-defs
 # Useful to run on a mod to remove all extra whitespaces and redundant formatting
 function Set-ModXml {
-	$currentDirectory = (Get-Location).Path
-	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return			
-	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	param([switch]$skipBaseCheck,
+		$modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}	
 	$modFolder = "$localModFolder\$modName"
 	
 	# Clean up XML-files
@@ -1135,6 +1316,9 @@ function Set-ModXml {
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
 			Write-Host $_
+			continue
+		}
+		if($skipBaseCheck) {
 			continue
 		}
 		$allBases = $fileContent.Defs.ChildNodes | Where-Object -Property Name -Match "Base$"
@@ -1192,6 +1376,7 @@ function Publish-Mod {
 	$modsyncFile = "$modFolder\About\ModSync.xml"
 	$aboutFile = "$modFolder\About\About.xml"
 	$readmeFile = "$modFolder\README.md"
+	$previewFile = "$modFolder\About\Preview.png"
 	$gitIgnorePath = "$modFolder\.gitignore"
 	$modPublisherPath = "$modFolder\_PublisherPlus.xml"
 	$reapplyGitignore = $false
@@ -1212,6 +1397,10 @@ function Publish-Mod {
 			return
 		}
 		$fileContent.Save($file.FullName)
+	}
+
+	if((Test-Path $previewFile) -and (Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2020-09-12")) {
+		Read-Host "Preview-file has not been updated since we changed logo, update first, then press Enter"
 	}
 
 	# Generate english-language if missing
@@ -1263,7 +1452,7 @@ function Publish-Mod {
 		((Get-Content -path $modPublisherPath -Raw -Encoding UTF8).Replace("[modpath]",$modFolder)) | Set-Content -Path $modPublisherPath
 	}
 
-	$firstPublish = $fale
+	$firstPublish = (-not (Test-Path "$modFolder\About\PublishedFileId.txt"))
 	# Create repo if does not exists
 	if(Get-RepositoryStatus -repositoryName $modNameClean) {
 		$message = Read-Host "Commit-Message"
@@ -1273,7 +1462,6 @@ function Publish-Mod {
 		((Get-Content -path $modsyncFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $modsyncFile
 		Set-ModUpdateFeatures -ModName $modNameClean
 	} else {
-		$firstPublish = $true
 		Read-Host "Repository could not be found, create $modNameClean?"
 		$repoData = @{
 			name = $modNameClean;
@@ -1300,14 +1488,17 @@ function Publish-Mod {
 
 	$version = [version]((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
 	Set-ModChangeNote -ModName $modName -Changenote "$version - $message"
+	if($firstPublish){		
+		Update-ModDescriptionFromPreviousMod -noConfimation -localSearch -modName $modName
+	}
 
 	# Clone current repository to staging
 	git clone https://github.com/$($settings.github_username)/$modNameClean
 
 	# Copy replace modfiles
 	if(-not (Test-Path $readmeFile) -or (Get-Content $readmeFile).Count -lt 10) {
-	"# $modNameClean`n`r" > $readmeFile
-	((Get-Content $aboutFile -Raw -Encoding UTF8).Replace("<description>", "|").Split("|")[1].Split("<")[0]) >> $readmeFile
+		"# $modNameClean`n`r" > $readmeFile
+		((Get-Content $aboutFile -Raw -Encoding UTF8).Replace("<description>", "|").Split("|")[1].Split("<")[0]) >> $readmeFile
 	}
 	robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git /NFL /NDL /NJH /NJS /NP
 	Set-Location -Path $stagingDirectory\$modNameClean
@@ -1429,7 +1620,7 @@ function Push-ModContent {
 	$message = Read-Host "Commit-Message"
 	git add .
 	git commit -m $message
-	git push origin master
+	git push origin
 }
 
 
@@ -1482,11 +1673,14 @@ function Get-NotUpdatedMods {
 
 # Helper function to scrape page
 function Get-HtmlPageStuff {
+	[CmdletBinding()]
 	param (
 		$url,
+		[switch] $previewUrl,
 		[switch] $subscribers
 	)
 	$returnValue = ""
+	Write-Verbose "Fetching $url"
 	$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
 	$HTML = New-Object -Com "HTMLFile" -Verbose:$false
 	$HTML.IHTMLDocument2_write($page.Content)
@@ -1497,6 +1691,11 @@ function Get-HtmlPageStuff {
 			if($cells) {
 				$returnValue = $cells[2].InnerText.Replace(",", "")
 			}  
+		}
+	} elseif ($previewUrl)  {
+		$img = ($HTML.all.tags("img") | Where-Object {$_.id -eq "previewImageMain" -or $_.id -eq "previewImage"}).src
+		if($img) {
+			$returnValue = "$($img.Split("?")[0])?"
 		}
 	} else {
 		$divs = ($HTML.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
