@@ -354,7 +354,8 @@ function Start-RimWorld {
 			[string]$testMod,
 			[string]$testAuthor,
 			[switch]$alsoLoadBefore,
-			[Parameter()][ValidateSet('1.0','1.1','latest')][string[]]$version
+			[Parameter()][ValidateSet('1.0','1.1','latest')][string[]]$version,
+			[switch]$autotest
 			)
 
 	if($test -and $play) {
@@ -384,7 +385,7 @@ function Start-RimWorld {
 		$oldModFolder = "$oldRimworldFolder\$version\Mods"
 	} else {
 		$currentActiveMods = Get-Content $modFile -Encoding UTF8
-		if($currentActiveMods.Length -gt 20) {
+		if($currentActiveMods.Length -gt 50) {
 			$currentActiveMods | Set-Content -Path $playingModsConfig -Encoding UTF8
 		} else {
 			$currentActiveMods | Set-Content -Path $moddingModsConfig -Encoding UTF8
@@ -392,6 +393,7 @@ function Start-RimWorld {
 	}	
 
 	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
+	Start-Sleep -Seconds 2
 
 	if($testAuthor) {
 		Copy-Item $testingModsConfig $modFile -Confirm:$false		
@@ -487,6 +489,15 @@ function Start-RimWorld {
 		Copy-Item $moddingModsConfig $modFile -Confirm:$false
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
+	if(-not $version -or $version -eq "latest") {
+		$hugsSettingsPath = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\HugsLib\ModSettings.xml"
+		$hugsContent = Get-Content $hugsSettingsPath -Encoding UTF8 -Raw
+		if($autotest) {
+			$hugsContent.Replace("Disabled", "GenerateMap") | Out-File $hugsSettingsPath -Encoding utf8
+		} else {
+			$hugsContent.Replace("GenerateMap", "Disabled") | Out-File $hugsSettingsPath -Encoding utf8
+		}
+	}
 
 	Start-Sleep -Seconds 2
 	$currentLocation = Get-Location
@@ -498,11 +509,85 @@ function Start-RimWorld {
 		$applicationPath = $settings.steam_path
 		$arguments = "-applaunch 294100"
 	}
+	$startTime = Get-Date
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
 	if($currentLocation -ne (Get-Location)) {
-		Start-Sleep -Seconds 5
 		Set-Location $currentLocation
 	}
+	if(-not $autotest) {
+		return $true
+	}
+	$logPath = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log"
+	while ((Get-Item -Path $logPath).LastWriteTime -ge (Get-Date).AddSeconds(-10) -or (Get-Item -Path $logPath).LastWriteTime -lt $startTime) {
+		Start-Sleep -Seconds 1
+	}
+	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
+	Copy-Item $logPath "$localModFolder\$modname\Source\lastrun.log" -Force | Out-Null
+	return (-not (Get-Content $logPath -Raw -Encoding UTF8).Contains("[HugsLib][ERR]"))
+}
+
+function Set-CorrectFolderStructure {
+	param($modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+	$modFolder = "$localModFolder\$modName"
+	$aboutFile = "$modFolder\About\About.xml"
+	if(-not (Test-Path $aboutFile)) {
+		Write-Host -ForegroundColor Yellow "No about-file for $modName"
+		return
+	}
+	if(-not (Test-Path "$modFolder\About\PublishedFileId.txt")) {
+		Write-Host -ForegroundColor Yellow "$modName is not published"
+		return
+	}
+	if(Test-Path "$modFolder\LoadFolders.xml") {
+		Write-Host -ForegroundColor Yellow "$modName has a LoadFolder.xml, will not change folders"
+		return
+	}
+	$currentVersionsString = (((Get-Content $aboutFile -Raw -Encoding UTF8) -split "<supportedVersions>")[1] -split "</supportedVersions>")[0]
+	$currentVersions = $currentVersionsString -split "<li>" | ForEach-Object { if(($_ -split "<")[0].Trim().Length -gt 1) { ($_ -split "<")[0]}  }
+	$missingVersionFolders = @()
+	$subfolderNames = @()
+	foreach	($version in $currentVersions) {
+		if(Test-Path "$modFolder\$version") {
+			$childFolders = Get-ChildItem "$modFolder\$version" -Directory
+			foreach($folder in $childFolders) {
+				if($subfolderNames.Contains($folder.Name)) {
+					continue
+				}
+				$subfolderNames += $folder.Name
+			}
+		} else {			
+			$missingVersionFolders += $version
+		}
+	}
+	if($missingVersionFolders.Length -eq 0 -or $missingVersionFolders.Length -eq $currentVersions.Length) {
+		Write-Host -ForegroundColor Green "$modName has correct folder structure"
+		return
+	}
+	if($missingVersionFolders.Length -gt 1) {
+		Write-Host -ForegroundColor Yellow "$modName has $($missingVersionFolders.Length) missing version-folders, cannot fix automatically"
+		return	
+	}
+	Write-Host "$modName has missing version-folder: $($missingVersionFolders -join ",")"
+	Write-Host "Will move the following folders to missing version-folder: $($subfolderNames -join ",")"
+	foreach($missingVersionFolder in $missingVersionFolders) {
+		New-Item -Path "$modFolder\$missingVersionFolder" -ItemType Directory -Force | Out-Null
+		foreach($subfolderName in $subfolderNames) {
+			if(Test-Path "$modFolder\$subfolderName") {
+				Move-Item -Path "$modFolder\$subfolderName" -Destination "$modFolder\$missingVersionFolder\$subfolderName" -Force | Out-Null
+			} else {
+				Write-Host "$modFolder\$subfolderName doeas not exist, version-specific folder"
+			}
+		}
+	}
+	Write-Host -ForegroundColor Green "$modName has correct folder structure"
 }
 
 # Returns an array of all mod-directories of mods by a specific author
@@ -721,6 +806,7 @@ function Update-ModsStatistics {
 		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 		if(-not $aboutContent.Contains("<packageId>Mlie")) {
 			Write-Verbose "$modName is not created by me, skipping"
+			$modlist.PSObject.Properties.Remove($modName)
 			continue
 		}
 		if(-not $modlist.$modName) {
@@ -740,7 +826,7 @@ function Update-ModsStatistics {
 			$modlist.$modName.Version = ((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
 			$modlist.$modName.LastUpdated = Get-Date (Get-Item $manifestFile).LastWriteTime -Format "yyyy-MM-dd HH:mm:ss"
 		}
-		if($modlist.$modName.Name -match "Continued" -or $aboutContent -match "Update of") {
+		if($modlist.$modName.Name -match "Continued" -or $aboutContent -match "Update of" -or $aboutContent -notmatch "<author>Mlie</author>") {
 			$modlist.$modName.Selfmade = $false				
 			if(-not $localOnly) {
 				$description = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])
@@ -761,7 +847,13 @@ function Update-ModsStatistics {
 			}
 		}
 	}
-	
+	foreach($modName in ($modlist.PSObject.Properties).Name) {
+		if(($allMods.Name).Contains($modName)) {
+			continue
+		}
+		Write-Verbose "$($modName) not found, removing"
+		$modlist.PSObject.Properties.Remove($modName)
+	}
 	$modlist | ConvertTo-Json | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
 }
 
@@ -1350,7 +1442,9 @@ function Publish-Mod {
 	[CmdletBinding()]
 	param (		
 		[switch]$SelectFolder,
-		[switch]$SkipNotifications
+		[switch]$SkipNotifications,
+		[switch]$GithubOnly,
+		[string]$ChangeNote
 	)
 	if($SelectFolder) {
 		$modFolder = Get-Folder 
@@ -1404,7 +1498,7 @@ function Publish-Mod {
 	}
 
 	# Generate english-language if missing
-	Set-Translation -ModName $modName
+	# Set-Translation -ModName $modName
 
 	# Reset Staging
 	Set-Location -Path $rootFolder
@@ -1455,12 +1549,18 @@ function Publish-Mod {
 	$firstPublish = (-not (Test-Path "$modFolder\About\PublishedFileId.txt"))
 	# Create repo if does not exists
 	if(Get-RepositoryStatus -repositoryName $modNameClean) {
-		$message = Read-Host "Commit-Message"
+		if($ChangeNote) {
+			$message = $ChangeNote
+		} else {
+			$message = Read-Host "Commit-Message"
+		}
 		$oldVersion = "$($version.Major).$($version.Minor).$($version.Build)"
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build + 1)"
 		((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $manifestFile
 		((Get-Content -path $modsyncFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $modsyncFile
-		Set-ModUpdateFeatures -ModName $modNameClean
+		if(-not $ChangeNote) {
+			Set-ModUpdateFeatures -ModName $modNameClean
+		}
 	} else {
 		Read-Host "Repository could not be found, create $modNameClean?"
 		$repoData = @{
@@ -1496,10 +1596,8 @@ function Publish-Mod {
 	git clone https://github.com/$($settings.github_username)/$modNameClean
 
 	# Copy replace modfiles
-	if(-not (Test-Path $readmeFile) -or (Get-Content $readmeFile).Count -lt 10) {
-		"# $modNameClean`n`r" > $readmeFile
-		((Get-Content $aboutFile -Raw -Encoding UTF8).Replace("<description>", "|").Split("|")[1].Split("<")[0]) >> $readmeFile
-	}
+	"# $modNameClean`n`r" > $readmeFile
+	(Convert-BBCodeToGithub -textToConvert ((Get-Content $aboutFile -Raw -Encoding UTF8).Replace("<description>", "|").Split("|")[1].Split("<")[0])) >> $readmeFile
 	robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git /NFL /NDL /NJH /NJS /NP
 	Set-Location -Path $stagingDirectory\$modNameClean
 
@@ -1546,6 +1644,10 @@ function Publish-Mod {
 	Remove-Item $zipFile.FullName -Force
 
 	Set-Location $modFolder
+	if($GithubOnly) {
+		Write-Host "Published $modName to github only!"
+		return
+	}
 	Start-SteamPublish -modFolder $modFolder
 
 	if(-not $SkipNotifications -and (Test-Path "$modFolder\About\PublishedFileId.txt")) {
@@ -1630,7 +1732,8 @@ function Test-Mod {
     [ValidateSet('1.0','1.1','latest')]
     [string[]]
 	$version = "latest",
-	[switch] $alsoLoadBefore)
+	[switch] $alsoLoadBefore,
+	[switch] $autotest)
 	if(-not $version) {
 		$version = "latest"
 	}
@@ -1641,11 +1744,7 @@ function Test-Mod {
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	Write-Host "Testing $modName"
-	if($alsoLoadBefore){
-		Start-RimWorld -testMod $modName -version $version -alsoLoadBefore		
-	} else {
-		Start-RimWorld -testMod $modName -version $version		
-	}
+	return Start-RimWorld -testMod $modName -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest
 }
 
 # Returns a list of mods that has not been updated to the latest version
@@ -1770,6 +1869,20 @@ function Push-UpdateNotification {
 			Write-Host "Failed to post message to Discord"
 		}
 	}
+}
+
+function Convert-BBCodeToGithub {
+	param($textToConvert)
+	$textToConvert = $textToConvert.Replace("[b]", "**").Replace("[/b]", "**")
+	$textToConvert = $textToConvert.Replace("[i]", "*").Replace("[/i]", "*")
+	$textToConvert = $textToConvert.Replace("[h1]", "# ").Replace("[/h1]", "`n")
+	$textToConvert = $textToConvert.Replace("[url=", "").Replace("[/url]", "")
+	$textToConvert = $textToConvert.Replace("[img]", "![Image](").Replace("[/img]", ")`n")
+	$textToRemove = (($textToConvert -split "\[table\]")[1] -split "\[/table\]")[0]
+	$textToConvert = $textToConvert.Replace("`n[table]$textToRemove[/table]`n", "")
+	$textToConvert = $textToConvert.Replace("[list]", "`n").Replace("[/list]", "`n").Replace("[*]", "- ")
+	
+	return $textToConvert
 }
 
 # Helper function

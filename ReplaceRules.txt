@@ -54,6 +54,11 @@ p|exceptedThingDefs|disallowedThingDefs
 p|specialshadowData|specialShadowData
 p|MaleGenderProbability|maleGenderProbability
 p|TownTrader|Town_Trader
+p|TribalWarrior|Tribal_Warrior
+p|TribalArcher|Tribal_Archer
+p|TribalHunter|Tribal_Hunter
+p|TribalHeavyArcher|Tribal_HeavyArcher
+p|TribalBerserker|Tribal_Berserker
 p|front|south
 p|back|north
 p|side|east
@@ -69,6 +74,7 @@ p|PawnsSpecificBackstories|pawnsSpecificBackstories
 p|ForcedRaceTraitEntries|forcedRaceTraitEntries
 p|designationHotkey|designationHotKey
 p|EntertainmentStrengthFactor|JoyGainFactor
+p|isBodyPartOrImplant|isTechHediff
 p|HasHair|hasHair
 p|defname|defName
 p|SoundCast|soundCast
@@ -109,6 +115,7 @@ p|SmithingSpeed|GeneralLaborSpeed
 p|SculptingSpeed|GeneralLaborSpeed
 p|SmeltingSpeed|GeneralLaborSpeed
 p|TailoringSpeed|GeneralLaborSpeed
+p|UnskilledLaborSpeed|GeneralLaborSpeed
 s|<def>LeftAntennae</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
 s|<def>RightAntennae</def>|<def>Antenna</def><customLabel>right antenna</customLabel>
 s|<def>LeftAntenna</def>|<def>Antenna</def><customLabel>left antenna</customLabel>
@@ -215,6 +222,7 @@ v|ArtName_Sculpture|NamerArtSculpture
 v|Apparel_PersonalShield|Apparel_ShieldBelt
 v|ArtName_Furniture|NamerArtFurniture
 v|MinifiedFurniture|MinifiedThing
+v|MapPlayerHome|Map_PlayerHome
 v|ArtilleryHitThickRoof|Artillery_HitThickRoof
 v|InteractGrenade|Interact_Grenade
 v|BulletImpactWood|BulletImpact_Wood
