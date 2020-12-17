@@ -34,6 +34,8 @@ if(-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
 	"{}" | Out-File -Encoding utf8 -FilePath "$($settings.mod_staging_folder)\..\modlist.json"
 }
 $Global:modlist = Get-Content "$($settings.mod_staging_folder)\..\modlist.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$Global:identifierCache = @{}
+
 
 # Helper-function
 # Select folder dialog, for selecting mod-folder manually
@@ -648,8 +650,15 @@ function Get-AllNonPublishedMods {
 
 # Scans a mods About-file for mod-identifiers and returns an array of them, with the selected mods identifier last
 function Get-IdentifiersFromMod {
-	param ([string]$modname, [switch]$oldmod, [switch]$alsoLoadBefore)
-	$aboutFile = "$localModFolder\$modname\About\About.xml"
+	param ([string]$modname, 
+		   [switch]$oldmod, 
+		   [switch]$alsoLoadBefore,
+		   [string]$modFolderPath)
+	if($modFolderPath) {		
+		$aboutFile = "$modFolderPath\About\About.xml"
+	} else {
+		$aboutFile = "$localModFolder\$modname\About\About.xml"		
+	}
 	if(-not (Test-Path $aboutFile)) {
 		Write-Host "Could not find About-file for mod named $modname"
 		return @()
@@ -695,6 +704,7 @@ function Get-IdentifiersFromMod {
 	#[array]::Reverse($identifiersToAdd)
 	return $identifiersToAdd
 }
+
 
 # Updates a mods content to a new version
 # Looks for the previous versions sub-folder and clones it to the new version if found
@@ -1066,9 +1076,25 @@ function Get-StringFromModFiles {
 	[CmdletBinding()]
 	param($searchString,
 		$threads = 10,
-		[switch]$firstOnly) 
+		[switch]$firstOnly,
+		$fromSave) 
 	$searchStringConverted = [regex]::escape($searchString)
-	$allMods = Get-ChildItem -Directory $localModFolder
+	if($fromSave) {
+		if(-not (Test-Path $fromSave)) {
+			Write-Host -ForegroundColor Red "No save-file found from path $fromSave"
+			return
+		}
+		[xml]$saveData = Get-Content $fromSave -Raw -Encoding UTF8
+		$identifiers = $saveData.ChildNodes.meta.modIds.li
+		$allMods = @()
+		foreach($identifier in $identifiers) {
+			if($identifierCache.Contains("$identifier")) {
+				$allMods += Get-Item $identifierCache["$identifier"]
+			}
+		}
+	} else {		
+		$allMods = Get-ChildItem -Directory $localModFolder
+	}
 	$allMatchingFiles = @()
 	$i = 0
 	$total = $allMods.Count
@@ -1078,7 +1104,7 @@ function Get-StringFromModFiles {
 	}
 	foreach($folder in ($allMods | Get-Random -Count $total)) {
 		$i++
-		$percent =  [math]::Round($i / $total * 100)
+		$percent = [math]::Round($i / $total * 100)
 		Write-Progress -Activity "Searching $($folder.name), $($allMatchingFiles.Count) matches found" -Status "$i of $total" -PercentComplete $percent;
 		while((Get-Job -State 'Running').Count -gt $threads) {
 			Start-Sleep -Milliseconds 100
@@ -1908,3 +1934,47 @@ function Set-Translation {
 	Write-Host "Generation done"	
 	Remove-Item -Path $currentFile -Force
 }
+
+function Update-IdentifierToFolderCache {
+	# First steam-dirs
+	Write-Host -ForegroundColor Gray "Caching identifiers"
+	Get-ChildItem "$localModFolder\..\..\..\workshop\content\294100" -Directory | ForEach-Object {
+		$continue = Test-Path "$($_.FullName)\About\About.xml"
+		if(-not $continue) {			
+			Write-Verbose "Ignoring $($_.Name) - No aboutfile"
+		} else {
+			$continue = Test-Path "$($_.FullName)\About\PublishedFileId.txt"
+			if(-not $continue) {			
+				Write-Verbose "Ignoring $($_.Name) - Not published"
+			} else {
+				[xml]$aboutContent = Get-Content -path "$($_.FullName)\About\About.xml" -Raw -Encoding UTF8
+				if(-not ($aboutContent.ChildNodes[1].packageId)) {
+					Write-Verbose "Ignoring $($_.Name) - No identifier"
+				} else {
+					$identifierCache["$($aboutContent.ChildNodes[1].packageId.ToLower())"] = $_.FullName						
+				}			
+			}
+		}		
+	}
+	# Then the local mods
+	Get-ChildItem $localModFolder -Directory | ForEach-Object {  		
+		$continue = Test-Path "$($_.FullName)\About\About.xml"
+		if(-not $continue) {			
+			Write-Verbose "Ignoring $($_.Name) - No aboutfile"
+		} else {
+			$continue = Test-Path "$($_.FullName)\About\PublishedFileId.txt"
+			if(-not $continue) {			
+				Write-Verbose "Ignoring $($_.Name) - Not published"
+			} else {
+				[xml]$aboutContent = Get-Content -path "$($_.FullName)\About\About.xml" -Raw -Encoding UTF8
+				if(-not ($aboutContent.ChildNodes[1].packageId)) {
+					Write-Verbose "Ignoring $($_.Name) - No identifier"
+				} else {
+					$identifierCache["$($aboutContent.ChildNodes[1].packageId.ToLower())"] = $_.FullName						
+				}			
+			}
+		}	
+	}
+	Write-Host -ForegroundColor Gray "Done, cached $($identifierCache.Count) mod identifiers"
+}
+Update-IdentifierToFolderCache

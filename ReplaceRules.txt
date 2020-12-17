@@ -99,6 +99,7 @@ p|GrizzlyBear|Bear_Grizzly
 p|attractionFactor|romanceChanceFactor
 p|optimalityOffset|optimalityOffsetHumanlikes
 p|wildSpawn_spawnWild
+p|reproduceRadius
 p|isFlesh
 p|reproduceMtbDays
 p|Weapon_Bulk
@@ -202,6 +203,7 @@ v|InteractPistol|Interact_Autopistol
 v|InteractRevolver|Interact_Revolver
 v|InteractRifle|Interact_Rifle
 v|InteractShotgun|Interact_Shotgun
+v|ShotSniperRifle|Shot_SniperRifle
 v|InteractSMG|Interact_SMG
 v|ShotShotgun|Shot_Shotgun
 v|ShotAssaultRifle|Shot_AssaultRifle
@@ -222,10 +224,15 @@ v|ArtName_Sculpture|NamerArtSculpture
 v|Apparel_PersonalShield|Apparel_ShieldBelt
 v|ArtName_Furniture|NamerArtFurniture
 v|MinifiedFurniture|MinifiedThing
+v|Stockable|Buyable
 v|MapPlayerHome|Map_PlayerHome
 v|ArtilleryHitThickRoof|Artillery_HitThickRoof
 v|InteractGrenade|Interact_Grenade
 v|BulletImpactWood|BulletImpact_Wood
+v|DoorOpenPowered|Door_OpenPowered
+v|DoorClosePowered|Door_ClosePowered
+v|DoorOpenManual|Door_OpenManual
+v|DoorCloseManual|Door_CloseManual
 v|Raider|Outlander
 v|Civil|Outlander
 v|ITab_TransporterContents|ITab_ContentsTransporter
@@ -294,6 +301,7 @@ s|<armorCategory>Electric</armorCategory>
 s| </description>|</description>
 s|<description> |<description>
 s|>NamerFactionBase|>NamerSettlement
+s|HediffCompProperties_HealOldWounds|HediffCompProperties_HealPermanentWounds
 s|<Insulation_Cold>-|<Insulation_Cold>
 s|<backstoryCategory>|<backstoryFilters><li><categories><li>
 s|</backstoryCategory>|</li></categories></li></backstoryFilters>
