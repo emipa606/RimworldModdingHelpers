@@ -8,6 +8,7 @@ p|canFlee
 p|homeIconPath|settlementTexturePath
 #p|Medicine|MedicineIndustrial
 p|Component|ComponentIndustrial
+p|AdvancedComponent|ComponentSpacer
 p|baseSelectionWeight|settlementGenerationWeight
 p|baseNameMaker|settlementNameMaker
 #p|ThingDefs|Defs
@@ -195,6 +196,7 @@ v|GamingDexterity|Gaming_Dexterity
 v|GlitterworldMedicine|MedicineUltratech
 v|HerbalMedicine|MedicineHerbal
 v|Component|ComponentIndustrial
+v|AdvancedComponent|ComponentSpacer
 v|Puddle_Fuel|Filth_Fuel
 v|FilthFireFoam|Filth_FireFoam
 v|MortarShell|Shell_HighExplosive
@@ -214,6 +216,7 @@ v|ShotMinigun|Shot_Minigun
 v|BulletImpactFlesh|BulletImpact_Flesh
 v|BulletImpactMetal|BulletImpact_Metal
 v|BulletImpactGround|BulletImpact_Ground
+v|CryptosleepCasketEject|CryptosleepCasket_Eject
 v|ShotIncendiaryLauncher|Shot_IncendiaryLauncher
 v|InteractChargeRifle|Interact_ChargeRifle
 v|ShotChargeRifle|Shot_ChargeRifle

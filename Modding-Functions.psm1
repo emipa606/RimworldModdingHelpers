@@ -114,6 +114,10 @@ function Update-Textures {
 		return			
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
 	$modFolder = "$localModFolder\$modName"
 	Set-Location $modFolder
 	$files = Get-ChildItem . -Recurse
@@ -246,9 +250,7 @@ function Get-ModSteamStatus{
 		$modName,
 		$modLink
 	)
-	$versionFile = "$localModFolder\..\Version.txt"
-	$currentVersion = [version]([regex]::Match((Get-Content $versionFile -Raw -Encoding UTF8), "[0-9]+\.[0-9]+")).Value
-	$currentVersionString = "$($currentVersion.Major).$($currentVersion.Minor)"
+	$currentVersionString = Get-CurrentRimworldVersion
 	if($modLink){
 		$modVersions  = Get-ModVersions -modLink $modLink
 	}
@@ -271,9 +273,12 @@ function Get-ModSteamStatus{
 # If HugsLib is loaded this will be shown if new to user
 function Set-ModUpdateFeatures {
 	param (
-		[string] $ModName
+		[string] $modName
 	)
-
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
 	Write-Host "Add update-message? Write the message, two blank rows ends message. To skip just press enter.'"
 	$continueMessage = $true
 	$currentNews = @()
@@ -300,7 +305,7 @@ function Set-ModUpdateFeatures {
 	$modId = Get-Content $modFileId -Raw -Encoding UTF8
 	$updatefeaturesFileName = Split-Path $updatefeaturesTemplate -Leaf
 	if(-not (Test-Path "$localModFolder\$modName\News\$updatefeaturesFileName")) {
-		(Get-Content -Path $updatefeaturesTemplate -Raw -Encoding UTF8).Replace("[modname]", $ModName).Replace("[modid]", $modId) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
+		(Get-Content -Path $updatefeaturesTemplate -Raw -Encoding UTF8).Replace("[modname]", $modName).Replace("[modid]", $modId) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
 	}
 
 	$defaultNewsObject = "	<HugsLib.UpdateFeatureDef ParentName=""UpdateFeatureBase"">
@@ -312,7 +317,7 @@ function Set-ModUpdateFeatures {
 	$manifestFile = "$localModFolder\$modName\About\Manifest.xml"
 	$version = ((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
 
-	$newsObject = $defaultNewsObject.Replace("[newsid]", "$($ModName.Replace(" ", "_"))_$($version.Replace(".", "_"))")
+	$newsObject = $defaultNewsObject.Replace("[newsid]", "$($modName.Replace(" ", "_"))_$($version.Replace(".", "_"))")
 	$newsObject = $newsObject.Replace("[version]", $version).Replace("[news]", $news)
 
 	(Get-Content -Path "$localModFolder\$modName\News\$updatefeaturesFileName" -Raw -Encoding UTF8).Replace("</Defs>", $newsObject) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
@@ -323,11 +328,15 @@ function Set-ModUpdateFeatures {
 # Adds an changelog post to the mod
 function Set-ModChangeNote {
 	param (
-		[string] $ModName,
+		[string] $modName,
 		[string] $Changenote
-	)
-	$baseLine = "# Changelog for $ModName"
-	$changelogFilePath = "$localModFolder\$ModName\About\Changelog.txt"
+	)	
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
+	$baseLine = "# Changelog for $modName"
+	$changelogFilePath = "$localModFolder\$modName\About\Changelog.txt"
 	if(-not (Test-Path $changelogFilePath)) {
 		$baseLine  | Out-File $changelogFilePath
 	}
@@ -538,6 +547,10 @@ function Set-CorrectFolderStructure {
 		}
 		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
 	$modFolder = "$localModFolder\$modName"
 	$aboutFile = "$modFolder\About\About.xml"
 	if(-not (Test-Path $aboutFile)) {
@@ -718,11 +731,14 @@ function Set-ModIncrement {
 		return			
 	}	
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
 	$modFolder = "$localModFolder\$modName"
-	$versionFile = "$localModFolder\..\Version.txt"
 	$aboutFile = "$modFolder\About\About.xml"
-	$currentVersion = [version]([regex]::Match((Get-Content $versionFile -Raw -Encoding UTF8), "[0-9]+\.[0-9]+")).Value
-	$currentVersionString = "$($currentVersion.Major).$($currentVersion.Minor)"
+	$currentVersion = Get-CurrentRimworldVersion -versionObject
+	$currentVersionString = Get-CurrentRimworldVersion
 	if((Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
 		Write-Host "Mod already has support for $currentVersionString according to the About-file"
 		return
@@ -814,7 +830,7 @@ function Update-ModsStatistics {
 		}
 		$aboutFile = "$($folder.FullName)\About\About.xml"		
 		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
-		if(-not $aboutContent.Contains("<packageId>Mlie")) {
+		if(-not (Get-OwnerIsMeStatus -modName $modName)) {
 			Write-Verbose "$modName is not created by me, skipping"
 			$modlist.PSObject.Properties.Remove($modName)
 			continue
@@ -878,6 +894,10 @@ function Update-ModPreviewImage {
 		}
 		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
 	$modFolder = "$localModFolder\$modName"
 	$modIdFile = "$($modFolder)\About\PublishedFileId.txt"
 	if(-not (Test-Path $modIdFile)) {
@@ -929,6 +949,11 @@ function Update-ModDescriptionFromPreviousMod {
 			return			
 		}
 		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+	
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
 	}
 	$modFolder = "$localModFolder\$modName"
 	$aboutFile = "$($modFolder)\About\About.xml"		
@@ -1009,12 +1034,12 @@ function Update-ModDescriptionFromPreviousMod {
 }
 
 
-
 function Update-ModDescription {
 	param($searchString,
 		$replaceString,
 		$modName,
 		[switch]$all,
+		[switch]$syncBefore,
 		$waittime = 500)
 
 	if(-not $searchString) {
@@ -1055,12 +1080,23 @@ function Update-ModDescription {
 		Start-Sleep -Milliseconds $waittime
 		if(-not (Test-Path "$($folder)\About\PublishedFileId.txt")) {
 			continue
+		}		
+		if(-not (Get-OwnerIsMeStatus -modName $(Split-Path $folder -Leaf))) {
+			Write-Host "$(Split-Path $folder -Leaf) is not mine, aborting sync"
+			continue
 		}
-		$modId = Get-Content "$($folder)\About\PublishedFileId.txt" -Raw		
-		$aboutFile = "$($folder)\About\About.xml"		
+		if($syncBefore) {			
+			Sync-ModDescriptionFromSteam -modName $(Split-Path $folder -Leaf)
+		}	
+		$modId = Get-Content "$($folder)\About\PublishedFileId.txt" -Raw
+		$aboutFile = "$($folder)\About\About.xml"
 		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 		$description = "$($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])"
-		if($description.Contains($searchString)) {
+		if(Select-String -InputObject $description -pattern $replaceString) {
+			Write-Host "Description for $(Split-Path $folder -Leaf) already contains the replace-string, skipping"
+			continue
+		}
+		if(Select-String -InputObject $description -pattern $searchString) {
 			$arguments = @($modId,"REPLACE",$searchString,$replaceString)   
 			Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
 			((Get-Content -path $aboutFile -Raw -Encoding UTF8).Replace($searchString,$replaceString)) | Set-Content -Path $aboutFile -Encoding UTF8
@@ -1071,6 +1107,107 @@ function Update-ModDescription {
 	
 }
 
+function Get-OwnerIsMeStatus {
+	param($modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return $false	
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+
+	$modFolder = "$localModFolder\$modName"
+	if(-not (Test-Path $modFolder)) {
+		Write-Host "$modFolder can not be found, exiting"
+		return $false
+	}
+	$aboutFile = "$($modFolder)\About\About.xml"
+	return ((Get-Content $aboutFile -Raw -Encoding UTF8).Contains("<packageId>Mlie."))
+}
+
+function Sync-ModDescriptionFromSteam {
+	param($modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+
+	$modFolder = "$localModFolder\$modName"
+	if(-not (Test-Path $modFolder)) {
+		Write-Host "$modFolder can not be found, exiting"
+		return	
+	}
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting sync"
+		return
+	}
+	if(-not (Test-Path "$($modFolder)\About\PublishedFileId.txt")) {
+		Write-Host "$modName not published, aborting sync"
+		return
+	}	
+	$modId = Get-Content "$($modFolder)\About\PublishedFileId.txt" -Raw
+	$applicationPath = "E:\\ModPublishing\\SteamDescriptionEdit\\Compiled\\SteamDescriptionEdit.exe"
+	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
+	Remove-Item -Path $tempDescriptionFile -Force -ErrorAction SilentlyContinue
+	$arguments = @($modId,"SAVE",$tempDescriptionFile)
+	Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
+	if(-not (Test-Path $tempDescriptionFile)) {
+		Write-Host "No description found on steam for $modName, aborting sync"
+		return
+	}
+	$currentDescription = Get-Content -Path $tempDescriptionFile -Raw -Encoding UTF8
+	if($currentDescription.Length -eq 0) {
+		Write-Host "Description found on steam for $modName was empty, aborting sync"
+		return
+	}
+	$aboutFile = "$($modFolder)\About\About.xml"
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	$description = "$($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])"
+	$aboutContent = $aboutContent.Replace($description, $currentDescription)
+	$aboutContent | Set-Content -Path $aboutFile -Encoding UTF8
+}
+
+function Sync-ModDescriptionToSteam {
+	param($modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+
+	$modFolder = "$localModFolder\$modName"
+	if(-not (Test-Path $modFolder)) {
+		Write-Host "$modFolder can not be found, exiting"
+		return	
+	}
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting sync"
+		return
+	}
+	if(-not (Test-Path "$($modFolder)\About\PublishedFileId.txt")) {
+		Write-Host "$modName not published, aborting sync"
+		return
+	}	
+	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
+	$aboutFile = "$($modFolder)\About\About.xml"
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	$description = "$($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])"
+	$description | Set-Content -Path $tempDescriptionFile -Encoding UTF8
+	$modId = Get-Content "$($modFolder)\About\PublishedFileId.txt" -Raw
+	$applicationPath = "E:\\ModPublishing\\SteamDescriptionEdit\\Compiled\\SteamDescriptionEdit.exe"
+	$arguments = @($modId,"SET",$tempDescriptionFile)
+	Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
+}
+
 # Returns a list of all files that have the selected string in their XML
 function Get-StringFromModFiles {
 	[CmdletBinding()]
@@ -1079,6 +1216,9 @@ function Get-StringFromModFiles {
 		[switch]$firstOnly,
 		$fromSave) 
 	$searchStringConverted = [regex]::escape($searchString)
+	if($identifierCache.Lenght -eq 0) {		
+		Update-IdentifierToFolderCache
+	}
 	if($fromSave) {
 		if(-not (Test-Path $fromSave)) {
 			Write-Host -ForegroundColor Red "No save-file found from path $fromSave"
@@ -1311,6 +1451,11 @@ function Merge-GitRepositories {
 		return			
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting merge"
+		return
+	}
 	$modFolder = "$localModFolder\$modName"
 	$manifestFile = "$modFolder\About\Manifest.xml"
 	$stagingDirectory = $settings.mod_staging_folder
@@ -1488,7 +1633,11 @@ function Publish-Mod {
 		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 		$modFolder = "$localModFolder\$modName"
 	}
-	
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting publish"
+		return
+	}
+
 	$modNameClean = $modName.Replace("+", "Plus")
 	$stagingDirectory = $settings.mod_staging_folder
 	$rootFolder = Split-Path $stagingDirectory
@@ -1519,7 +1668,13 @@ function Publish-Mod {
 		$fileContent.Save($file.FullName)
 	}
 
-	if((Test-Path $previewFile) -and (Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2020-09-12")) {
+	if(-not (Test-Path $previewFile)) {
+		Read-Host "Preview-file does not exist, create one then press Enter"
+	}
+	if((Get-Item $previewFile).Length -ge 1MB) {
+		Read-Host "Preview-file is too large, resave a file under 1MB and then press Enter"
+	}
+	if((Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2020-09-12")) {
 		Read-Host "Preview-file has not been updated since we changed logo, update first, then press Enter"
 	}
 
@@ -1617,6 +1772,31 @@ function Publish-Mod {
 	if($firstPublish){		
 		Update-ModDescriptionFromPreviousMod -noConfimation -localSearch -modName $modName
 	}
+	else {
+		Sync-ModDescriptionFromSteam -modName $modName
+	}
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	if(-not $aboutContent.Contains("Rs6T6cr")) {
+		$faqText = @"
+
+
+[img]https://i.imgur.com/Rs6T6cr.png[/img]
+[list]
+[*] See if the the error persists if you just have this mod and its requirements active.
+[*] If not, try adding your other mods until it happens again.
+[*] Post your error-log using [url=https://steamcommunity.com/workshop/filedetails/?id=818773962]HugsLib[/url] and command Ctrl+F12
+[*] For best support, please use the Discord-channel for error-reporting.
+[*] Do not report errors by making a discussion-thread, I get no notification of that.
+[*] If you have the solution for a problem, please post it to the GitHub repository.
+[/list]
+</description>
+"@
+		$aboutContent = $aboutContent.Replace("</description>", $faqText)
+		$aboutContent | Set-Content $aboutFile -Encoding UTF8
+		if(-not $firstPublish) {
+			Sync-ModDescriptionToSteam -modName $modName
+		}
+	}
 
 	# Clone current repository to staging
 	git clone https://github.com/$($settings.github_username)/$modNameClean
@@ -1680,6 +1860,15 @@ function Publish-Mod {
 		if($firstPublish) {
 			Push-UpdateNotification
 			Get-ModPage
+			$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+			$currentDescription = ((($aboutContent -split "<description>")[1]) -split "</description>")[0]
+			if($currentDescription -match "https://steamcommunity.com/sharedfiles/filedetails") {
+				$previousModId = (($currentDescription -split "https://steamcommunity.com/sharedfiles/filedetails/\?id=")[1] -split "[^0-9]")[0]
+				$trelloCard = Find-TrelloCardByLink -url "https://steamcommunity.com/sharedfiles/filedetails/?id=$previousModId"
+				if($trelloCard) {
+					Move-TrelloCardToDone -cardId $trelloCard.id
+				}
+			}
 		} else {
 			Push-UpdateNotification -Changenote "$version - $message"
 		}
@@ -1694,7 +1883,10 @@ function Start-SteamPublish {
 		Write-Host "$modfolder does not exist"
 		return
 	}
-
+	if(-not (Get-OwnerIsMeStatus -modName $(Split-Path $modfolder -Leaf))) {
+		Write-Host "$(Split-Path $modfolder -Leaf) is not mine, aborting update"
+		return
+	}
 	$copyPublishedFileId = $false
 	if(!(Test-Path "$modFolder\About\PublishedFileId.txt")) {
 		$copyPublishedFileId = $true
@@ -1777,9 +1969,7 @@ function Test-Mod {
 # With switch FirstOnly the current directory is changed to the next not-updated mod root path
 function Get-NotUpdatedMods {
 	param([switch]$FirstOnly)
-	$versionFile = "$localModFolder\..\Version.txt"
-	$currentVersion = [version]([regex]::Match((Get-Content $versionFile -Raw -Encoding UTF8), "[0-9]+\.[0-9]+")).Value
-	$currentVersionString = "$($currentVersion.Major).$($currentVersion.Minor)"
+	$currentVersionString = Get-CurrentRimworldVersion
 	$allMods = Get-ChildItem -Directory $localModFolder
 	foreach($folder in $allMods) {
 		if(-not (Test-Path "$($folder.FullName)\About\PublishedFileId.txt")) {
@@ -1794,6 +1984,16 @@ function Get-NotUpdatedMods {
 			Write-Host $folder.Name
 		}
 	}
+}
+
+function Get-CurrentRimworldVersion {
+	param([switch]$versionObject)
+	$rimworldVersionFile = "$localModFolder\..\Version.txt"
+	$currentRimworldVersion = [version]([regex]::Match((Get-Content $rimworldVersionFile -Raw -Encoding UTF8), "[0-9]+\.[0-9]+")).Value
+	if($versionObject) {
+		return $currentRimworldVersion
+	}
+	return "$($currentRimworldVersion.Major).$($currentRimworldVersion.Minor)"
 }
 
 # Helper function to scrape page
@@ -1825,7 +2025,7 @@ function Get-HtmlPageStuff {
 	} else {
 		$divs = ($HTML.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
 		if($divs) {
-			$versions = $divs[0].InnerText.Split(",")
+			$versions = $divs[0].InnerText.Split(", ")
 			$returnValue =  $versions | Where-Object { $_ -ne "Mod"}  
 		}
 	}
@@ -1915,15 +2115,19 @@ function Convert-BBCodeToGithub {
 # Generates default language files for english
 function Set-Translation {
 	param (
-		[string] $ModName
+		[string] $modName
 	)
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
 	$rimTransExe = $settings.rimtrans_path
 	$currentFile = $rimTransTemplate.Replace(".xml", "_current.xml")
 	$command = "-p:$currentFile"
 
 	Write-Host "Generating default language-data"
 
-	(Get-Content $rimTransTemplate -Raw -Encoding UTF8).Replace("[modpath]", "$localModFolder\$ModName") | Out-File $currentFile -Encoding utf8
+	(Get-Content $rimTransTemplate -Raw -Encoding UTF8).Replace("[modpath]", "$localModFolder\$modName") | Out-File $currentFile -Encoding utf8
 	
 	$process = Start-Process -FilePath $rimTransExe -ArgumentList $command -PassThru 
 	Start-Sleep -Seconds 1
@@ -1977,4 +2181,3 @@ function Update-IdentifierToFolderCache {
 	}
 	Write-Host -ForegroundColor Gray "Done, cached $($identifierCache.Count) mod identifiers"
 }
-Update-IdentifierToFolderCache
