@@ -16,6 +16,7 @@ p|ThingCategoryDefs|Defs
 p|GameData|Defs
 p|DefPackage-SoundDef|Defs
 p|HerbalMedicine|MedicineHerbal
+p|GlitterworldMedicine|MedicineUltratech
 p|DiplomacyPower|NegotiationAbility
 p|WorkGivers|Defs
 p|RecipeDefs|Defs
@@ -56,6 +57,7 @@ p|specialshadowData|specialShadowData
 p|MaleGenderProbability|maleGenderProbability
 p|TownTrader|Town_Trader
 p|TribalWarrior|Tribal_Warrior
+p|itemGeneratorTags|thingSetMakerTags
 p|TribalArcher|Tribal_Archer
 p|TribalHunter|Tribal_Hunter
 p|TribalHeavyArcher|Tribal_HeavyArcher
@@ -76,14 +78,18 @@ p|ForcedRaceTraitEntries|forcedRaceTraitEntries
 p|designationHotkey|designationHotKey
 p|EntertainmentStrengthFactor|JoyGainFactor
 p|isBodyPartOrImplant|isTechHediff
+p|averagePainPerSeverityOld|averagePainPerSeverityPermanent
+p|targetTypes|targetTags
 p|HasHair|hasHair
 p|defname|defName
 p|SoundCast|soundCast
+p|RecipeUsers|recipeUsers
 p|GetsGreyAt|getsGreyAt
 p|preventDeterioration|preventDeteriorationOnTop
 p|ArmorRating_Electric
 p|appreciative
 p|homeIconColor
+p|spreadOut
 p|raidCommonality
 p|startElectricalFires
 p|pawnsSpecificBackstories
@@ -223,6 +229,8 @@ v|ShotChargeRifle|Shot_ChargeRifle
 v|PowerOnSmall|Power_OnSmall
 v|PowerOffSmall|Power_OffSmall
 v|FilthBloodInsect|Filth_BloodInsect
+v|RockRubble|Filth_RubbleRock
+v|FilthSlime|Filth_Slime
 v|ArtName_Sculpture|NamerArtSculpture
 v|Apparel_PersonalShield|Apparel_ShieldBelt
 v|ArtName_Furniture|NamerArtFurniture
@@ -236,7 +244,8 @@ v|DoorOpenPowered|Door_OpenPowered
 v|DoorClosePowered|Door_ClosePowered
 v|DoorOpenManual|Door_OpenManual
 v|DoorCloseManual|Door_CloseManual
-v|Raider|Outlander
+v|Raider|Pirate
+v|SpecialReward|RewardStandardQualitySuper
 v|Civil|Outlander
 v|ITab_TransporterContents|ITab_ContentsTransporter
 v|LeftEye|Eye
@@ -259,7 +268,9 @@ v|ChemicalDamageBrain|ChemicalDamageSevere
 v|BingingDrugExtreme|Binging_DrugMajor
 v|WanderPsychotic|Wander_Psychotic
 v|FilthFuel|Filth_Fuel
+v|CabinFever|NeedOutdoors
 v|Things/Item/Health/HealthItemBionic|Things/Item/Health/HealthItem
+v|Things/Item/Health/HealthItemNatural|Things/Item/Health/HealthItem
 v|World/FactionHomes/DefaultHome|World/WorldObjects/DefaultSettlement
 v|ScenPart_StartingThing_Defined|StartingThing_Defined
 v|World/WorldObjects/TribalFactionBase|World/WorldObjects/TribalSettlement
@@ -269,6 +280,7 @@ s|<kindDef>Normal</kindDef>|<kindDef>Combat</kindDef>
 s|<thingClass>PersonalShield</thingClass>|<thingClass>ShieldBelt</thingClass>
 s|<kindDef>FactionBase</kindDef>|<kindDef>Settlement</kindDef>
 s|<thingDef>Medicine</thingDef>|<thingDef>MedicineIndustrial</thingDef>
+s|<thingDef>GlitterworldMedicine</thingDef>|<thingDef>MedicineUltratech</thingDef>
 s|<tradeability>Never</tradeability>|<tradeability>None</tradeability>
 s|<li>LeftHandRingFinger</li>
 s|<li>LeftHandMiddleFinger</li>
@@ -297,6 +309,10 @@ s|<li>RightLeg</li>
 s|<li>RightFoot</li>
 s|<li>RightEar</li>
 s|<li>InstallScytherBlade</li>
+s|<def>FrontLeftPaw|<def>Paw
+s|<def>FrontRightPaw|<def>Paw
+s|<def>RearLeftPaw|<def>Paw
+s|<def>RearRightPaw|<def>Paw
 s|<acceptFilth>false</acceptFilth>|<filthAcceptanceMask><li>None</li></filthAcceptanceMask>
 s|<li Class="Rule_PersonName">|<li Class="Rule_NamePerson">
 s|<soldThought>SoldMyLovedOne</soldThought>|<soldThoughts><li>SoldMyLovedOne</li></soldThoughts>

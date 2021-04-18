@@ -125,7 +125,11 @@ function Update-Textures {
 		if(-not $file.FullName.Contains("Textures")){
 			continue
 		}
-		$newName = $file.Name.Replace("_side", "_east").Replace("_front", "_south").Replace("_back", "_north")
+		if($file.Extension -eq ".psd") {
+			Move-Item $file.FullName "$localModFolder\$modName\Source\" -Force -Confirm:$false | Out-Null
+			continue
+		}
+		$newName = $file.Name.Replace("_side", "_east").Replace("_Side", "_east").Replace("_front", "_south").Replace("_Front", "_south").Replace("_back", "_north").Replace("_Back", "_north").Replace("_rear", "_north").Replace("_Rear", "_north")
 		$newPath = $file.FullName.Replace($file.Name, $newName)
 		Move-Item $file.FullName "$newPath" -ErrorAction SilentlyContinue | Out-Null
 	}
@@ -856,7 +860,7 @@ function Update-ModsStatistics {
 			$modlist.$modName.Selfmade = $false				
 			if(-not $localOnly) {
 				$description = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])
-				[regex]$regex = 'https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=[0-9]+'
+				[regex]$regex = 'https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=[0-9]+\s'
 				$originalLink = $regex.Matches($description).Value
 				if($originalLink.Count -gt 1) {
 					$originalLink = $originalLink[0]
@@ -2007,10 +2011,12 @@ function Get-HtmlPageStuff {
 	$returnValue = ""
 	Write-Verbose "Fetching $url"
 	$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
-	$HTML = New-Object -Com "HTMLFile" -Verbose:$false
-	$HTML.IHTMLDocument2_write($page.Content)
+	$html = New-Object -Com "HTMLFile" -Verbose:$false
+	# $HTML.IHTMLDocument2_write($page.Content)
+	$encoded = [System.Text.Encoding]::Unicode.GetBytes($page.Content)
+    $html.write($encoded)
 	if($subscribers) {
-		$tables = $HTML.all.tags("table")
+		$tables = $html.all.tags("table")
 		if($tables) {
 			$cells = $tables[0].cells
 			if($cells) {
@@ -2018,19 +2024,19 @@ function Get-HtmlPageStuff {
 			}  
 		}
 	} elseif ($previewUrl)  {
-		$img = ($HTML.all.tags("img") | Where-Object {$_.id -eq "previewImageMain" -or $_.id -eq "previewImage"}).src
+		$img = ($html.all.tags("img") | Where-Object {$_.id -eq "previewImageMain" -or $_.id -eq "previewImage"}).src
 		if($img) {
 			$returnValue = "$($img.Split("?")[0])?"
 		}
 	} else {
-		$divs = ($HTML.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
+		$divs = ($html.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
 		if($divs) {
 			$versions = $divs[0].InnerText.Split(", ")
-			$returnValue =  $versions | Where-Object { $_ -ne "Mod"}  
+			$returnValue =  $versions | Where-Object {$_ -and $_ -ne "Mod"}  
 		}
 	}
 	
-	$HTML.close()
+	$html.close()
 	try {
 		[System.Runtime.Interopservices.Marshal]::ReleaseComObject($HTML) | Out-Null	
 	} catch {
@@ -2180,4 +2186,8 @@ function Update-IdentifierToFolderCache {
 		}	
 	}
 	Write-Host -ForegroundColor Gray "Done, cached $($identifierCache.Count) mod identifiers"
+}
+
+function Show-GitOrigin {
+	git remote show origin
 }
