@@ -2031,7 +2031,7 @@ function Get-HtmlPageStuff {
 	} else {
 		$divs = ($html.all.tags("div") | Where-Object -Property className -eq "rightDetailsBlock")
 		if($divs) {
-			$versions = $divs[0].InnerText.Split(", ")
+			$versions = $divs[0].InnerText.Replace(" ", "").Split(",")
 			$returnValue =  $versions | Where-Object {$_ -and $_ -ne "Mod"}  
 		}
 	}
