@@ -108,18 +108,25 @@ function New-ModSyncFile {
 # Checks for textures with the old naming-style (side/front/back) and replaces it
 # with the new style (east/south/north)
 function Update-Textures {
-	$currentDirectory = (Get-Location).Path
-	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return			
+	param($modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	$modFolder = "$localModFolder\$modName"
+	if(-not (Test-Path $modFolder)) {
+		Write-Host "$modFolder can not be found, exiting"
+		return	
+	}
 	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
 		Write-Host "$modName is not mine, aborting update"
 		return
 	}
-	$modFolder = "$localModFolder\$modName"
-	Set-Location $modFolder
+	Set-Location $modfolder
 	$files = Get-ChildItem . -Recurse
 	foreach ($file in $files) { 
 		if(-not $file.FullName.Contains("Textures")){
@@ -868,10 +875,10 @@ function Update-ModsStatistics {
 				if($originalLink) {
 					Write-Verbose "Testing status for original: $originalLink"
 					if(Get-ModSteamStatus -modLink $originalLink) {
-						Write-Host "$modName is no longer needed, original has been updated."
-						Get-ModRepository -modName $modName
-						Get-ModPage -modName $modName
-						$modlist.$modName.Archived = $true
+						Write-Host "$modName might no longer be needed, original link is latest version."
+						# Get-ModRepository -modName $modName
+						# Get-ModPage -modName $modName
+						# $modlist.$modName.Archived = $true
 					}
 				}
 			}
@@ -2010,7 +2017,31 @@ function Get-HtmlPageStuff {
 	)
 	$returnValue = ""
 	Write-Verbose "Fetching $url"
-	$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
+	try { 
+		$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
+	} catch { 
+		Write-Host "Could not fetch $url, trying again"
+	} 
+	if(-not $page) {
+		try { 
+			$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
+		} catch { 
+			Write-Host "Could not fetch $url, trying again"
+		} 
+	}
+	if(-not $page) {
+		try { 
+			$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
+		} catch { 
+			Write-Host "Could not fetch $url"
+			return $returnValue
+		} 
+	}
+	# $page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false -ErrorAction SilentlyContinue
+	if(-not $page) {
+		Write-Host "Fetched $url but got no content"
+		return $returnValue
+	}
 	$html = New-Object -Com "HTMLFile" -Verbose:$false
 	# $HTML.IHTMLDocument2_write($page.Content)
 	$encoded = [System.Text.Encoding]::Unicode.GetBytes($page.Content)
