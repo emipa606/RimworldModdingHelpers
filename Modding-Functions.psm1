@@ -10,6 +10,7 @@ $Global:oldRimworldFolder = $settings.old_rimworld_folders
 $Global:playingModsConfig = "$PSScriptRoot\ModsConfig_Playing.xml"
 $Global:moddingModsConfig = "$PSScriptRoot\ModsConfig_Modding.xml"
 $Global:testingModsConfig = "$PSScriptRoot\ModsConfig_Testing.xml"
+$Global:autoModsConfig = "$PSScriptRoot\ModsConfig_Auto.xml"
 $Global:replacementsFile = "$PSScriptRoot\ReplaceRules.txt"
 $Global:manifestTemplate = "$PSScriptRoot\$($settings.manfest_template)"
 if(-not (Test-Path $manifestTemplate)) {
@@ -231,8 +232,34 @@ function Get-ModSubscribers{
 function Get-ModVersions{
 	param(
 		$modName,
-		$modLink
+		$modLink,
+		[switch] $local
 	)
+	if($local) {
+		if(-not $modName) {
+			$currentDirectory = (Get-Location).Path
+			if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+				Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+				return			
+			}
+			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		}
+		if(-not (Test-Path "$localModFolder\$modName\About\About.xml")) {
+			Write-Host "No aboutfile found for $modName"
+			return
+		}
+		$aboutContent = Get-Content "$localModFolder\$modName\About\About.xml" -Raw -Encoding UTF8
+		$versionArray = $aboutContent.Replace("<supportedVersions>", "|").Split("|")[1].Replace("</supportedVersions>", "|").Split("|")[0].Replace("<li>", "|").Split("|")
+		$returnArray = @()
+		foreach($versionString in $versionArray) {
+			$version = ($versionString.Split("<")[0]).Trim()
+			if($version) {
+				$returnArray += $version
+			}
+		}
+		return $returnArray
+	}
+
 	if(-not $modLink) {
 		if(-not $modName) {
 			$currentDirectory = (Get-Location).Path
@@ -376,8 +403,11 @@ function Start-RimWorld {
 			[string]$testMod,
 			[string]$testAuthor,
 			[switch]$alsoLoadBefore,
-			[Parameter()][ValidateSet('1.0','1.1','latest')][string[]]$version,
-			[switch]$autotest
+			[switch]$rimThreaded,
+			[Parameter()][ValidateSet('1.0','1.1','1.2','latest')][string[]]$version,
+			[switch]$autotest,
+			[switch]$force,
+			[switch]$bare
 			)
 
 	if($test -and $play) {
@@ -418,7 +448,10 @@ function Start-RimWorld {
 	Start-Sleep -Seconds 2
 
 	if($testAuthor) {
-		Copy-Item $testingModsConfig $modFile -Confirm:$false		
+		Copy-Item $testingModsConfig $modFile -Confirm:$false
+		if($autotest -or $bare) {
+			Copy-Item $autoModsConfig $modFile -Confirm:$false
+		}	
 		$modsToTest = Get-AllModsFromAuthor -author $testAuthor -onlyPublished
 		$modIdentifiersPrereq = ""
 		$modIdentifiers = ""
@@ -449,11 +482,19 @@ function Start-RimWorld {
 					}
 				}
 			}
-		}		
+		}
+		if($rimThreaded) {
+			Write-Host "Adding RimThreaded last"
+			$modIdentifiers += "<li>majorhoff.rimthreaded</li>"
+		}
 		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiersPrereq</activeMods>").Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
 	if($testMod) {
+		if((-not $force) -and (-not (Get-OwnerIsMeStatus -modName $testMod))) {
+			Write-Host "Not my mod, exiting."
+			return
+		}
 		if($version -and $version -ne "latest") {			
 			Copy-Item $testModFile $modFile -Confirm:$false
 			if($version -eq "1.0") {
@@ -474,16 +515,19 @@ function Start-RimWorld {
 			}
 		} else {
 			Copy-Item $testingModsConfig $modFile -Confirm:$false	
+			if($autotest -or $bare) {
+				Copy-Item $autoModsConfig $modFile -Confirm:$false
+			}	
 			if($alsoLoadBefore) {
 				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -alsoLoadBefore
 			} else {
 				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname			
 			}
 		}
-		if($identifiersToAdd.Length -eq 0) {
-			Write-Host "No mod identifiers found, exiting."
-			return
-		}
+		# if($identifiersToAdd.Length -eq 0) {
+		# 	Write-Host "No mod identifiers found, exiting."
+		# 	return
+		# }
 		$modIdentifiers = ""
 		if($identifiersToAdd.Count -eq 1) {
 			Write-Host "Adding $identifiersToAdd as mod to test"
@@ -497,7 +541,11 @@ function Start-RimWorld {
 				}
 				$modIdentifiers += "<li>$identifier</li>"
 			}	
-		}	
+		}
+		if($rimThreaded) {
+			Write-Host "Adding RimThreaded last"
+			$modIdentifiers += "<li>majorhoff.rimthreaded</li>"
+		}
 		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
@@ -540,12 +588,15 @@ function Start-RimWorld {
 		return $true
 	}
 	$logPath = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log"
-	while ((Get-Item -Path $logPath).LastWriteTime -ge (Get-Date).AddSeconds(-10) -or (Get-Item -Path $logPath).LastWriteTime -lt $startTime) {
+	while ((Get-Item -Path $logPath).LastWriteTime -ge (Get-Date).AddSeconds(-15) -or (Get-Item -Path $logPath).LastWriteTime -lt $startTime) {
 		Start-Sleep -Seconds 1
 	}
 	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
-	Copy-Item $logPath "$localModFolder\$modname\Source\lastrun.log" -Force | Out-Null
-	return (-not (Get-Content $logPath -Raw -Encoding UTF8).Contains("[HugsLib][ERR]"))
+	$errors = (Get-Content $logPath -Raw -Encoding UTF8).Contains("[HugsLib][ERR]")
+	if($errors) {
+		Copy-Item $logPath "$localModFolder\$modname\Source\lastrun.log" -Force | Out-Null
+	}
+	return (-not $errors)
 }
 
 function Set-CorrectFolderStructure {
@@ -694,7 +745,7 @@ function Get-IdentifiersFromMod {
 		$identifiersToAdd += $modName
 		return $identifiersToAdd
 	}
-	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty"
+	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "mlie.showmeyourhands"
 	foreach($identifier in $identifiersList) {
 		$identifierString = $identifier.Split("<")[0].ToLower()
 		if(-not ($identifierString.Contains(".")) -or $identifiersToIgnore.Contains($identifierString) -or $identifierString.Contains(" ")) {
@@ -729,82 +780,80 @@ function Get-IdentifiersFromMod {
 	return $identifiersToAdd
 }
 
-
-# Updates a mods content to a new version
-# Looks for the previous versions sub-folder and clones it to the new version if found
-# Adds the new version to the supported versions in the About-file
-# Updates references in any C# projects so the dll-file is created in the new folder
-function Set-ModIncrement {
-	param([switch]$Test)
-	$currentDirectory = (Get-Location).Path
-	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return			
+function Update-Mods {
+	param([switch]$NoVs,
+		[switch]$NoDependencies,
+		[switch]$ConfirmContinue,
+		[int]$MaxToUpdate = 5)
+	$currentVersion = Get-CurrentRimworldVersion
+	for ($i = 0; $i -lt $MaxToUpdate; $i++) {
+		if(-not (Get-NotUpdatedMods -NoVs:$NoVs -NoDependencies:$NoDependencies -FirstOnly)) {
+			Write-Host "Found no mods to update"
+			Set-Location $localModFolder
+			return
+		}
+		$currentDirectory = (Get-Location).Path
+		if(-not (Test-Path "$currentDirectory\Source")) {
+			New-Item -ItemType Directory -Name "Source" | Out-Null
+		}
+		$logFile = "$currentDirectory\Source\autoupdate.log"
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		Write-Host "Starting update of $modName"
+		Get-Date -Format "yyyy-MM-dd HH:mm:ss" | Set-Content $logFile -Encoding utf8
+		"Starting autoupdate to version $currentVersion" | Add-Content $logFile -Encoding utf8
+		"Updating folder-structure" | Add-Content $logFile -Encoding utf8
+		Update-ModStructure -ForNewVersion | Add-Content $logFile -Encoding utf8
+		"Updating VSCode if needed" | Add-Content $logFile -Encoding utf8
+		$result = Update-VSCodeLoop -modName $modName
+		if($result) {
+			"True" | Add-Content $logFile -Encoding utf8
+		} else {
+			"Gave up updating the mod, moving to next." | Add-Content $logFile -Encoding utf8
+			New-Item -Path "$currentDirectory\Source\lastrun.log" -ItemType File -ErrorAction SilentlyContinue | Out-Null
+			continue
+		}
+		"Testing mod" | Add-Content $logFile -Encoding utf8
+		$result = Test-Mod -autotest
+		if(-not $result) {
+			"Mod threw errors, aborting autotest, see Source\lastrun.log for info" | Add-Content $logFile -Encoding utf8
+			continue
+		}
+		"Mod passed autotest, publishing" | Add-Content $logFile -Encoding utf8
+		Publish-Mod -ChangeNote "Mod updated for $currentVersion and passed autotests"
+		if($ConfirmContinue) {
+			Read-Host "Continue?"
+		}
 	}	
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
-	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
-		Write-Host "$modName is not mine, aborting update"
-		return
-	}
-	$modFolder = "$localModFolder\$modName"
-	$aboutFile = "$modFolder\About\About.xml"
-	$currentVersion = Get-CurrentRimworldVersion -versionObject
-	$currentVersionString = Get-CurrentRimworldVersion
-	if((Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
-		Write-Host "Mod already has support for $currentVersionString according to the About-file"
-		return
-	}
-
-	$lastVersion = "$($currentVersion.Major).$($currentVersion.Minor - 1)"
-	Write-Host "Current game version: $currentVersionString, looking for $lastVersion-folder"
-	$cloneFromPreviousVersion = Test-Path "$modFolder\$lastVersion"
-	if($cloneFromPreviousVersion) {
-		Write-Host "$lastVersion-folder found, will clone it to $currentVersionString"
-		if(-not $Test) {
-			Copy-Item -Path "$modFolder\$lastVersion" -Destination "$modFolder\$currentVersionString" -Recurse -Force
-		}
-	} else {
-		Write-Host "No $lastVersion-folder found, will not generate new version-dir"
-	}
-
-	Write-Host "Will add $currentVersionString to supported versions in About.xml"
-	if(-not $Test) {
-		((Get-Content -path $aboutFile -Raw -Encoding UTF8).Replace("</supportedVersions>","<li>$currentVersionString</li></supportedVersions>")) | Set-Content -Path $aboutFile
-		[xml]$fileContent = Get-Content -path $aboutFile -Raw -Encoding UTF8
-		$fileContent.Save($aboutFile)
-	}
-	
-	if(Test-Path "$modFolder\Source") {		
-		$csprojFile = Get-ChildItem "$modFolder\Source\*.csproj" -Recurse
-		if($csprojFile.Length -gt 0) {
-			Write-Host "Mod has VS project to update"
-			foreach ($file in $csprojFile) {
-				Write-Host "Updating $($file.FullName.Replace($modFolder, "."))"
-				if(-not $Test) {
-					(Get-Content -path $file.FullName -Raw -Encoding UTF8).Replace("$lastVersion\Assemblies", "$currentVersionString\Assemblies") | Set-Content -Path $file.FullName
-					[xml]$fileContent = Get-Content -path $file.FullName -Raw -Encoding UTF8
-					$fileContent.Save($file.FullName)
-				}
-			}
-		}
-	}
-	Write-Host "Done"
 }
 
-# Wrapper for the different functions needed for updating mods
-function Update-NextMod {
-	Set-Location $localModFolder
-	Get-NotUpdatedMods -FirstOnly
-	if((Get-Location).Path -eq $localModFolder) {
-		Write-Host "No mods need updating"
-		return
+function Update-VSCodeLoop {
+	[CmdletBinding()]
+	param($modName)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return $false		
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
-	$continue = Read-Host "$(Split-Path (Get-Location).Path -Leaf) - Continue? (Blank yes)"
-	if($continue.Length -gt 0) {
-		return
+	$cscprojFiles = Get-ChildItem -Recurse -Path $modFolder -Include *.csproj
+	if(-not $cscprojFiles) {
+		return $true
 	}
-	Set-ModIncrement
-	Test-Mod
+
+	Start-VSProject -modname $modName
+	while ($true) {
+		$answer = Read-Host "Enter for testing mod, Y+Enter for accepting, N+Enter for aborting"
+		if($answer.ToLower() -eq "y") {
+			return $true
+		}
+		if($answer.ToLower() -eq "n") {
+			return $false
+		}
+		Test-Mod -bare
+	}
+	return $false
 }
 
 # Checks for updated versions of updated mods
@@ -1021,7 +1070,7 @@ function Update-ModDescriptionFromPreviousMod {
 	}
 	$firstPart = "$(($currentDescription -split "NOW7jU1.png\[\/img\]")[0])NOW7jU1.png[/img]"
 	$lastPart = $lastPart.Trim()
-	$fullDescription = "$firstPart`n$lastPart".Replace("&", "and").Replace("<", "").Replace(">", "")
+	$fullDescription = [Security.SecurityElement]::Escape("$firstPart`n$lastPart")
 
 	if(-not $noConfimation) {
 		Write-Verbose "First: $firstPart"
@@ -1177,11 +1226,19 @@ function Sync-ModDescriptionFromSteam {
 		Write-Host "Description found on steam for $modName was empty, aborting sync"
 		return
 	}
+	$currentDescription = [Security.SecurityElement]::Escape($currentDescription)
 	$aboutFile = "$($modFolder)\About\About.xml"
 	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 	$description = "$($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])"
 	$aboutContent = $aboutContent.Replace($description, $currentDescription)
 	$aboutContent | Set-Content -Path $aboutFile -Encoding UTF8
+}
+
+function Get-CleanDescription {
+	param (
+		$description
+	)
+	
 }
 
 function Sync-ModDescriptionToSteam {
@@ -1689,6 +1746,11 @@ function Publish-Mod {
 		Read-Host "Preview-file has not been updated since we changed logo, update first, then press Enter"
 	}
 
+	# Remove leftover-files
+	if(Test-Path "$modFolder\Source\lastrun.log") {
+		Remove-Item "$modFolder\Source\lastrun.log" -Force
+	}
+
 	# Generate english-language if missing
 	# Set-Translation -ModName $modName
 
@@ -1958,11 +2020,14 @@ function Push-ModContent {
 # Test the mod in the current directory
 function Test-Mod {
 	param([Parameter()]
-    [ValidateSet('1.0','1.1','latest')]
+    [ValidateSet('1.0','1.1','1.2','latest')]
     [string[]]
 	$version = "latest",
 	[switch] $alsoLoadBefore,
-	[switch] $autotest)
+	[switch] $rimThreaded,
+	[switch] $autotest,
+	[switch] $force,
+	[switch] $bare)
 	if(-not $version) {
 		$version = "latest"
 	}
@@ -1972,30 +2037,113 @@ function Test-Mod {
 		return			
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
-	Write-Host "Testing $modName"
-	return Start-RimWorld -testMod $modName -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest
+	if($autotest) {
+		Write-Host "Auto-testing $modName"
+	} else {
+		Write-Host "Testing $modName"		
+	}
+	return Start-RimWorld -testMod $modName -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -rimthreaded:$rimThreaded -bare:$bare
 }
+
 
 # Returns a list of mods that has not been updated to the latest version
 # With switch FirstOnly the current directory is changed to the next not-updated mod root path
 function Get-NotUpdatedMods {
-	param([switch]$FirstOnly)
+	param([switch]$FirstOnly,
+		[switch]$NextOnly,
+		[switch]$NoVs,
+		[switch]$NoDependencies,
+		[switch]$IgnoreLastErrors,
+		[switch]$NotFinished,
+		[int]$MaxToFetch = -1)
 	$currentVersionString = Get-CurrentRimworldVersion
 	$allMods = Get-ChildItem -Directory $localModFolder
+	if($MaxToFetch -eq 0) {
+		$MaxToFetch = $allMods.Length
+	}
+	$currentFolder = (Get-Location).Path
+	if($currentFolder -eq $localModFolder) {
+		$NextOnly = $false
+		$FirstOnly = $true
+		Write-Host "Standing in root-dir, will assume FirstOnly instead of NextOnly"
+	}
+	$foundStart = $false
+	$counter = 0
 	foreach($folder in $allMods) {
+		if($NextOnly -and (-not $foundStart)) {
+			if($folder.FullName -eq $currentFolder) {				
+				Write-Host "Will search for next mod from $currentFolder"
+				$foundStart = $true
+			}
+			continue
+		}
+		if($MaxToFetch -gt 0 -and $counter -ge $MaxToFetch) {
+			return $false
+		}
 		if(-not (Test-Path "$($folder.FullName)\About\PublishedFileId.txt")) {
 			continue
 		}
-		$aboutFile = "$($folder.FullName)\About\About.xml"
-		if(-not (Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
-			if($FirstOnly) {
-				Set-Location $folder.FullName
-				return
-			}
-			Write-Host $folder.Name
+		if(-not (Get-OwnerIsMeStatus -modName $folder.Name)) {
+			continue
 		}
+		if(-not $IgnoreLastErrors -and (Test-Path "$($folder.FullName)Source\lastrun.log")) {
+			continue
+		}
+		if($NoVs) {
+			$cscprojFiles = Get-ChildItem -Recurse -Path $folder.FullName -Include *.csproj
+			if($cscprojFiles.Length -gt 0) {
+				continue
+			}
+		}
+		$aboutFile = "$($folder.FullName)\About\About.xml"
+
+		if($NoDependencies -and (Get-IdentifiersFromMod -modname $folder.Name).Count -gt 1) {
+			continue
+		}
+
+		if(-not $NotFinished -and (Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
+			continue
+		}
+
+		if($NotFinished) {
+			if((Get-Item "$($folder.FullName)\About\Changelog.txt").LastWriteTime -ge (Get-Item $aboutFile).LastWriteTime.AddMinutes(-5)) {
+				continue
+			}
+			if(-not (Get-Content -path $aboutFile -Raw -Encoding UTF8).Contains("<li>$currentVersionString</li>")) {
+				continue
+			}
+		}
+
+		if($FirstOnly -or $NextOnly) {
+			Set-Location $folder.FullName
+			return $true
+		}
+		Write-Host $folder.Name
+		$counter++
 	}
 }
+
+
+# Returns the oldest mod in the mod-directory, optional VS-only switch
+function Get-OldestMod {
+	param([switch]$OnlyVS)
+	$allMods = Get-ChildItem -Path "$localModFolder\*\About\About.xml" | Sort-Object -Property LastWriteTime 
+	foreach($aboutFile in $allMods) {
+		Set-Location $aboutFile.Directory.Parent
+		if(-not (Get-OwnerIsMeStatus)) {
+			continue
+		}
+		if($OnlyVS) {
+			$cscprojFiles = Get-ChildItem -Recurse -Path $aboutFile.Directory.Parent -Include *.csproj	
+			if($cscprojFiles.Count -eq 0) {
+				continue
+			}
+		}
+		Write-Host "$($aboutFile.Directory.Parent.Name) was updated $($aboutFile.LastWriteTimeString)"
+		break
+	}
+}
+
 
 function Get-CurrentRimworldVersion {
 	param([switch]$versionObject)
@@ -2005,6 +2153,12 @@ function Get-CurrentRimworldVersion {
 		return $currentRimworldVersion
 	}
 	return "$($currentRimworldVersion.Major).$($currentRimworldVersion.Minor)"
+}
+
+
+function Get-LastRimworldVersion {
+	$currentVersion = Get-CurrentRimworldVersion -versionObject
+	return "$($currentVersion.Major).$($currentVersion.Minor - 1)"
 }
 
 # Helper function to scrape page
@@ -2020,26 +2174,26 @@ function Get-HtmlPageStuff {
 	try { 
 		$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
 	} catch { 
-		Write-Host "Could not fetch $url, trying again"
+		Write-Verbose "Could not fetch $url, trying again"
 	} 
 	if(-not $page) {
 		try { 
 			$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
 		} catch { 
-			Write-Host "Could not fetch $url, trying again"
+			Write-Verbose "Could not fetch $url, trying again"
 		} 
 	}
 	if(-not $page) {
 		try { 
 			$page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false
 		} catch { 
-			Write-Host "Could not fetch $url"
+			Write-Host -ForegroundColor Red "Could not fetch $url"
 			return $returnValue
 		} 
 	}
 	# $page = Invoke-WebRequest -Uri $url -UseBasicParsing -Verbose:$false -ErrorAction SilentlyContinue
 	if(-not $page) {
-		Write-Host "Fetched $url but got no content"
+		Write-Host -ForegroundColor Red "Fetched $url but got no content"
 		return $returnValue
 	}
 	$html = New-Object -Com "HTMLFile" -Verbose:$false
@@ -2139,6 +2293,8 @@ function Convert-BBCodeToGithub {
 	$textToConvert = $textToConvert.Replace("[b]", "**").Replace("[/b]", "**")
 	$textToConvert = $textToConvert.Replace("[i]", "*").Replace("[/i]", "*")
 	$textToConvert = $textToConvert.Replace("[h1]", "# ").Replace("[/h1]", "`n")
+	$textToConvert = $textToConvert.Replace("[h2]", "## ").Replace("[/h2]", "`n")
+	$textToConvert = $textToConvert.Replace("[h3]", "### ").Replace("[/h3]", "`n")
 	$textToConvert = $textToConvert.Replace("[url=", "").Replace("[/url]", "")
 	$textToConvert = $textToConvert.Replace("[img]", "![Image](").Replace("[/img]", ")`n")
 	$textToRemove = (($textToConvert -split "\[table\]")[1] -split "\[/table\]")[0]

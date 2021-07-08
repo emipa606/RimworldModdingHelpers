@@ -83,6 +83,7 @@ p|targetTypes|targetTags
 p|HasHair|hasHair
 p|defname|defName
 p|SoundCast|soundCast
+p|UseGenderedHeads|useGenderedHeads
 p|RecipeUsers|recipeUsers
 p|GetsGreyAt|getsGreyAt
 p|preventDeterioration|preventDeteriorationOnTop
@@ -203,15 +204,19 @@ v|GlitterworldMedicine|MedicineUltratech
 v|HerbalMedicine|MedicineHerbal
 v|Component|ComponentIndustrial
 v|AdvancedComponent|ComponentSpacer
+v|Gun_Pistol|Gun_Autopistol
 v|Puddle_Fuel|Filth_Fuel
 v|FilthFireFoam|Filth_FireFoam
+v|FilthVomit|Filth_Vomit
 v|MortarShell|Shell_HighExplosive
 v|TurretMortarBase|TurretMortar_Base
 v|InteractPistol|Interact_Autopistol
+v|InteractMolotovCocktail|Interact_MolotovCocktail
 v|InteractRevolver|Interact_Revolver
 v|InteractRifle|Interact_Rifle
 v|InteractShotgun|Interact_Shotgun
 v|ShotSniperRifle|Shot_SniperRifle
+v|ShotRevolver|Shot_Revolver
 v|InteractSMG|Interact_SMG
 v|ShotShotgun|Shot_Shotgun
 v|ShotAssaultRifle|Shot_AssaultRifle
@@ -219,6 +224,7 @@ v|ShotSurvivalRifle|Shot_BoltActionRifle
 v|ShotHeavySMG|Shot_HeavySMG
 v|ShotBoltActionRifle|Shot_BoltActionRifle
 v|ShotMinigun|Shot_Minigun
+v|PlantPotato|Plant_Potato
 v|BulletImpactFlesh|BulletImpact_Flesh
 v|BulletImpactMetal|BulletImpact_Metal
 v|BulletImpactGround|BulletImpact_Ground
