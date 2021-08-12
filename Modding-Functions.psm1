@@ -1008,7 +1008,10 @@ function Get-ModDependencyMaxVersion {
 # Checks for updated versions of updated mods
 function Update-ModsStatistics {
 	[CmdletBinding()]
-	param([switch]$localOnly)
+	param(
+		[switch]$localOnly,
+		$maxAmount = 0
+	)
 	$allMods = Get-ChildItem -Directory $localModFolder
 	$templateModObject = @"
 {
@@ -1017,7 +1020,7 @@ function Update-ModsStatistics {
 	"Archived":  false,
 	"Steamlink": "",
 	"Githublink": "",
-	"ID": 0,
+	"modId": "",
 	"Selfmade": true,
 	"Version": "0.0",
 	"LastUpdated": ""
@@ -1025,9 +1028,13 @@ function Update-ModsStatistics {
 "@	
 	$i = 0
 	$total = $allMods.Count
-	Write-Host "`n`n`n`n`n`n"
-
+	if($maxAmount -eq 0) {
+		$maxAmount = $total
+	}
 	foreach($folder in $allMods) {
+		if($i -ge $maxAmount) {
+			continue
+		}
 		$i++
 		$percent =  [math]::Round($i / $total * 100)
 		$modName = $folder.Name
@@ -1037,6 +1044,7 @@ function Update-ModsStatistics {
 			Write-Verbose "$modName not published, skipping"
 			continue
 		}
+		$modId = Get-Content $modFileId -Raw -Encoding UTF8
 		$aboutFile = "$($folder.FullName)\About\About.xml"		
 		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 		if(-not (Get-OwnerIsMeStatus -modName $modName)) {
@@ -1056,14 +1064,18 @@ function Update-ModsStatistics {
 		if(-not $localOnly) {
 			$modlist.$modName.Subscribers = Get-ModSubscribers -modLink $steamLink		
 		}
-		$modlist.$modName.ID = Get-Content $modFileId -Raw -Encoding UTF8
+		[string]$modlist.$modName.modId = $modId
 		if(Test-Path $manifestFile) {
 			$modlist.$modName.Version = ((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
 			$modlist.$modName.LastUpdated = Get-Date (Get-Item $manifestFile).LastWriteTime -Format "yyyy-MM-dd HH:mm:ss"
 		}
 		if($modlist.$modName.Name -match "Continued" -or $aboutContent -match "Update of" -or $aboutContent -notmatch "<author>Mlie</author>") {
-			$modlist.$modName.Selfmade = $false				
+			$modlist.$modName.Selfmade = $false
 			if(-not $localOnly) {
+				$visibility = Get-HtmlPageStuff -url $steamLink -visibility
+				if($visibility -ne "Public") {
+					Write-Host -ForegroundColor Yellow "$modName, id:$modId has visiblity set to $visibility, perhaps archived?"
+				}
 				$description = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])
 				[regex]$regex = 'https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=[0-9]+\s'
 				$originalLink = $regex.Matches($description).Value
@@ -1073,7 +1085,7 @@ function Update-ModsStatistics {
 				if($originalLink) {
 					Write-Verbose "Testing status for original: $originalLink"
 					if(Get-ModSteamStatus -modLink $originalLink) {
-						Write-Host "$modName might no longer be needed, original link is latest version."
+						Write-Host -ForegroundColor Yellow "$modName might no longer be needed, original link is latest version."
 						# Get-ModRepository -modName $modName
 						# Get-ModPage -modName $modName
 						# $modlist.$modName.Archived = $true
@@ -1089,7 +1101,7 @@ function Update-ModsStatistics {
 		Write-Verbose "$($modName) not found, removing"
 		$modlist.PSObject.Properties.Remove($modName)
 	}
-	$modlist | ConvertTo-Json -Depth 15 | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
+	$modlist | ConvertTo-Json -EnumsAsStrings | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
 }
 
 function Update-ModPreviewImage {
@@ -2012,13 +2024,14 @@ function Publish-Mod {
 </description>
 "@
 		$aboutContent = $aboutContent.Replace("</description>", $faqText)
-		if($EndOfLife) {
-			$aboutContent = $aboutContent.Replace("NOW7jU1.png", "CN9Rs5X.png")
-		}
 		$aboutContent | Set-Content $aboutFile -Encoding UTF8
 		if(-not $firstPublish) {
 			Sync-ModDescriptionToSteam -modName $modName -Force:$Force
 		}
+	}
+	if($EndOfLife) {
+		$aboutContent = $aboutContent.Replace("7Gzt3Rg.png", "CN9Rs5X.png")		
+		Sync-ModDescriptionToSteam -modName $modName -Force:$Force
 	}
 
 	# Clone current repository to staging
@@ -2407,15 +2420,34 @@ function Get-HtmlPageStuff {
 	[CmdletBinding()]
 	param (
 		$url,
+		$cacheTime = 30,
 		[switch] $previewUrl,
-		[switch] $subscribers
+		[switch] $subscribers,
+		[switch] $visibility
 	)
 	# Write-Host "Fetching $url"
 	Import-Module -ErrorAction Stop PowerHTML
-	$html = ConvertFrom-Html -URI $url
+	$fileName = $url.Split("=")[1].Trim()
+	$filePath = "$($env:TEMP)\$fileName.html"
+	if(-not (Test-Path $filePath) -or (Get-Item $filePath).LastWriteTime -lt ((get-date).AddMinutes(-$cacheTime))) {
+		(ConvertFrom-Html -URI $url).InnerHtml | Out-File $filePath
+	}
+	$html = ConvertFrom-Html -Path $filePath
 	try {
 		if($html.InnerText -match "An error was encountered while processing your request:") {
 			return
+		}
+		if($visibility) {
+			if($html.InnerText -match "Current visibility: Unlisted") {
+				return "Unlisted"
+			}
+			if($html.InnerText -match "Current visibility: Hidden") {
+				return "Hidden"
+			}
+			if($html.InnerText -match "Current visibility: Friends-only") {
+				return "Friends"
+			}
+			return "Public"
 		}
 		if($subscribers) {
 			return $html.SelectNodes("//table").SelectNodes("//td")[2].InnerText.Replace(",", "")
