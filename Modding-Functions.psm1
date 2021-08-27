@@ -29,8 +29,10 @@ $Global:modSyncTemplate = "$PSScriptRoot\$($settings.modsync_template)"
 $Global:licenseFile = "$PSScriptRoot\$($settings.license_file)"
 $Global:discordUpdateMessage = "$PSScriptRoot\$($settings.discord_update_message)"
 $Global:discordPublishMessage = "$PSScriptRoot\$($settings.discord_publish_message)"
+$Global:discordRemoveMessage = "$PSScriptRoot\$($settings.discord_remove_message)"
 $Global:discordUpdateHookUrl = $settings.discord_update_hook_url
 $Global:discordPublishHookUrl = $settings.discord_publish_hook_url
+$Global:discordRemovehHookUrl = $settings.discord_remove_hook_url
 if(-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
 	"{}" | Out-File -Encoding utf8 -FilePath "$($settings.mod_staging_folder)\..\modlist.json"
 }
@@ -179,7 +181,8 @@ function Get-ModPage {
 function Get-ModRepository {
 	param(
 		[string]$modName,
-		[switch]$getLink
+		[switch]$getLink,
+		$extraParameters
 	)
 	if(-not $modName) {
 		$currentDirectory = (Get-Location).Path
@@ -190,7 +193,7 @@ function Get-ModRepository {
 		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$modNameClean = $modName.Replace("+", "Plus")
-	$arguments = "https://github.com/$($settings.github_username)/$modNameClean"
+	$arguments = "https://github.com/$($settings.github_username)/$modNameClean$($extraParameters)"
 	if($getLink) {
 		return $arguments
 	}	
@@ -1076,11 +1079,15 @@ function Update-ModsStatistics {
 				if($visibility -ne "Public") {
 					Write-Host -ForegroundColor Yellow "$modName, id:$modId has visiblity set to $visibility, perhaps archived?"
 				}
-				$description = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])
+				$description = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("[")[0])
 				[regex]$regex = 'https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=[0-9]+\s'
 				$originalLink = $regex.Matches($description).Value
 				if($originalLink.Count -gt 1) {
 					$originalLink = $originalLink[0]
+				}
+				if($originalLink -match $modId) {
+					Write-Verbose "Original link points to the mod itself, ignoring"
+					continue
 				}
 				if($originalLink) {
 					Write-Verbose "Testing status for original: $originalLink"
@@ -1159,6 +1166,43 @@ function Update-ModPreviewImage {
 	Read-Host "Waitning for image to be updated"
 }
 
+function Set-CleanModDescription {
+	param(
+		$modName,
+		[switch]$noWait
+	)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+	if(-not (Get-OwnerIsMeStatus -modName $modName)) {
+		Write-Host "$modName is not mine, aborting update"
+		return
+	}
+	$modFolder = "$localModFolder\$modName"
+	$aboutFile = "$($modFolder)\About\About.xml"		
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	if(-not ($aboutContent -match "&apos;") -and -not ($aboutContent -match "&quot;") -and -not ($aboutContent -match "&lt;") -and -not ($aboutContent -match "&gt;")) {
+		Write-Host "Local description for $modName does not need cleaning"
+		return		
+	}
+	Write-Host -ForegroundColor Green "Starting with $modName"
+	Sync-ModDescriptionFromSteam
+	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+	$aboutContent = $aboutContent.Replace("&quot;", '"').Replace("&apos;", "'").Replace("&lt;", "").Replace("&gt;", "")
+	$aboutContent | Set-Content -Path $aboutFile -Encoding UTF8
+	Sync-ModDescriptionToSteam
+	if($noWait) {
+		return
+	}
+	Get-ModPage
+	Read-Host "Continue?"
+}
+
 function Update-ModDescriptionFromPreviousMod {
 	param($modName,
 		[switch]$localSearch,
@@ -1233,7 +1277,7 @@ function Update-ModDescriptionFromPreviousMod {
 	$firstPart = "$(($currentDescription -split "NOW7jU1.png\[\/img\]")[0])NOW7jU1.png[/img]"
 	$lastPart = $lastPart.Trim()
 	# Disclamer is 650 chars
-	$fullDescription = "$firstPart`n$lastPart".Replace(" & ", " &amp; ").Replace(">", "&gt;").Replace(">", "&gt;").Replace("<", "&lt;").Replace("'", "&apos;").Replace('"', "&quot;")
+	$fullDescription = "$firstPart`n$lastPart".Replace("&", "&amp;").Replace(">", "").Replace("<", "")
 	$remainingCharacters = 8000 - 650
 	if($fullDescription.Length -gt $remainingCharacters) {
 		Write-Host -ForegroundColor Red "Mod-description will be over $remainingCharacters characters, will trim the original description."
@@ -1399,7 +1443,7 @@ function Sync-ModDescriptionFromSteam {
 	$aboutFile = "$($modFolder)\About\About.xml"
 	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 	$description = "$($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])"
-	$aboutContent = $aboutContent.Replace($description, $currentDescription.Replace(" & ", " &amp; ").Replace(">", "&gt;").Replace(">", "&gt;").Replace("<", "&lt;").Replace("'", "&apos;").Replace('"', "&quot;"))
+	$aboutContent = $aboutContent.Replace($description, $currentDescription.Replace(" & ", " &amp; ").Replace(">", "").Replace("<", ""))
 	$aboutContent | Set-Content -Path $aboutFile -Encoding UTF8
 }
 
@@ -1665,20 +1709,74 @@ function Update-Defs {
 # Git-fetching function
 # A simple function to update a local mod from a remote git server
 function Get-LatestGitVersion {
+	param (
+		[switch]$mineOnly,
+		[switch]$newOnly,
+		[switch]$clean
+	)
 	$currentDirectory = (Get-Location).Path
 	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
 		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return			
+		return
 	}
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	$modFolder = "$localModFolder\$modName"
 	Set-Location $modFolder
-	if(Test-Path "$modFolder\.git") {
-		git pull origin master | Out-Null
-	} else {
-		$path = Read-Host "URL for the project"
-		git clone $path $modFolder
+	if($clean) {
+		Remove-Item "$modFolder\.git" -Recurse -Force -Confirm:$false
 	}
+	if(Test-Path "$modFolder\.git") {
+		if($newOnly) {
+			return
+		}
+		Write-Host "Fetching latest github for mod $modName"
+		git pull origin main --allow-unrelated-histories *> $null
+	} else {
+		Write-Host "Fetching latest github for mod $modName"
+		if(Get-RepositoryStatus) {
+			$path = Get-ModRepository -getLink
+		} else {
+			if($mineOnly) {
+				Write-Host "$modName is not my mod, exiting"
+				return
+			}
+			$path = Read-Host "URL for the project"
+		}
+
+		if((Get-ChildItem $modFolder).Length -gt 0) {
+			git init
+			git remote add origin $path
+			git fetch
+			git config core.autocrlf true
+			git add -A
+			Update-GitRepoName
+			git pull origin main
+		} else {
+			git clone $path $modFolder
+			Update-GitRepoName
+		}
+	}
+}
+
+function Update-GitRepoName {
+	$currentDirectory = (Get-Location).Path
+	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+		return
+	}
+	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	$path = Get-ModRepository -getLink
+	if(-not (git ls-remote --heads $path master)) {
+		Write-Host "$modName does not use the 'master' branch name, exiting"
+		return
+	}
+	git switch -f master
+	git branch -m master main
+	git push -u origin main
+	#git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+	git branch -u origin/main main
+	Set-DefaultGitBranch -repoName $modName -branchName "main"
+	git push origin --delete master
 }
 
 # Merges a repository with another, preserving history
@@ -1881,7 +1979,7 @@ function Publish-Mod {
 
 	$modNameClean = $modName.Replace("+", "Plus")
 	$stagingDirectory = $settings.mod_staging_folder
-	$rootFolder = Split-Path $stagingDirectory
+	# $rootFolder = Split-Path $stagingDirectory
 	$manifestFile = "$modFolder\About\Manifest.xml"
 	$modsyncFile = "$modFolder\About\ModSync.xml"
 	$aboutFile = "$modFolder\About\About.xml"
@@ -1928,10 +2026,10 @@ function Publish-Mod {
 	# Set-Translation -ModName $modName
 
 	# Reset Staging
-	Set-Location -Path $rootFolder
-	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
-	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
-	Set-Location -Path $stagingDirectory
+	# Set-Location -Path $rootFolder
+	# Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+	# Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+	# Set-Location -Path $stagingDirectory
 
 	# Prepare mod-directory
 	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
@@ -1968,7 +2066,7 @@ function Publish-Mod {
 	if((Test-Path $modSyncTemplate) -and -not (Test-Path $modsyncFile)) {
 		New-ModSyncFile -targetPath $modsyncFile -modWebPath $modNameClean -modname $modFullName -version $version.ToString()
 	}
-	if((Test-Path $publisherPlusTemplate) -and -not (Test-Path $modPublisherPath)) {
+	if((Test-Path $publisherPlusTemplate) -and -not (Test-Path $modPublisherPath) -or ((Get-Item $publisherPlusTemplate).LastWriteTime -gt (Get-Item $modPublisherPath).LastWriteTime)) {
 		Copy-Item -Path $publisherPlusTemplate $modPublisherPath -Force | Out-Null
 		((Get-Content -path $modPublisherPath -Raw -Encoding UTF8).Replace("[modpath]",$modFolder)) | Set-Content -Path $modPublisherPath
 	}
@@ -1995,6 +2093,7 @@ function Publish-Mod {
 	} else {
 		Read-Host "Repository could not be found, create $modNameClean?"
 		New-GitRepository -repoName $modNameClean
+		Get-LatestGitVersion
 		$message = "First publish"
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
 	}
@@ -2030,18 +2129,20 @@ function Publish-Mod {
 		}
 	}
 	if($EndOfLife) {
-		$aboutContent = $aboutContent.Replace("7Gzt3Rg.png", "CN9Rs5X.png")		
+		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
+		$aboutContent = $aboutContent.Replace("7Gzt3Rg", "CN9Rs5X")		
+		$aboutContent | Set-Content $aboutFile -Encoding UTF8
 		Sync-ModDescriptionToSteam -modName $modName -Force:$Force
 	}
 
 	# Clone current repository to staging
-	git clone https://github.com/$($settings.github_username)/$modNameClean
+	# git clone https://github.com/$($settings.github_username)/$modNameClean
 
 	# Copy replace modfiles
 	"# $modNameClean`n`r" > $readmeFile
 	(Convert-BBCodeToGithub -textToConvert ((Get-Content $aboutFile -Raw -Encoding UTF8).Replace("<description>", "|").Split("|")[1].Split("<")[0])) >> $readmeFile
-	robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git /NFL /NDL /NJH /NJS /NP
-	Set-Location -Path $stagingDirectory\$modNameClean
+	# robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git /NFL /NDL /NJH /NJS /NP
+	# Set-Location -Path $stagingDirectory\$modNameClean
 
 	# Reapply gitignore-file if necessary
 	if($reapplyGitignore) {
@@ -2087,7 +2188,7 @@ function Publish-Mod {
 	Write-Host "Upload status: $($uploadedFile.state)"
 	Remove-Item $zipFile.FullName -Force
 
-	Set-Location $modFolder
+	# Set-Location $modFolder
 
 	if($EndOfLife) {
 		Set-GitRepositoryToArchived -repoName $modNameClean
@@ -2120,6 +2221,8 @@ function Publish-Mod {
 	}
 	if($EndOfLife) {
 		Write-Host "Repository set to archived, mod set to unlisted. Moving local mod-folder to Archived"
+		Push-UpdateNotification -Changenote "Original version updated, mod set to unlisted. Will not be further updated" -EndOfLife
+		Get-ModPage
 		Set-Location $localModFolder
 		Move-Item -Path $modFolder -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
 	}
@@ -2152,6 +2255,23 @@ function New-GitRepository {
 	Write-Host "Creating repo"
 	Invoke-RestMethod @repoParams | Out-Null
 	Start-Sleep -Seconds 1
+	$sha = ((Invoke-WebRequest "https://api.github.com/repos/$($settings.github_username)/$repoName/contents/README.md").Content | ConvertFrom-Json).sha
+	$repoData = @{
+		message = "Removed default Readme";
+		sha = $sha;
+	}
+	$repoParams = @{
+		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoName/contents/README.md";
+		Method = 'DELETE';
+		Headers = @{
+		Authorization = 'Basic ' + [Convert]::ToBase64String(
+		[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"));
+		}
+		ContentType = 'application/json';
+		Body = (ConvertTo-Json $repoData -Compress)
+	}
+	Write-Host "Removing basic readme"
+	Invoke-RestMethod @repoParams | Out-Null
 	Write-Host "Done"
 }
 
@@ -2181,6 +2301,36 @@ function Set-GitRepositoryToArchived {
 	Start-Sleep -Seconds 1
 	Write-Host "Done"
 }
+
+
+function Set-DefaultGitBranch {
+	param(
+		$repoName,
+		$branchName
+	)
+	if(-not (Get-RepositoryStatus -repositoryName $repoName)) {
+		Write-Host "Repository $repoName does not exist"
+		return
+	}
+	$repoData = @{
+		default_branch = "$branchName";
+	}
+	$repoParams = @{
+		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoName";
+		Method = 'PATCH';
+		Headers = @{
+		Authorization = 'Basic ' + [Convert]::ToBase64String(
+		[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"));
+		}
+		ContentType = 'application/json';
+		Body = (ConvertTo-Json $repoData -Compress)
+	}
+	Write-Host "Changing repo default to $branchName"
+	Invoke-RestMethod @repoParams | Out-Null
+	Start-Sleep -Seconds 1
+	Write-Host "Done"
+}
+
 
 function Start-SteamPublish {
 	param($modFolder,
@@ -2489,7 +2639,7 @@ function Get-WrongManifest {
 
 # Simple update-notification for Discord
 function Push-UpdateNotification {
-	param([switch]$Test, [string]$Changenote)
+	param([switch]$Test, [string]$Changenote, [switch]$EndOfLife)
 	$currentDirectory = (Get-Location).Path
 	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
 		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
@@ -2504,12 +2654,18 @@ function Push-UpdateNotification {
 	$modFullName = ($aboutContent.Replace("<name>", "|").Split("|")[1].Split("<")[0])
 	$modUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
 
-	if($Changenote.Length -gt 0) {
-		$discordHookUrl = $discordUpdateHookUrl
-		$content = (Get-Content $discordUpdateMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl).Replace("[changenote]", $Changenote)
+	if($EndOfLife) {
+		$discordHookUrl = $discordRemovehHookUrl
+		$repoUrl = Get-ModRepository -getLink
+		$content = (Get-Content $discordRemoveMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[repourl]", $repoUrl).Replace("[endmessage]", $Changenote)
 	} else {
-		$discordHookUrl = $discordPublishHookUrl
-		$content = (Get-Content $discordPublishMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl)
+		if($Changenote.Length -gt 0) {
+			$discordHookUrl = $discordUpdateHookUrl
+			$content = (Get-Content $discordUpdateMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl).Replace("[changenote]", $Changenote)
+		} else {
+			$discordHookUrl = $discordPublishHookUrl
+			$content = (Get-Content $discordPublishMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[modurl]", $modUrl)
+		}		
 	}
 	
 	if($Test) {
