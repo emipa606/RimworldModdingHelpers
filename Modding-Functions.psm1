@@ -1079,9 +1079,9 @@ function Update-ModsStatistics {
 				if($visibility -ne "Public") {
 					Write-Host -ForegroundColor Yellow "$modName, id:$modId has visiblity set to $visibility, perhaps archived?"
 				}
-				$description = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("[")[0])
+				$linkArea = ($aboutContent.Replace("<description>", "|").Split("|")[1].Split("`n") | Select-Object -First 4)
 				[regex]$regex = 'https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=[0-9]+\s'
-				$originalLink = $regex.Matches($description).Value
+				$originalLink = $regex.Matches($linkArea).Value
 				if($originalLink.Count -gt 1) {
 					$originalLink = $originalLink[0]
 				}
@@ -1097,8 +1097,14 @@ function Update-ModsStatistics {
 						# Get-ModPage -modName $modName
 						# $modlist.$modName.Archived = $true
 					}
+				} else {
+					Write-Debug "No original link found for $modName"
 				}
+			} else {
+				Write-Debug "No online check for $modName"
 			}
+		} else {
+			Write-Debug "$modName is not a continued mod"
 		}
 	}
 	foreach($modName in ($modlist.PSObject.Properties).Name) {
@@ -1224,8 +1230,8 @@ function Update-ModDescriptionFromPreviousMod {
 	$modFolder = "$localModFolder\$modName"
 	$aboutFile = "$($modFolder)\About\About.xml"		
 	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
-	if(-not ($aboutContent -match "NOW7jU1.png\[\/img\]")) {
-		Write-Host "Local description for $modName does not contain NOW7jU1.png[/img]"
+	if(-not ($aboutContent -match "Z4GOv8H.png\[\/img\]")) {
+		Write-Host "Local description for $modName does not contain Z4GOv8H.png[/img]"
 		return		
 	}
 
@@ -1253,28 +1259,28 @@ function Update-ModDescriptionFromPreviousMod {
 		$previousModId = (($currentDescription -split "https://steamcommunity.com/sharedfiles/filedetails/\?id=")[1] -split "[^0-9]")[0]
 		if(-not $previousModId) {
 			Write-Host "No previous mod found for $modName, using existing instead"
-			$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]", 0)[1]
+			$lastPart = ($currentDescription -split "Z4GOv8H.png\[\/img\]", 0)[1]
 		} else {
 			Remove-Item -Path $tempDescriptionFile -Force -ErrorAction SilentlyContinue
 			$arguments = @($previousModId,"SAVE",$tempDescriptionFile)  
 			Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
 			if(-not (Test-Path $tempDescriptionFile)) {
 				Write-Host "No description found for previous mod for $modName, using id $previousModId, will keep existing"			
-				$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]")[1]
+				$lastPart = ($currentDescription -split "Z4GOv8H.png\[\/img\]")[1]
 			} else {
 				$lastPart = Get-Content -Path $tempDescriptionFile -Raw -Encoding UTF8
 				if($lastPart.Length -eq 0) {
 					Write-Host "Description found on steam for previous mod for $modName was empty, using existing instead"
-					$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]")[1]
+					$lastPart = ($currentDescription -split "Z4GOv8H.png\[\/img\]")[1]
 				}
 			}
 		}
 
 	} else {		
 		Write-Host "Description found on steam for $modName does not contain an old mod-link on steam, will just update format"
-		$lastPart = ($currentDescription -split "NOW7jU1.png\[\/img\]")[1]
+		$lastPart = ($currentDescription -split "Z4GOv8H.png\[\/img\]")[1]
 	}
-	$firstPart = "$(($currentDescription -split "NOW7jU1.png\[\/img\]")[0])NOW7jU1.png[/img]"
+	$firstPart = "$(($currentDescription -split "Z4GOv8H.png\[\/img\]")[0])Z4GOv8H.png[/img]"
 	$lastPart = $lastPart.Trim()
 	# Disclamer is 650 chars
 	$fullDescription = "$firstPart`n$lastPart".Replace("&", "&amp;").Replace(">", "").Replace("<", "")
@@ -1993,6 +1999,9 @@ function Publish-Mod {
 	# Clean up XML-files
 	$files = Get-ChildItem "$modFolder\*.xml" -Recurse
 	foreach($file in $files) {
+		if($file.BaseName -eq "_PublisherPlus") {
+			continue
+		}
 		$fileContentRaw = Get-Content -path $file.FullName -Raw -Encoding UTF8		
 		if(-not $fileContentRaw.StartsWith("<?xml")) {
 			$fileContentRaw = "<?xml version=""1.0"" encoding=""utf-8""?>" + $fileContentRaw
@@ -2107,11 +2116,11 @@ function Publish-Mod {
 		Sync-ModDescriptionFromSteam -modName $modName -Force:$Force
 	}
 	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
-	if(-not $aboutContent.Contains("Rs6T6cr")) {
+	if(-not $aboutContent.Contains("PwoNOj4")) {
 		$faqText = @"
 
 
-[img]https://i.imgur.com/Rs6T6cr.png[/img]
+[img]https://i.imgur.com/PwoNOj4.png[/img]
 [list]
 [*] See if the the error persists if you just have this mod and its requirements active.
 [*] If not, try adding your other mods until it happens again.
@@ -2130,7 +2139,7 @@ function Publish-Mod {
 	}
 	if($EndOfLife) {
 		$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
-		$aboutContent = $aboutContent.Replace("7Gzt3Rg", "CN9Rs5X")		
+		$aboutContent = $aboutContent.Replace("pufA0kM", "CN9Rs5X")		
 		$aboutContent | Set-Content $aboutFile -Encoding UTF8
 		Sync-ModDescriptionToSteam -modName $modName -Force:$Force
 	}
@@ -2576,7 +2585,7 @@ function Get-HtmlPageStuff {
 		[switch] $visibility
 	)
 	# Write-Host "Fetching $url"
-	Import-Module -ErrorAction Stop PowerHTML
+	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
 	$fileName = $url.Split("=")[1].Trim()
 	$filePath = "$($env:TEMP)\$fileName.html"
 	if(-not (Test-Path $filePath) -or (Get-Item $filePath).LastWriteTime -lt ((get-date).AddMinutes(-$cacheTime))) {

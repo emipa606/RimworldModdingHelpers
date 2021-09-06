@@ -4,3 +4,7 @@ settings.json
 gitignore.txt
 DiscordUpdate.txt
 LICENSE.md
+.vs
+obj
+MigrationBackup
+*.DotSettings.user
