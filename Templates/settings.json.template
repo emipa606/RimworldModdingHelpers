@@ -7,8 +7,10 @@
 	"mod_staging_folder": "C:\\ModPublishing\\StagingDirectory",
 	"discord_update_hook_url": "http://hook.url",
 	"discord_publish_hook_url": "http://hook.url",
+	"discord_remove_hook_url": "http://hook.url",
 	"discord_update_message": "DiscordUpdate.txt",
 	"discord_publish_message": "DiscordPublish.txt",
+	"discord_remove_message": "DiscordRemove.txt",
 	"github_username": "username",
 	"github_api_token": "00000000000000000000000000000",
 	"modsync_template": "ModSync.xml",
@@ -25,4 +27,5 @@
 	"playing_screen_witdh": "2560",
 	"zip_path": "C:\\ModPublishing\\7za.exe",
 	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"
+	"mod_identifier_prefix": "Author"
 }

@@ -137,7 +137,7 @@ namespace SteamUpdateTool
                     await LoadModInfoAsync();
                     using (var sw = File.CreateText(args[2]))
                     {
-                        sw.Write(workshopItem.Description);
+                        await sw.WriteAsync(workshopItem.Description);
                     }
 
                     break;
@@ -157,7 +157,7 @@ namespace SteamUpdateTool
                         case "AUTHOR":
                             using (var sw = File.CreateText(args[3]))
                             {
-                                sw.Write(workshopItem.Owner.Name);
+                                await sw.WriteAsync(workshopItem.Owner.Name);
                             }
 
                             break;
@@ -199,28 +199,18 @@ namespace SteamUpdateTool
         {
             var result = await new Editor(workshopId).WithDescription(description).SubmitAsync();
 
-            if (result.Success)
-            {
-                Console.WriteLine($"Description of {workshopItem.Title} updated");
-            }
-            else
-            {
-                Console.WriteLine($"Failed to update description of {workshopItem.Title}");
-            }
+            Console.WriteLine(result.Success
+                ? $"Description of {workshopItem.Title} updated"
+                : $"Failed to update description of {workshopItem.Title}");
         }
 
         private static async Task SetModPreviewAsync(string previewFile)
         {
             var result = await new Editor(workshopId).WithPreviewFile(previewFile).SubmitAsync();
 
-            if (result.Success)
-            {
-                Console.WriteLine($"Preview of {workshopItem.Title} updated");
-            }
-            else
-            {
-                Console.WriteLine($"Failed to update preview of {workshopItem.Title}");
-            }
+            Console.WriteLine(result.Success
+                ? $"Preview of {workshopItem.Title} updated"
+                : $"Failed to update preview of {workshopItem.Title}");
         }
     }
 }
