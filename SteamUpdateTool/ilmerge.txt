@@ -1,0 +1,1 @@
+ilmerge /v4 /lib:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319" /t:exe /out:Deployer.exe RimworldModReleaseTool.exe System.IO.Compression.FileSystem.dll System.IO.Compression.ZipFile.dll
