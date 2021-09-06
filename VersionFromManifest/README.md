@@ -5,6 +5,7 @@ Uses the mod-identifier to look up the correct file
 
 Example.
 
+```
 private static string currentVersion;
 currentVersion = VersionFromManifest.GetVersionFromModMetaData(ModLister.GetActiveModWithIdentifier("ModIdentifier"));
 if (currentVersion != null)
@@ -15,3 +16,4 @@ if (currentVersion != null)
 	listing_Standard.Label($"Installed mod-version: {currentVersion}");
 	GUI.contentColor = Color.white;
 }
+```
