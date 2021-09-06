@@ -5,7 +5,7 @@ Uses the mod-identifier to look up the correct file
 
 Example.
 
-```
+```cs
 private static string currentVersion;
 currentVersion = VersionFromManifest.GetVersionFromModMetaData(ModLister.GetActiveModWithIdentifier("ModIdentifier"));
 if (currentVersion != null)
