@@ -1235,8 +1235,8 @@ function Update-ModDescriptionFromPreviousMod {
 		return		
 	}
 
+	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	$stagingDirectory = $settings.mod_staging_folder
-	$applicationPath = "$stagingDirectory\..\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe".Replace("\", "\\")
 	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
 	if($localSearch) {
 		$currentDescription = ((($aboutContent -split "<description>")[1]) -split "</description>")[0]
@@ -1354,8 +1354,7 @@ function Update-ModDescription {
 	
 	Write-Host "Will replace $searchString with $replaceString in $($modFolders.Count) mods" 
 	
-	$stagingDirectory = $settings.mod_staging_folder
-	$applicationPath = "$stagingDirectory\..\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe".Replace("\", "\\")
+	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	foreach($folder in ($modFolders | Get-Random -Count $modFolders.Count)) {	
 		Start-Sleep -Milliseconds $waittime
 		if(-not (Test-Path "$($folder)\About\PublishedFileId.txt")) {
@@ -1432,9 +1431,9 @@ function Sync-ModDescriptionFromSteam {
 		Write-Host "$modName not published, aborting sync"
 		return
 	}	
+	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	$modId = Get-Content "$($modFolder)\About\PublishedFileId.txt" -Raw
 	$stagingDirectory = $settings.mod_staging_folder
-	$applicationPath = "$stagingDirectory\..\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe".Replace("\", "\\")
 	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
 	Remove-Item -Path $tempDescriptionFile -Force -ErrorAction SilentlyContinue
 	$arguments = @($modId,"SAVE",$tempDescriptionFile)
@@ -1487,14 +1486,14 @@ function Sync-ModDescriptionToSteam {
 		Write-Host "$modName not published, aborting sync"
 		return
 	}	
+	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
+	$stagingDirectory = $settings.mod_staging_folder
 	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
 	$aboutFile = "$($modFolder)\About\About.xml"
 	$aboutContent = Get-Content $aboutFile -Raw -Encoding UTF8
 	$description = "$($aboutContent.Replace("<description>", "|").Split("|")[1].Split("<")[0])"
 	$description | Set-Content -Path $tempDescriptionFile -Encoding UTF8
 	$modId = Get-Content "$($modFolder)\About\PublishedFileId.txt" -Raw
-	$stagingDirectory = $settings.mod_staging_folder
-	$applicationPath = "$stagingDirectory\..\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe".Replace("\", "\\")
 	$arguments = @($modId,"SET",$tempDescriptionFile)
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
 }
@@ -2378,7 +2377,7 @@ function Start-SteamPublish {
 	Copy-Item -Path "$modFolder\*" -Destination $stagingDirectory -Recurse -Exclude $exclusions
 
 	Write-Host "Starting steam-publish"
-	$publishToolPath = "$stagingDirectory\..\SteamUpdateTool\Compiled\RimworldModReleaseTool.exe".Replace("\", "\\")
+	$publishToolPath = "$($settings.script_root)\SteamUpdateTool\Compiled\RimworldModReleaseTool.exe"
 	Start-Process -FilePath $publishToolPath -ArgumentList $stagingDirectory -Wait -NoNewWindow
 	if($copyPublishedFileId -and (Test-Path "$stagingDirectory\About\PublishedFileId.txt")) {
 		Copy-Item -Path "$stagingDirectory\About\PublishedFileId.txt" -Destination "$modfolder\About\PublishedFileId.txt" -Force

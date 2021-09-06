@@ -5,6 +5,7 @@
 	"text_editor_path": "C:\\Program Files\\Notepad++\\notepad++.exe",
 	"rimtrans_path": "C:\\Program Files\\RimTrans\\Trans.exe",
 	"mod_staging_folder": "C:\\ModPublishing\\StagingDirectory",
+	"script_root": "C:\\ModPublishing\\Scripts",
 	"discord_update_hook_url": "http://hook.url",
 	"discord_publish_hook_url": "http://hook.url",
 	"discord_remove_hook_url": "http://hook.url",
