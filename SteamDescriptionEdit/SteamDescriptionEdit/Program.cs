@@ -9,7 +9,7 @@ namespace SteamUpdateTool
 {
     internal class Program
     {
-        private const int rimworldId = 294100;
+        private const uint rimworldId = 294100;
         private static uint workshopId;
         private static Item workshopItem;
 
