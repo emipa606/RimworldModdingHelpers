@@ -213,12 +213,14 @@ v|FilthVomit|Filth_Vomit
 v|MortarShell|Shell_HighExplosive
 v|TurretMortarBase|TurretMortar_Base
 v|InteractPistol|Interact_Autopistol
+v|InteractAutopistol|Interact_Autopistol
 v|InteractMolotovCocktail|Interact_MolotovCocktail
 v|InteractRevolver|Interact_Revolver
 v|InteractRifle|Interact_Rifle
 v|InteractShotgun|Interact_Shotgun
 v|ShotSniperRifle|Shot_SniperRifle
 v|ShotRevolver|Shot_Revolver
+v|ShotAutopistol|Shot_Autopistol
 v|InteractSMG|Interact_SMG
 v|ShotShotgun|Shot_Shotgun
 v|ShotAssaultRifle|Shot_AssaultRifle
