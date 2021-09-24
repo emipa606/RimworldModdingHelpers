@@ -801,17 +801,17 @@ function Get-IdentifiersFromMod {
 	}
 	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "mlie.showmeyourhands"
 	foreach($identifier in $aboutFileContent.ModMetaData.modDependencies.li.packageId) {
-		if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier) -or $identifier.Contains(" ")) {
+		if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
 			continue
 		}
 		$identifiersToAdd += $identifier.ToLower()
 	}
 	if($alsoLoadBefore){
-		foreach($identifier in .ModMetaData.loadAfter.li) {
-			if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier) -or $identifier.Contains(" ")) {
+		foreach($identifier in $aboutFileContent.ModMetaData.loadAfter.li) {
+			if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
 				continue
 			}
-			if(-not $identifiersToAdd.Contains($identifierString)) {
+			if(-not $identifiersToAdd.Contains($identifier.ToLower())) {
 				$identifiersToAdd += $identifier.ToLower()
 			}
 		}
