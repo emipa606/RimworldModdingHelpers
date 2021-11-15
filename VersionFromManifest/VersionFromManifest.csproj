@@ -7,6 +7,16 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <DebugType>None</DebugType>
     <LangVersion>latest</LangVersion>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>Mlie_Rimworld_VersionFromManifest</PackageId>
+    <Authors>Mlie</Authors>
+    <PackageProjectUrl>https://github.com/emipa606/RimworldModdingHelpers/tree/master/VersionFromManifest</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/emipa606/RimworldModdingHelpers/tree/master/VersionFromManifest</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>Rimworld</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	  <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref">
@@ -15,4 +25,13 @@
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+	<ItemGroup>
+		<Content Include="readme.md">
+			<Pack>true</Pack>
+			<PackagePath>\</PackagePath>
+		</Content>
+	</ItemGroup>
+	<Target Name="NugetPackAutoVersioning" AfterTargets="Build">
+		<Exec Command="dotnet pack -p:PackageVersion=$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmmss&quot;)) --no-build --configuration $(Configuration) --output &quot;$(SolutionDir)nuget&quot;" />
+	</Target>
 </Project>

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 using Steamworks;
 using Version = System.Version;
 
@@ -12,11 +14,16 @@ namespace RimworldModReleaseTool
         public readonly List<string> Tags;
         private PublishedFileId_t _publishedFileId = PublishedFileId_t.Invalid;
 
-        public Mod(string path)
+        public Mod(string path, string imageFolderPath)
         {
             if (!Directory.Exists(path))
             {
-                throw new Exception($"path '{path}' not found.");
+                throw new Exception($"mod-path '{path}' not found.");
+            }
+
+            if (!string.IsNullOrEmpty(imageFolderPath) && !Directory.Exists(imageFolderPath))
+            {
+                throw new Exception($"image-path '{imageFolderPath}' not found.");
             }
 
             var about = PathCombine(path, "About", "About.xml");
@@ -48,35 +55,94 @@ namespace RimworldModReleaseTool
                     if (metaNode.Name.ToLower() == "name")
                     {
                         Name = metaNode.InnerText;
+                        continue;
                     }
 
                     if (metaNode.Name.ToLower() == "description")
                     {
                         Description = metaNode.InnerText;
-                    }
-
-                    if (metaNode.Name != "supportedVersions")
-                    {
                         continue;
                     }
 
-                    foreach (XmlNode tagNode in metaNode.ChildNodes)
+                    if (metaNode.Name == "supportedVersions")
                     {
-                        Version.TryParse(tagNode.InnerText, out var version);
-                        Tags.Add(version.Major + "." + version.Minor);
+                        foreach (XmlNode tagNode in metaNode.ChildNodes)
+                        {
+                            Version.TryParse(tagNode.InnerText, out var version);
+                            Tags.Add(version.Major + "." + version.Minor);
+                        }
                     }
                 }
             }
 
+            Dependencies = new List<ulong>();
+
+            if (XElement.Parse(aboutXml.InnerXml).Element("modDependencies") != null &&
+                XElement.Parse(aboutXml.InnerXml).Element("modDependencies").HasElements)
+            {
+                foreach (var xElement in XElement.Parse(aboutXml.InnerXml).Element("modDependencies")?.Elements())
+                {
+                    var stringDependency =
+                        xElement.Element("steamWorkshopUrl")?.Value.Replace("=", "/").Split('/').Last();
+                    try
+                    {
+                        Dependencies.Add(Convert.ToUInt64(stringDependency));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not convert {stringDependency} to ulong {e}");
+                    }
+                }
+            }
+
+            Console.WriteLine($"Found {Dependencies.Count} dependencies to add. {string.Join(", ", Dependencies)}");
             Archived = Description?.Contains("CN9Rs5X.png") == true;
 
-            // get preview image
+            // get preview images
             var preview = PathCombine(path, "About", "Preview.png");
             if (File.Exists(preview))
             {
                 Preview = preview;
                 PreviewBytes = new FileInfo(preview).Length;
             }
+
+            PreviewsBytes = 0;
+            Previews = new List<string>();
+            if (!string.IsNullOrEmpty(imageFolderPath))
+            {
+                for (var i = 1; i < 100; i++)
+                {
+                    var filePath = PathCombine(imageFolderPath, $"{i}.png");
+                    if (File.Exists(filePath))
+                    {
+                        Previews.Add(filePath);
+                        PreviewsBytes += new FileInfo(filePath).Length;
+                        continue;
+                    }
+
+                    filePath = PathCombine(imageFolderPath, $"{i}.jpg");
+                    if (File.Exists(filePath))
+                    {
+                        Previews.Add(filePath);
+                        PreviewsBytes += new FileInfo(filePath).Length;
+                        continue;
+                    }
+
+                    filePath = PathCombine(imageFolderPath, $"{i}.gif");
+                    if (File.Exists(filePath))
+                    {
+                        Previews.Add(filePath);
+                        PreviewsBytes += new FileInfo(filePath).Length;
+                        continue;
+                    }
+
+                    // Console.WriteLine($"Could not find any preview in path {filePath}, will not continue looking");
+                    break;
+                }
+            }
+
+            Console.WriteLine(
+                $"Found {Previews.Count} previews to add from {imageFolderPath}. {string.Join(", ", Previews)}");
 
             // get publishedFileId
             var pubfileIdPath = PathCombine(path, "About", "PublishedFileId.txt");
@@ -92,11 +158,13 @@ namespace RimworldModReleaseTool
 
         public string Name { get; }
         public string Preview { get; }
+        public List<string> Previews { get; }
         public string Description { get; }
         public long PreviewBytes { get; }
+        public long PreviewsBytes { get; }
         public long ModBytes { get; }
         public bool Archived { get; }
-
+        public List<ulong> Dependencies { get; }
 
         public PublishedFileId_t PublishedFileId
         {

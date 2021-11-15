@@ -92,6 +92,7 @@ namespace RimworldModReleaseTool
 
         public string LatestChangeNote { get; }
 
+
         private static string ParseAboutXMLFor(string element, string newPath)
         {
             var text = newPath + @"\About\About.xml";

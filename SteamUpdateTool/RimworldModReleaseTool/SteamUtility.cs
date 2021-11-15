@@ -91,6 +91,12 @@ namespace RimworldModReleaseTool
                         break;
                     case "Uploading Preview File":
                         Console.WriteLine($"{niceStatus} ({Math.Round((double)mod.PreviewBytes / 1000)} KB)");
+                        if (mod.PreviewsBytes > 0)
+                        {
+                            Console.WriteLine(
+                                $"and {mod.Previews.Count} preview-images ({Math.Round((double)mod.PreviewsBytes / 1000)} KB)");
+                        }
+
                         break;
                     default:
                         Console.WriteLine(niceStatus);
@@ -179,12 +185,31 @@ namespace RimworldModReleaseTool
                 SteamUGC.SetItemDescription(handle, mod.Description);
                 SteamUGC.SetItemVisibility(handle,
                     ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic);
+                foreach (var modDependency in mod.Dependencies)
+                {
+                    Console.WriteLine($"Setting dependency to mod with id {modDependency}");
+                    SteamUGC.AddDependency(new PublishedFileId_t(modDependency), mod.PublishedFileId);
+                }
+
+                if (mod.Name.Contains("(Continued)"))
+                {
+                    Console.WriteLine("Adding mod to ressurection-collection");
+                    SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+                }
+
+                foreach (var modPreview in mod.Previews)
+                {
+                    SteamUGC.AddItemPreviewFile(handle, modPreview, EItemPreviewType.k_EItemPreviewType_Image);
+                }
+
+                Console.WriteLine($"Adding {mod.Previews.Count} preview images");
             }
 
             if (mod.Archived)
             {
                 SteamUGC.SetItemVisibility(handle,
                     ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityUnlisted);
+                SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
             }
         }
 

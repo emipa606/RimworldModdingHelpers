@@ -9,24 +9,35 @@ namespace RimworldModReleaseTool
         public static void Main(string[] args)
         {
             InitializeProgram();
-            if (args.Length != 1)
+            if (args.Length < 1 || args.Length > 3)
             {
-                Console.WriteLine("You must specify one parameter, the base path to the mod-folder.");
+                Console.WriteLine("You must at least specify the path to the mod-folder.");
                 return;
             }
 
             var modFolderPath = args[0];
-
             if (!Directory.Exists(modFolderPath))
             {
                 Console.WriteLine($"{modFolderPath} not found");
                 return;
             }
 
+            var imageFolderPath = string.Empty;
+            if (args.Length > 1)
+            {
+                imageFolderPath = args[1];
+                if (!Directory.Exists(imageFolderPath))
+                {
+                    Console.WriteLine($"{imageFolderPath} not found");
+                    return;
+                }
+            }
+
+            var confirm = args.Length > 2;
 
             var updateInfo = new ModUpdateInfo(modFolderPath);
 
-            SteamUpdateRequest(updateInfo, modFolderPath);
+            SteamUpdateRequest(updateInfo, modFolderPath, imageFolderPath, confirm);
         }
 
         private static void InitializeProgram()
@@ -49,14 +60,21 @@ namespace RimworldModReleaseTool
             };
         }
 
-        private static void SteamUpdateRequest(ModUpdateInfo updateInfo, string modRootPath)
+        private static void SteamUpdateRequest(ModUpdateInfo updateInfo, string modRootPath, string imageFolderPath,
+            bool confirm)
         {
             try
             {
-                var mod = new Mod(modRootPath);
+                var mod = new Mod(modRootPath, imageFolderPath);
                 SteamUtility.Init();
                 Console.WriteLine(mod.ToString());
                 Console.WriteLine($"Latest changenote: {updateInfo.LatestChangeNote}");
+                if (confirm)
+                {
+                    Console.WriteLine("Continue?");
+                    Console.ReadLine();
+                }
+
                 if (SteamUtility.Upload(mod, updateInfo.LatestChangeNote))
                 {
                     Console.WriteLine("Upload done");

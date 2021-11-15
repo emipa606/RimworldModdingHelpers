@@ -348,6 +348,44 @@ function Get-ModSteamStatus{
 	return $false
 }
 
+function Get-MultilineMessage {
+	param (
+		$query,
+		[switch]$mustFill
+	)
+	$returnValue = ""
+	while(-not $returnValue) {
+		$message = "$query (two blank rows ends message, to skip just press enter)"
+		if($mustFill) {
+			$message = "$query (two blank rows ends message)"
+		}
+		Write-Host "$addon$message"
+		$continueMessage = $true
+		$currentMessage = @()
+		$lastRow = ""
+		while ($continueMessage) {		
+			$currentRow = Read-Host
+			if($currentRow -eq "" -and $currentMessage.Count -eq 0) {
+				break
+			}
+			if($currentRow -eq "" -and $lastRow -eq "") {
+				$continueMessage = $false
+				continue
+			}
+			$currentMessage += $currentRow
+			$lastRow = $currentRow
+		}
+
+		$returnValue = $currentMessage -join "`r`n"
+		if($mustFill) {
+			$addon = "Must write something! "
+		} else {
+			break
+		}
+	}
+	return $returnValue	
+}
+
 # Adds an update post to the mod
 # If HugsLib is loaded this will be shown if new to user
 function Set-ModUpdateFeatures {
@@ -369,24 +407,7 @@ function Set-ModUpdateFeatures {
 		return
 	}
 	if(-not $updateMessage) {
-		Write-Host "Add update-message? Write the message, two blank rows ends message. To skip just press enter."
-		$continueMessage = $true
-		$currentNews = @()
-		$lastRow = ""
-		while ($continueMessage) {		
-			$newsRow = Read-Host
-			if($newsRow -eq "" -and $currentNews.Count -eq 0) {
-				return
-			}
-			if($newsRow -eq "" -and $lastRow -eq "") {
-				$continueMessage = $false
-				continue
-			}
-			$currentNews += $newsRow
-			$lastRow = $newsRow
-		}
-
-	$news = $currentNews -join "`r`n"
+		$news = Get-MultilineMessage -query "Add update-message?"
 	} else {
 		$news = $updateMessage
 	}
@@ -556,9 +577,9 @@ function Start-RimWorld {
 				$identifiersToAdd = Get-IdentifiersFromMod -modname $testMod -oldmod
 			} else {
 				if($alsoLoadBefore) {
-					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -alsoLoadBefore
+					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -gameVersion $version -alsoLoadBefore
 				} else {
-					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname			
+					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -gameVersion $version		
 				}
 			}
 			if(Test-Path "$oldModFolder\$modname") {
@@ -783,7 +804,16 @@ function Get-IdentifiersFromMod {
 	param ([string]$modname, 
 		   [switch]$oldmod, 
 		   [switch]$alsoLoadBefore,
-		   [string]$modFolderPath)
+		   [string]$modFolderPath,
+		   [string]$gameVersion)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return			
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
 	if($modFolderPath) {		
 		$aboutFile = "$modFolderPath\About\About.xml"
 	} else {
@@ -792,6 +822,9 @@ function Get-IdentifiersFromMod {
 	if(-not (Test-Path $aboutFile)) {
 		Write-Host "Could not find About-file for mod named $modname"
 		return @()
+	}
+	if(-not $gameVersion) {
+		$gameVersion = Get-CurrentRimworldVersion
 	}
 	$aboutFileContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
 	$identifiersToAdd = @()
@@ -805,6 +838,14 @@ function Get-IdentifiersFromMod {
 			continue
 		}
 		$identifiersToAdd += $identifier.ToLower()
+	}
+	if($aboutFileContent.ModMetaData.modDependenciesByVersion) {
+		foreach($identifier in $aboutFileContent.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId) {
+			if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
+				continue
+			}
+			$identifiersToAdd += $identifier.ToLower()
+		}
 	}
 	if($alsoLoadBefore){
 		foreach($identifier in $aboutFileContent.ModMetaData.loadAfter.li) {
@@ -1363,34 +1404,40 @@ function Update-ModDescription {
 	}
 	
 	Write-Host "Will replace $searchString with $replaceString in $($modFolders.Count) mods" 
-	
+	$total = $modFolders.Count
+	$i = 0
 	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
-	foreach($folder in ($modFolders | Get-Random -Count $modFolders.Count)) {	
-		Start-Sleep -Milliseconds $waittime
+	foreach($folder in ($modFolders | Get-Random -Count $modFolders.Count)) {		
+		$i++	
+		$percent = [math]::Round($i / $total * 100)
+		$modNameString = $(Split-Path $folder -Leaf)
+		Write-Progress -Activity "$($modFolders.Count) matches found, looking in $($folder.name), " -Status "$i of $total" -PercentComplete $percent;
 		if(-not (Test-Path "$($folder)\About\PublishedFileId.txt")) {
 			continue
 		}		
-		if(-not (Get-OwnerIsMeStatus -modName $(Split-Path $folder -Leaf))) {
-			Write-Host "$(Split-Path $folder -Leaf) is not mine, aborting sync"
+		if(-not (Get-OwnerIsMeStatus -modName $modNameString)) {
+			Write-Host -ForegroundColor Gray "$modNameString is not mine, aborting sync"
 			continue
 		}
 		if($syncBefore) {			
-			Sync-ModDescriptionFromSteam -modName $(Split-Path $folder -Leaf)
+			Sync-ModDescriptionFromSteam -modName $modNameString
 		}	
 		$modId = Get-Content "$($folder)\About\PublishedFileId.txt" -Raw
 		$aboutFile = "$($folder)\About\About.xml"
 		$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
 		if(Select-String -InputObject $aboutContent.ModMetaData.description -pattern $replaceString) {
-			Write-Host "Description for $(Split-Path $folder -Leaf) already contains the replace-string, skipping"
+			Write-Host -ForegroundColor Gray "Description for $modNameString already contains the replace-string, skipping"
 			continue
 		}
 		if(Select-String -InputObject $aboutContent.ModMetaData.description -pattern $searchString) {
+			Start-Sleep -Milliseconds $waittime
 			$arguments = @($modId,"REPLACE",$searchString,$replaceString)   
 			Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
 			$aboutContent.ModMetaData.description = $aboutContent.ModMetaData.description.Replace($searchString,$replaceString)
 			$aboutContent.Save($aboutFile)
+			Write-Host -ForegroundColor Green "Updated description for $modNameString"
 		} else {
-			Write-Host "Description for $(Split-Path $folder -Leaf) does not contain $searchString"
+			Write-Host -ForegroundColor Gray "Description for $modNameString does not contain $searchString"
 		}
 	}
 	
@@ -1505,8 +1552,12 @@ function Get-StringFromModFiles {
 	param($searchString,
 		$threads = 10,
 		[switch]$firstOnly,
+		[switch]$noEscape,
 		$fromSave) 
 	$searchStringConverted = [regex]::escape($searchString)
+	if($noEscape) {
+		$searchStringConverted = $searchString
+	}
 	if($identifierCache.Lenght -eq 0) {		
 		Update-IdentifierToFolderCache
 	}
@@ -1536,15 +1587,16 @@ function Get-StringFromModFiles {
 	foreach($folder in ($allMods | Get-Random -Count $total)) {
 		$i++
 		$percent = [math]::Round($i / $total * 100)
-		Write-Progress -Activity "Searching $($folder.name), $($allMatchingFiles.Count) matches found" -Status "$i of $total" -PercentComplete $percent;
+		Write-Progress -Activity "$($allMatchingFiles.Count) matches found, looking in $($folder.name), " -Status "$i of $total" -PercentComplete $percent;
 		while((Get-Job -State 'Running').Count -gt $threads) {
 			Start-Sleep -Milliseconds 100
 		}
 		$ScriptBlock = {
-			# 1: $folder.FullName 2: $searchStringConverted
+			# 1: $folder.FullName 2: $searchStringConverted 
 			$foundFiles = @()
 			$searchString = $args[1]
-			Get-ChildItem -Path $args[0] -Recurse -File -Filter "*.xml" | ForEach-Object { if((Get-Content $_.FullName) -match $searchString) { $foundFiles += $_ } }
+			$baseFolder = Split-Path $args[0]
+			Get-ChildItem -Path $args[0] -Recurse -File -Filter "*.xml" | ForEach-Object { if((Get-Content -Path "$($_.FullName)" -Raw -Encoding utf8) -match $searchString) { $foundFiles += $_.FullName.Replace("$baseFolder\", "") } }
 			return $foundFiles
 		}
 		$arguments = @("$($folder.FullName)",$searchStringConverted)
@@ -1574,13 +1626,14 @@ function Get-StringFromModFiles {
 		Remove-Job $job | Out-Null
 	}
 	if($firstOnly -and $allMatchingFiles.Count -gt 0){
-		$number = ((Get-Content $allMatchingFiles[0].FullName | select-string $searchStringConverted).LineNumber)[0]
+		$fullPath = "$localModFolder\$($allMatchingFiles[0])"
+		$number = ((Get-Content $fullPath | select-string $searchStringConverted).LineNumber)[0]
 		$applicationPath = $settings.text_editor_path
-		$arguments = """$($allMatchingFiles[0].FullName)""","-n$number"
+		$arguments = """$($fullPath)""","-n$number"
 		Start-Process -FilePath $applicationPath -ArgumentList $arguments
 		return $allMatchingFiles[0]
 	}
-	return $allMatchingFiles
+	return $allMatchingFiles | Sort-Object
 }
 
 # Main mod-updating function
@@ -1784,7 +1837,7 @@ function Update-GitRepoName {
 	git push -u origin main
 	#git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
 	git branch -u origin/main main
-	Set-DefaultGitBranch -repoName $modName -branchName "main"
+	Set-DefaultGitBranch -repoName $modName.Replace("+", "Plus") -branchName "main"
 	git push origin --delete master
 }
 
@@ -1901,16 +1954,25 @@ function Get-NextModDependancy {
 # Useful to run on a mod to remove all extra whitespaces and redundant formatting
 function Set-ModXml {
 	param([switch]$skipBaseCheck,
-		$modName)
-	if(-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		$modName,
+		[switch]$currentDir)
+	$currentDirectory = (Get-Location).Path
+	if($currentDir) {
+		if(-not $currentDirectory.StartsWith($localModFolder)) {
 			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
-	}	
-	$modFolder = "$localModFolder\$modName"
+		$modFolder = $currentDirectory
+	} else {
+		if(-not $modName) {
+			if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+				Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+				return			
+			}
+			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		}	
+		$modFolder = "$localModFolder\$modName"		
+	}
 	
 	# Clean up XML-files
 	$files = Get-ChildItem "$modFolder\*.xml" -Recurse
@@ -2093,7 +2155,7 @@ function Publish-Mod {
 		} elseif($EndOfLife) {
 			$message = "Last update, added end-of-life message"
 		} else {
-			$message = Read-Host "Commit-Message"
+			$message = Get-MultilineMessage -query "Changenote" -mustFill
 		}
 		$oldVersion = "$($version.Major).$($version.Minor).$($version.Build)"
 		$newVersion = "$($version.Major).$($version.Minor).$($version.Build + 1)"
@@ -2186,16 +2248,18 @@ function Publish-Mod {
 	$uploadedFile = Invoke-RestMethod @uploadParams -InFile $zipFile.FullName -ContentType "application/zip"
 	Write-Host "Upload status: $($uploadedFile.state)"
 	Remove-Item $zipFile.FullName -Force
-
 	# Set-Location $modFolder
 
 	if($EndOfLife) {
 		Set-GitRepositoryToArchived -repoName $modNameClean
+	} else {
+		Set-GitSubscriptionStatus -repoName $modNameClean -enabled $true
 	}
 	if($GithubOnly) {
 		Write-Host "Published $modName to github only!"
 		return
 	}
+
 	Start-SteamPublish -modFolder $modFolder -Force:$Force
 
 	if(-not $SkipNotifications -and (Test-Path "$modFolder\About\PublishedFileId.txt")) {
@@ -2329,9 +2393,69 @@ function Set-DefaultGitBranch {
 }
 
 
+function Get-GitSubscriptionStatus {
+	param(
+		$repoName
+	)
+	if(-not (Get-RepositoryStatus -repositoryName $repoName)) {
+		Write-Host "Repository $repoName does not exist"
+		return
+	}
+	$repoParams = @{
+		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoName/subscription"
+		Method = 'GET'
+		Headers = @{
+		Authorization = 'Basic ' + [Convert]::ToBase64String(
+		[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"))
+		}
+		ContentType = 'application/json'
+	}
+	Write-Host "Fetching status for $repoName"
+	try {
+		$repoStatus = Invoke-RestMethod @repoParams
+	} catch {
+		return $false
+	}
+	return $repoStatus.subscribed
+}
+
+
+function Set-GitSubscriptionStatus {
+	param(
+		$repoName,
+		[bool]$enabled
+	)
+	if(-not (Get-RepositoryStatus -repositoryName $repoName)) {
+		Write-Host "Repository $repoName does not exist"
+		return
+	}
+	$repoData = @{
+		subscribed = $enabled
+	}
+	$repoParams = @{
+		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoName/subscription"
+		Method = 'PUT'
+		Headers = @{
+		Authorization = 'Basic ' + [Convert]::ToBase64String(
+		[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"))
+		}
+		ContentType = 'application/json'
+		Body = (ConvertTo-Json $repoData -Compress)
+	}
+	Write-Host "Setting status for $repoName to $enabled"
+	try {
+		Invoke-RestMethod @repoParams | Out-Null
+	} catch {
+		return $false
+	}
+	return $true
+}
+
+
 function Start-SteamPublish {
 	param($modFolder,
-		[switch]$Force)
+		[switch]$Force,
+		[switch]$Confirm)
 
 	if(-not (Test-Path $modFolder)) {
 		Write-Host "$modfolder does not exist"
@@ -2346,8 +2470,11 @@ function Start-SteamPublish {
 		$copyPublishedFileId = $true
 	}
 	$stagingDirectory = $settings.mod_staging_folder
+	$previewDirectory = "$($settings.mod_staging_folder)\..\PreviewStaging"
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+	Get-ChildItem -Path $previewDirectory -Recurse | Remove-Item -force -recurse
+	Get-ChildItem -Path $previewDirectory -Recurse | Remove-Item -force -recurse
 
 	Write-Host "Copying mod-files to publish-dir"
 	$exclusions = @()
@@ -2359,10 +2486,19 @@ function Start-SteamPublish {
 		$exclusions += $exclusionFile.Replace("$modFolder\", "")
 	}
 	Copy-Item -Path "$modFolder\*" -Destination $stagingDirectory -Recurse -Exclude $exclusions
+	if($copyPublishedFileId -or $Force) {
+		Write-Host "Copying previewfiles to preview-dir"
+		$inclusions = @("*.png", "*.jpg", "*.gif")
+		Copy-Item -Path "$modfolder\Source\*" -Destination $previewDirectory -Include $inclusions
+	}
 
 	Write-Host "Starting steam-publish"
 	$publishToolPath = "$($settings.script_root)\SteamUpdateTool\Compiled\RimworldModReleaseTool.exe"
-	Start-Process -FilePath $publishToolPath -ArgumentList $stagingDirectory -Wait -NoNewWindow
+	$arguments = @($stagingDirectory,$previewDirectory)
+	if($Confirm) {
+		$arguments += "True"
+	}
+	Start-Process -FilePath $publishToolPath -ArgumentList $arguments -Wait -NoNewWindow
 	if($copyPublishedFileId -and (Test-Path "$stagingDirectory\About\PublishedFileId.txt")) {
 		Copy-Item -Path "$stagingDirectory\About\PublishedFileId.txt" -Destination "$modfolder\About\PublishedFileId.txt" -Force
 	}
@@ -2566,7 +2702,8 @@ function Get-HtmlPageStuff {
 		$cacheTime = 30,
 		[switch] $previewUrl,
 		[switch] $subscribers,
-		[switch] $visibility
+		[switch] $visibility,
+		$previewSavePath
 	)
 	# Write-Host "Fetching $url"
 	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
@@ -2614,11 +2751,43 @@ function Get-HtmlPageStuff {
 				return "$($imgSrc.Split("?")[0])"
 			}
 			return
-		} else {
-			$versionsHtml = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")[0].InnerText.Trim()
-			$versions = $versionsHtml.Replace(" ", "").Split(",")
-			return $versions | Where-Object {$_ -and $_ -ne "Mod"}  
 		}
+		if($previewSavePath) {
+			if(-not (Test-Path $previewSavePath)) {
+				Write-Host -ForegroundColor Yellow "$previewSavePath does not exist, will not download preview images"
+				return
+			}
+			$previewNodes = $html.SelectNodes("//div[@class='highlight_strip_item highlight_strip_screenshot']")
+			if(-not $previewNodes) {
+				Write-Host -ForegroundColor Gray "No preview images found, ignoring"
+				return
+			}
+			$counter = 0
+			Write-Host -ForegroundColor Gray "Trying to download $($previewNodes.Count) preview images"
+			$total = $previewNodes.Count
+
+			for ($i = 1; $i -le $previewNodes.Count; $i++) {	
+				$percent = [math]::Round($i / $total * 100)
+				Write-Progress -Activity "Downloading preview-image $i" -Status "$i of $total" -PercentComplete $percent
+				$node = $previewNodes[$i - 1]
+				$image = $node.ChildNodes | Where-Object -Property Name -eq img
+				if(-not $image) {
+					continue
+				}
+				$imageSource = $image.GetAttributeValue("src","").Split("?")[0]
+				$ProgressPreference = 'SilentlyContinue' 
+				$request = Invoke-WebRequest -Uri $imageSource -MaximumRedirection 0 -ErrorAction Ignore
+				$extension = $request.Headers['Content-Type'].Split('/')[1].Replace("jpeg", "jpg")
+				Invoke-WebRequest $imageSource -OutFile "$previewSavePath\$i.$extension"
+				$ProgressPreference = 'Continue'
+				$counter++
+			}
+			Write-Host "Saved $counter preview-images to $previewSavePath"
+			return
+		}
+		$versionsHtml = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")[0].InnerText.Trim()
+		$versions = $versionsHtml.Replace(" ", "").Split(",")
+		return $versions | Where-Object {$_ -and $_ -ne "Mod"}		
 	} catch {
 		Write-Host -ForegroundColor Yellow "Failed to fetch data from $url `n$($_.ScriptStackTrace)`n$_"
 	}
@@ -2778,4 +2947,12 @@ function Update-IdentifierToFolderCache {
 
 function Get-GitOrigin {
 	git remote show origin
+}
+
+function Get-RimworldLog {	
+	Get-content "$env:USERPROFILE\Appdata\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log" -Tail 10 -Wait
+}
+
+function Get-GitHistory {
+	git --no-pager log --date=format:'%Y-%m-%d' --pretty=format:'%C(bold blue)%cd%Creset - %s %C(yellow)%d%Creset' --abbrev-commit --reverse
 }

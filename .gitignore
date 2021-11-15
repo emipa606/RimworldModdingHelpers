@@ -8,3 +8,6 @@ LICENSE.md
 obj
 MigrationBackup
 *.DotSettings.user
+.fake
+.ionide
+*.nupkg
