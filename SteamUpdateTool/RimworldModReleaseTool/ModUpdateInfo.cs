@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -53,14 +55,14 @@ namespace RimworldModReleaseTool
             }
 
             var isExtracting = false;
-            string changelogMessage = null;
+            var changelogArray = new List<string>();
             var versionRegex = new Regex(@"\d+(?:\.\d+){1,3}");
             foreach (var line in File.ReadAllLines(changelogFile.FullName))
             {
                 if (line.StartsWith(currentVersion))
                 {
                     isExtracting = true;
-                    changelogMessage += line;
+                    changelogArray.Add(line);
                     continue;
                 }
 
@@ -75,8 +77,10 @@ namespace RimworldModReleaseTool
                     break;
                 }
 
-                changelogMessage += line;
+                changelogArray.Add(line);
             }
+
+            var changelogMessage = string.Join(Environment.NewLine, changelogArray).Trim();
 
             LatestChangeNote = changelogMessage;
         }

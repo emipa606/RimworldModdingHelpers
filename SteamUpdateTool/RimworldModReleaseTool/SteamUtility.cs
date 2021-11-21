@@ -196,6 +196,11 @@ namespace RimworldModReleaseTool
                     Console.WriteLine("Adding mod to ressurection-collection");
                     SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
                 }
+                else
+                {
+                    Console.WriteLine("Adding mod to personal-collection");
+                    SteamUGC.AddDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+                }
 
                 foreach (var modPreview in mod.Previews)
                 {
