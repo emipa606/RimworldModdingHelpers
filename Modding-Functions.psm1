@@ -383,7 +383,8 @@ function Get-MultilineMessage {
 			break
 		}
 	}
-	return $returnValue	
+	$returnValue = $returnValue.Trim()
+	return $returnValue
 }
 
 # Adds an update post to the mod
@@ -408,6 +409,9 @@ function Set-ModUpdateFeatures {
 	}
 	if(-not $updateMessage) {
 		$news = Get-MultilineMessage -query "Add update-message?"
+		if(-not $news) {
+			return
+		}
 	} else {
 		$news = $updateMessage
 	}
@@ -1553,6 +1557,8 @@ function Get-StringFromModFiles {
 		$threads = 10,
 		[switch]$firstOnly,
 		[switch]$noEscape,
+		[switch]$alsoCs,
+		[switch]$finalOutput,
 		$fromSave) 
 	$searchStringConverted = [regex]::escape($searchString)
 	if($noEscape) {
@@ -1580,6 +1586,10 @@ function Get-StringFromModFiles {
 	$allMatchingFiles = @()
 	$i = 0
 	$total = $allMods.Count
+	$filterPart = "*.xml"
+	if($alsoCs) {		
+		$filterPart = ('*.xml','*.cs')
+	}
 	foreach($job in Get-Job){
 		Stop-Job $job | Out-Null
 		Remove-Job $job | Out-Null
@@ -1592,18 +1602,21 @@ function Get-StringFromModFiles {
 			Start-Sleep -Milliseconds 100
 		}
 		$ScriptBlock = {
-			# 1: $folder.FullName 2: $searchStringConverted 
+			# 0: $folder.FullName 1: $searchStringConverted 2: $filterPart
 			$foundFiles = @()
 			$searchString = $args[1]
 			$baseFolder = Split-Path $args[0]
-			Get-ChildItem -Path $args[0] -Recurse -File -Filter "*.xml" | ForEach-Object { if((Get-Content -Path "$($_.FullName)" -Raw -Encoding utf8) -match $searchString) { $foundFiles += $_.FullName.Replace("$baseFolder\", "") } }
+			Get-ChildItem -Path $args[0] -Recurse -File -Include $args[2] | ForEach-Object { if((Get-Content -LiteralPath "$($_.FullName)" -Raw -Encoding utf8) -match $searchString) { $foundFiles += $_.FullName.Replace("$baseFolder\", "") } }
 			return $foundFiles
 		}
-		$arguments = @("$($folder.FullName)",$searchStringConverted)
+		$arguments = @("$($folder.FullName)",$searchStringConverted,$filterPart)
 		Start-Job -Name "Find_$($folder.Name)" -ScriptBlock $ScriptBlock -ArgumentList $arguments | Out-Null
 		foreach($job in Get-Job -State Completed){
 			$result = Receive-Job $job
 			$allMatchingFiles += $result
+			if(-not $finalOutput -and -not $firstOnly) {
+				$result
+			}
 			Remove-Job $job | Out-Null
 		}
 		foreach($job in Get-Job -State Blocked){
@@ -1617,7 +1630,10 @@ function Get-StringFromModFiles {
 	}
 	foreach($job in Get-Job -State Completed){
 		$result = Receive-Job $job
-		$allMatchingFiles += $result
+		$allMatchingFiles += $result		
+		if(-not $finalOutput) {
+			$result
+		}
 		Remove-Job $job | Out-Null
 	}
 	foreach($job in Get-Job -State Blocked){
@@ -1633,7 +1649,9 @@ function Get-StringFromModFiles {
 		Start-Process -FilePath $applicationPath -ArgumentList $arguments
 		return $allMatchingFiles[0]
 	}
-	return $allMatchingFiles | Sort-Object
+	if($finalOutput) {
+		return $allMatchingFiles | Sort-Object
+	}
 }
 
 # Main mod-updating function
@@ -1795,7 +1813,7 @@ function Get-LatestGitVersion {
 		git pull origin main --allow-unrelated-histories
 	} else {
 		Write-Host "Fetching latest github for mod $modName"
-		if(Get-RepositoryStatus) {
+		if(Get-OwnerIsMeStatus -modName $modName) {
 			$path = Get-ModRepository -getLink
 		} else {
 			if($mineOnly) {
@@ -2149,7 +2167,7 @@ function Publish-Mod {
 
 	$firstPublish = (-not (Test-Path "$modFolder\About\PublishedFileId.txt"))
 	# Create repo if does not exists
-	if(Get-RepositoryStatus -repositoryName $modNameClean) {
+	if((Get-RepositoryStatus -repositoryName $modNameClean) -eq $true) {
 		if($ChangeNote) {
 			$message = $ChangeNote
 		} elseif($EndOfLife) {
@@ -2294,7 +2312,7 @@ function New-GitRepository {
 	param(
 		$repoName
 	)
-	if(Get-RepositoryStatus -repositoryName $repoName) {
+	if((Get-RepositoryStatus -repositoryName $repoName) -eq $true) {
 		Write-Host "Repository $repoName already exists"
 		return
 	}
@@ -2778,8 +2796,13 @@ function Get-HtmlPageStuff {
 				$ProgressPreference = 'SilentlyContinue' 
 				$request = Invoke-WebRequest -Uri $imageSource -MaximumRedirection 0 -ErrorAction Ignore
 				$extension = $request.Headers['Content-Type'].Split('/')[1].Replace("jpeg", "jpg")
-				Invoke-WebRequest $imageSource -OutFile "$previewSavePath\$i.$extension"
+				$outputPath = "$previewSavePath\$i.$extension"
+				Invoke-WebRequest $imageSource -OutFile $outputPath
 				$ProgressPreference = 'Continue'
+				if((Get-Item $outputPath).Length -gt 1MB) {
+					Write-Host "Lowering the size of previewimage to below 1MB"
+					Set-ImageSizeBelow -imagePath $outputPath -sizeInKb 999
+				}
 				$counter++
 			}
 			Write-Host "Saved $counter preview-images to $previewSavePath"

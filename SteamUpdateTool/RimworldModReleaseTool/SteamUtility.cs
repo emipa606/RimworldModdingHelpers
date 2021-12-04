@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Steamworks;
@@ -91,10 +92,10 @@ namespace RimworldModReleaseTool
                         break;
                     case "Uploading Preview File":
                         Console.WriteLine($"{niceStatus} ({Math.Round((double)mod.PreviewBytes / 1000)} KB)");
-                        if (mod.PreviewsBytes > 0)
+                        if (mod.PreviewsBytes.Any())
                         {
                             Console.WriteLine(
-                                $"and {mod.Previews.Count} preview-images ({Math.Round((double)mod.PreviewsBytes / 1000)} KB)");
+                                $"and {mod.Previews.Count} preview-images ({Math.Round((double)mod.PreviewsBytes.Sum() / 1000)} KB)");
                         }
 
                         break;
@@ -110,6 +111,32 @@ namespace RimworldModReleaseTool
             if (submitResult.m_eResult != EResult.k_EResultOK)
             {
                 Console.WriteLine($"Unexpected result: {submitResult.m_eResult}");
+            }
+
+            if (creating)
+            {
+                foreach (var modDependency in mod.Dependencies)
+                {
+                    Console.WriteLine($"Setting dependency to mod with id {modDependency}");
+                    SteamUGC.AddDependency(new PublishedFileId_t(modDependency), mod.PublishedFileId);
+                }
+
+                if (mod.Name.Contains("(Continued)"))
+                {
+                    Console.WriteLine("Adding mod to ressurection-collection");
+                    SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+                }
+                else
+                {
+                    Console.WriteLine("Adding mod to personal-collection");
+                    SteamUGC.AddDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+                }
+            }
+
+            if (mod.Archived)
+            {
+                Console.WriteLine("Removing mod to ressurection-collection");
+                SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
             }
 
             return submitResult.m_eResult == EResult.k_EResultOK;
@@ -185,23 +212,6 @@ namespace RimworldModReleaseTool
                 SteamUGC.SetItemDescription(handle, mod.Description);
                 SteamUGC.SetItemVisibility(handle,
                     ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityPublic);
-                foreach (var modDependency in mod.Dependencies)
-                {
-                    Console.WriteLine($"Setting dependency to mod with id {modDependency}");
-                    SteamUGC.AddDependency(new PublishedFileId_t(modDependency), mod.PublishedFileId);
-                }
-
-                if (mod.Name.Contains("(Continued)"))
-                {
-                    Console.WriteLine("Adding mod to ressurection-collection");
-                    SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
-                }
-                else
-                {
-                    Console.WriteLine("Adding mod to personal-collection");
-                    SteamUGC.AddDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
-                }
-
                 foreach (var modPreview in mod.Previews)
                 {
                     SteamUGC.AddItemPreviewFile(handle, modPreview, EItemPreviewType.k_EItemPreviewType_Image);
@@ -214,7 +224,6 @@ namespace RimworldModReleaseTool
             {
                 SteamUGC.SetItemVisibility(handle,
                     ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityUnlisted);
-                SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
             }
         }
 

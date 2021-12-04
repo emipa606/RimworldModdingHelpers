@@ -106,7 +106,7 @@ namespace RimworldModReleaseTool
                 PreviewBytes = new FileInfo(preview).Length;
             }
 
-            PreviewsBytes = 0;
+            PreviewsBytes = new List<long>();
             Previews = new List<string>();
             if (!string.IsNullOrEmpty(imageFolderPath))
             {
@@ -116,7 +116,7 @@ namespace RimworldModReleaseTool
                     if (File.Exists(filePath))
                     {
                         Previews.Add(filePath);
-                        PreviewsBytes += new FileInfo(filePath).Length;
+                        PreviewsBytes.Add(new FileInfo(filePath).Length);
                         continue;
                     }
 
@@ -124,7 +124,7 @@ namespace RimworldModReleaseTool
                     if (File.Exists(filePath))
                     {
                         Previews.Add(filePath);
-                        PreviewsBytes += new FileInfo(filePath).Length;
+                        PreviewsBytes.Add(new FileInfo(filePath).Length);
                         continue;
                     }
 
@@ -132,7 +132,7 @@ namespace RimworldModReleaseTool
                     if (File.Exists(filePath))
                     {
                         Previews.Add(filePath);
-                        PreviewsBytes += new FileInfo(filePath).Length;
+                        PreviewsBytes.Add(new FileInfo(filePath).Length);
                         continue;
                     }
 
@@ -161,7 +161,7 @@ namespace RimworldModReleaseTool
         public List<string> Previews { get; }
         public string Description { get; }
         public long PreviewBytes { get; }
-        public long PreviewsBytes { get; }
+        public List<long> PreviewsBytes { get; }
         public long ModBytes { get; }
         public bool Archived { get; }
         public List<ulong> Dependencies { get; }
