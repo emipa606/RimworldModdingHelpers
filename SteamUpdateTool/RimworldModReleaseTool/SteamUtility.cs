@@ -14,6 +14,10 @@ namespace RimworldModReleaseTool
         private static readonly AutoResetEvent ready = new AutoResetEvent(false);
         private static CallResult<SubmitItemUpdateResult_t> submitResultCallback;
         private static CallResult<CreateItemResult_t> createResultCallback;
+        private static CallResult<AddUGCDependencyResult_t> OnAddUGCDependencyCompletedCallResult;
+        private static CallResult<RemoveUGCDependencyResult_t> OnRemoveUGCDependencyCompletedCallResult;
+        private static RemoveUGCDependencyResult_t removeUGCDependencyResult;
+        private static AddUGCDependencyResult_t addUGCDependencyResult;
         private static bool _initialized;
 
         private static SubmitItemUpdateResult_t submitResult;
@@ -70,6 +74,10 @@ namespace RimworldModReleaseTool
             // start async call
             var call = SteamUGC.SubmitItemUpdate(handle, changeNotes);
             submitResultCallback = CallResult<SubmitItemUpdateResult_t>.Create(OnItemSubmitted);
+            OnAddUGCDependencyCompletedCallResult =
+                CallResult<AddUGCDependencyResult_t>.Create(OnAddUGCDependencyCompleted);
+            OnRemoveUGCDependencyCompletedCallResult =
+                CallResult<RemoveUGCDependencyResult_t>.Create(OnRemoveUGCDependencyCompleted);
             submitResultCallback.Set(call);
 
             // keep checking for async call to complete
@@ -118,18 +126,42 @@ namespace RimworldModReleaseTool
                 foreach (var modDependency in mod.Dependencies)
                 {
                     Console.WriteLine($"Setting dependency to mod with id {modDependency}");
-                    SteamUGC.AddDependency(new PublishedFileId_t(modDependency), mod.PublishedFileId);
+                    addUGCDependencyResult = new AddUGCDependencyResult_t();
+                    var addDependencyHandle =
+                        SteamUGC.AddDependency(mod.PublishedFileId, new PublishedFileId_t(modDependency));
+                    OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
+                    while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+                    {
+                        Thread.Sleep(5);
+                        SteamAPI.RunCallbacks();
+                    }
                 }
 
                 if (mod.Name.Contains("(Continued)"))
                 {
                     Console.WriteLine("Adding mod to ressurection-collection");
-                    SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+                    addUGCDependencyResult = new AddUGCDependencyResult_t();
+                    var addDependencyHandle =
+                        SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+                    OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
+                    while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+                    {
+                        Thread.Sleep(5);
+                        SteamAPI.RunCallbacks();
+                    }
                 }
                 else
                 {
                     Console.WriteLine("Adding mod to personal-collection");
-                    SteamUGC.AddDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+                    addUGCDependencyResult = new AddUGCDependencyResult_t();
+                    var addDependencyHandle =
+                        SteamUGC.AddDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+                    OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
+                    while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+                    {
+                        Thread.Sleep(5);
+                        SteamAPI.RunCallbacks();
+                    }
                 }
             }
 
@@ -137,6 +169,16 @@ namespace RimworldModReleaseTool
             {
                 Console.WriteLine("Removing mod to ressurection-collection");
                 SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+
+                removeUGCDependencyResult = new RemoveUGCDependencyResult_t();
+                var removeDependencyHandle =
+                    SteamUGC.RemoveDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+                OnRemoveUGCDependencyCompletedCallResult.Set(removeDependencyHandle);
+                while (removeUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+                {
+                    Thread.Sleep(5);
+                    SteamAPI.RunCallbacks();
+                }
             }
 
             return submitResult.m_eResult == EResult.k_EResultOK;
@@ -225,6 +267,16 @@ namespace RimworldModReleaseTool
                 SteamUGC.SetItemVisibility(handle,
                     ERemoteStoragePublishedFileVisibility.k_ERemoteStoragePublishedFileVisibilityUnlisted);
             }
+        }
+
+        private static void OnRemoveUGCDependencyCompleted(RemoveUGCDependencyResult_t pCallback, bool bIOFailure)
+        {
+            removeUGCDependencyResult = pCallback;
+        }
+
+        private static void OnAddUGCDependencyCompleted(AddUGCDependencyResult_t pCallback, bool bIOFailure)
+        {
+            addUGCDependencyResult = pCallback;
         }
 
         public static void Shutdown()

@@ -56,7 +56,7 @@ namespace RimworldModReleaseTool
 
             var isExtracting = false;
             var changelogArray = new List<string>();
-            var versionRegex = new Regex(@"\d+(?:\.\d+){1,3}");
+            var versionRegex = new Regex(@"^\d+(?:\.\d+){1,3}");
             foreach (var line in File.ReadAllLines(changelogFile.FullName))
             {
                 if (line.StartsWith(currentVersion))

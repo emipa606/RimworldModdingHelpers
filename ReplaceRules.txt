@@ -326,6 +326,7 @@ s|<def>RearLeftPaw|<def>Paw
 s|<def>RearRightPaw|<def>Paw
 s|<acceptFilth>false</acceptFilth>|<filthAcceptanceMask><li>None</li></filthAcceptanceMask>
 s|<li Class="Rule_PersonName">|<li Class="Rule_NamePerson">
+s|Class="CompProperties_BiocodableApparel"|Class="CompProperties_Biocodable"
 s|<soldThought>SoldMyLovedOne</soldThought>|<soldThoughts><li>SoldMyLovedOne</li></soldThoughts>
 s|<armorCategory>Electric</armorCategory>
 s| </description>|</description>

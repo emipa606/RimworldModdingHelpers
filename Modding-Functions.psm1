@@ -432,7 +432,7 @@ function Set-ModUpdateFeatures {
 	</HugsLib.UpdateFeatureDef>
 </Defs>"
 	$manifestFile = "$localModFolder\$modName\About\Manifest.xml"
-	$version = ((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+	$version = ([xml](Get-Content -path $manifestFile -Raw -Encoding UTF8)).Manifest.version
 
 	$newsObject = $defaultNewsObject.Replace("[newsid]", "$($modName.Replace(" ", "_"))_$($version.Replace(".", "_"))")
 	$newsObject = $newsObject.Replace("[version]", $version).Replace("[news]", $news)
@@ -836,19 +836,36 @@ function Get-IdentifiersFromMod {
 		$identifiersToAdd += $modName
 		return $identifiersToAdd
 	}
+	if($identifierCache.Count -eq 0) {
+		Update-IdentifierToFolderCache
+	}
 	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "mlie.showmeyourhands"
 	foreach($identifier in $aboutFileContent.ModMetaData.modDependencies.li.packageId) {
 		if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
 			continue
 		}
-		$identifiersToAdd += $identifier.ToLower()
+		foreach($subIdentifier in (Get-IdentifiersFromSubMod $identifierCache[$identifier])) {
+			if($identifiersToAdd -notcontains $subIdentifier.ToLower()) {
+				$identifiersToAdd += $subIdentifier.ToLower()
+			}
+		}
+		if($identifiersToAdd -notcontains $identifier.ToLower()) {
+			$identifiersToAdd += $identifier.ToLower()
+		}
 	}
 	if($aboutFileContent.ModMetaData.modDependenciesByVersion) {
 		foreach($identifier in $aboutFileContent.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId) {
 			if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
 				continue
 			}
-			$identifiersToAdd += $identifier.ToLower()
+			foreach($subIdentifier in (Get-IdentifiersFromSubMod $identifierCache[$identifier])) {
+				if($identifiersToAdd -notcontains $subIdentifier.ToLower()) {
+					$identifiersToAdd += $subIdentifier.ToLower()
+				}
+			}
+			if($identifiersToAdd -notcontains $identifier.ToLower()) {
+				$identifiersToAdd += $identifier.ToLower()
+			}
 		}
 	}
 	if($alsoLoadBefore){
@@ -863,6 +880,35 @@ function Get-IdentifiersFromMod {
 	}
 	$identifiersToAdd += $aboutFileContent.ModMetaData.packageId.ToLower()
 	return $identifiersToAdd
+}
+
+function Get-IdentifiersFromSubMod {
+	param (
+		$modFolderPath
+	)
+	$aboutFile = "$modFolderPath\About\About.xml"
+	if(-not (Test-Path $aboutFile)) {
+		Write-Host "Could not find About-file for mod in $modFolderPath"
+		return @()
+	}
+	$aboutFileContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
+	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "mlie.showmeyourhands"
+	$identifiersToReturn = @()
+	foreach($identifier in $aboutFileContent.ModMetaData.modDependencies.li.packageId) {
+		if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
+			continue
+		}
+		$identifiersToReturn += $identifier.ToLower()
+	}
+	if($aboutFileContent.ModMetaData.modDependenciesByVersion) {
+		foreach($identifier in $aboutFileContent.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId) {
+			if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
+				continue
+			}
+			$identifiersToReturn += $identifier.ToLower()
+		}
+	}
+	return $identifiersToReturn
 }
 
 function Update-Mods {
@@ -1877,7 +1923,7 @@ function Merge-GitRepositories {
 	$stagingDirectory = $settings.mod_staging_folder
 	$rootFolder = Split-Path $stagingDirectory
 	$version = [version]$manifestContent.Manifest.version
-	$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
+	$newVersion = $version.ToString()
 
 	Set-Location -Path $rootFolder
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
@@ -2132,15 +2178,18 @@ function Publish-Mod {
 		Copy-Item -Path $manifestTemplate $manifestFile -Force | Out-Null
 		((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace("[modname]",$modNameClean).Replace("[username]",$settings.github_username)) | Set-Content -Path $manifestFile -Encoding UTF8
 		$manifestContent = [xml](Get-Content -path $manifestFile -Raw -Encoding UTF8)
+		$version = Get-NextVersionNumber -currentVersion (Get-CurrentRimworldVersion -versionObject)
+		$manifestContent.Manifest.version = $version.ToString()
+		$manifestContent.Save($manifestFile)
 	} else {
 		$manifestContent = [xml](Get-Content -path $manifestFile -Raw -Encoding UTF8)
 		$currentIdentifier = $manifestContent.Manifest.identifier
+		$version = [version]$manifestContent.Manifest.version
 		if($currentIdentifier -ne $modNameClean) {
 			$manifestContent.Manifest.identifier = $modNameClean
 			$manifestContent.Save($manifestFile)
 		}
 	}
-	$version = [version]$manifestContent.Manifest.version
 	if(Test-Path $licenseFile) {
 		if(Test-Path $modFolder\LICENSE) {
 			Remove-Item -Path "$modFolder\LICENSE" -Force
@@ -2175,8 +2224,8 @@ function Publish-Mod {
 		} else {
 			$message = Get-MultilineMessage -query "Changenote" -mustFill
 		}
-		$oldVersion = "$($version.Major).$($version.Minor).$($version.Build)"
-		$newVersion = "$($version.Major).$($version.Minor).$($version.Build + 1)"
+		$oldVersion = $version.ToString()
+		$newVersion = (Get-NextVersionNumber -currentVersion $version).ToString()
 		((Get-Content -path $manifestFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $manifestFile
 		((Get-Content -path $modsyncFile -Raw -Encoding UTF8).Replace($oldVersion,$newVersion)) | Set-Content -Path $modsyncFile
 		if($EndOfLife) {
@@ -2189,10 +2238,10 @@ function Publish-Mod {
 		New-GitRepository -repoName $modNameClean
 		Get-LatestGitVersion
 		$message = "First publish"
-		$newVersion = "$($version.Major).$($version.Minor).$($version.Build)"
+		$newVersion = $version.ToString()
 	}
 
-	$version = [version]((Get-Content $manifestFile -Raw -Encoding UTF8).Replace("<version>", "|").Split("|")[1].Split("<")[0])
+	$version = [version]$newVersion
 	Set-ModChangeNote -ModName $modName -Changenote "$version - $message" -Force:$Force
 	if($firstPublish){		
 		Update-ModDescriptionFromPreviousMod -noConfimation -localSearch -modName $modName -Force:$Force
@@ -2978,4 +3027,19 @@ function Get-RimworldLog {
 
 function Get-GitHistory {
 	git --no-pager log --date=format:'%Y-%m-%d' --pretty=format:'%C(bold blue)%cd%Creset - %s %C(yellow)%d%Creset' --abbrev-commit --reverse
+}
+
+function Get-NextVersionNumber {
+	param (
+		[version]$currentVersion
+	)
+	$currentRimworldVersion = Get-CurrentRimworldVersion -versionObject
+
+	if($currentVersion.Major -ne $currentRimworldVersion.Major) {
+		return [version]"$($currentRimworldVersion.Major).$($currentRimworldVersion.Minor).1"
+	}
+	if($currentVersion.Minor -ne $currentRimworldVersion.Minor) {
+		return [version]"$($currentRimworldVersion.Major).$($currentRimworldVersion.Minor).1"
+	}
+	return [version]"$($currentVersion.Major).$($currentVersion.Minor).$($currentVersion.Build + 1)"
 }

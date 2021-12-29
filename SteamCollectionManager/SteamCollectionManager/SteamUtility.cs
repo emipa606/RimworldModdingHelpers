@@ -22,6 +22,48 @@ namespace SteamCollectionManager
         private static RemoveUGCDependencyResult_t removeUGCDependencyResult;
         private static AddUGCDependencyResult_t addUGCDependencyResult;
 
+        public static void JustAddOne(string collectionId, string idToAdd)
+        {
+            if (!Init())
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine("Failed to init");
+                return;
+            }
+
+            var collectionFileId = new PublishedFileId_t(Convert.ToUInt64(collectionId));
+            OnAddUGCDependencyCompletedCallResult =
+                CallResult<AddUGCDependencyResult_t>.Create(OnAddUGCDependencyCompleted);
+
+            Console.WriteLine("Continue? (CTRL+C aborts)");
+            Console.ReadLine();
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine($"Adding {idToAdd} mods to {collectionId}");
+            try
+            {
+                var modFileId = new PublishedFileId_t(Convert.ToUInt64(idToAdd));
+                addUGCDependencyResult = new AddUGCDependencyResult_t();
+                var addDependencyHandle = SteamUGC.AddDependency(collectionFileId, modFileId);
+                OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
+                while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+                {
+                    Thread.Sleep(5);
+                    SteamAPI.RunCallbacks();
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine("Error while adding dependency: ");
+                Console.Write(exception.Message);
+            }
+
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("Done!");
+            Process.Start($"https://steamcommunity.com/sharedfiles/filedetails/?id={collectionId}");
+            Shutdown();
+        }
+
         public static void SyncCollection(string collectionId, List<string> idsToAdd)
         {
             if (!Init())

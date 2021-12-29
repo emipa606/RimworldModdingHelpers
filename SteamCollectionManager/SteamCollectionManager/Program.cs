@@ -34,54 +34,52 @@ namespace SteamCollectionManager
             }
 
             var savePath = args[1];
-            List<string> packageIdsToAdd;
             if (Regex.IsMatch(savePath, @"^\d+$"))
             {
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine(
                     $"Second parameter {savePath} is numeric, assuming you just want to add it to the collection");
-                packageIdsToAdd = new List<string> { savePath };
+                SteamUtility.JustAddOne(collectionId, savePath);
+                return;
             }
-            else
+
+            if (!File.Exists(savePath))
             {
-                if (!File.Exists(savePath))
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"{savePath} not found");
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(Settings.Default.RimworldFolder) &&
+                !Directory.Exists(Settings.Default.RimworldFolder))
+            {
+                Settings.Default.RimworldFolder = null;
+                Settings.Default.Save();
+            }
+
+            if (string.IsNullOrEmpty(Settings.Default.RimworldFolder))
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("Paste the path to your Rimworld folder: (CTRL+C aborts)");
+                var rimworldFolder = Console.ReadLine();
+
+                if (!Directory.Exists(rimworldFolder))
                 {
                     Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine($"{savePath} not found");
+                    Console.WriteLine($"Could not find {rimworldFolder}");
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(Settings.Default.RimworldFolder) &&
-                    !Directory.Exists(Settings.Default.RimworldFolder))
-                {
-                    Settings.Default.RimworldFolder = null;
-                    Settings.Default.Save();
-                }
+                Settings.Default.RimworldFolder = rimworldFolder;
+                Settings.Default.Save();
+            }
 
-                if (string.IsNullOrEmpty(Settings.Default.RimworldFolder))
-                {
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine("Paste the path to your Rimworld folder: (CTRL+C aborts)");
-                    var rimworldFolder = Console.ReadLine();
-
-                    if (!Directory.Exists(rimworldFolder))
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkRed;
-                        Console.WriteLine($"Could not find {rimworldFolder}");
-                        return;
-                    }
-
-                    Settings.Default.RimworldFolder = rimworldFolder;
-                    Settings.Default.Save();
-                }
-
-                packageIdsToAdd = GetAllIdsToAdd(savePath);
-                if (!packageIdsToAdd.Any())
-                {
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine($"Could not parse any mods from {savePath}");
-                    return;
-                }
+            var packageIdsToAdd = GetAllIdsToAdd(savePath);
+            if (!packageIdsToAdd.Any())
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Could not parse any mods from {savePath}");
+                return;
             }
 
             Console.ForegroundColor = ConsoleColor.Gray;
@@ -199,7 +197,7 @@ namespace SteamCollectionManager
                     }
                 }
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine($"Failed to parse mod-file at {folderPath}");
