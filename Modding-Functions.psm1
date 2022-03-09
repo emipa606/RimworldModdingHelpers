@@ -425,7 +425,7 @@ function Set-ModUpdateFeatures {
 		(Get-Content -Path $updatefeaturesTemplate -Raw -Encoding UTF8).Replace("[modname]", $modName).Replace("[modid]", $modId) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
 	}
 
-	$defaultNewsObject = "	<HugsLib.UpdateFeatureDef ParentName=""UpdateFeatureBase"">
+	$defaultNewsObject = "	<HugsLib.UpdateFeatureDef ParentName=""$($modName)_UpdateFeatureBase"">
 		<defName>[newsid]</defName>
 		<assemblyVersion>[version]</assemblyVersion>
 		<content>[news]</content>
@@ -839,7 +839,7 @@ function Get-IdentifiersFromMod {
 	if($identifierCache.Count -eq 0) {
 		Update-IdentifierToFolderCache
 	}
-	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "mlie.showmeyourhands"
+	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "ludeon.rimworld.ideology", "mlie.showmeyourhands"
 	foreach($identifier in $aboutFileContent.ModMetaData.modDependencies.li.packageId) {
 		if(-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
 			continue
@@ -1129,7 +1129,8 @@ function Update-ModsStatistics {
 	"modId": "",
 	"Selfmade": true,
 	"Version": "0.0",
-	"LastUpdated": ""
+	"LastUpdated": "",
+	"Commits": 0
 }
 "@	
 	$i = 0
@@ -1137,6 +1138,7 @@ function Update-ModsStatistics {
 	if($maxAmount -eq 0) {
 		$maxAmount = $total
 	}
+	$originalLocation = Get-Location
 	foreach($folder in $allMods) {
 		if($i -ge $maxAmount) {
 			continue
@@ -1145,13 +1147,18 @@ function Update-ModsStatistics {
 		$percent =  [math]::Round($i / $total * 100)
 		$modName = $folder.Name
 		Write-Progress -Activity "Updating $($modName)" -Status "$i of $total" -PercentComplete $percent;
+		Write-Verbose "Checking $modName"
 		$modFileId = "$($folder.FullName)\About\PublishedFileId.txt"
 		if(-not (Test-Path $modFileId)) {
 			Write-Verbose "$modName not published, skipping"
 			continue
 		}
 		$modId = Get-Content $modFileId -Raw -Encoding UTF8
-		$aboutFile = "$($folder.FullName)\About\About.xml"		
+		$aboutFile = "$($folder.FullName)\About\About.xml"	
+		if(-not (Test-Path $aboutFile)) {
+			Write-Verbose "$modName has no about-file, skipping"
+			continue
+		}	
 		$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
 		if(-not (Get-OwnerIsMeStatus -modName $modName)) {
 			Write-Verbose "$modName is not created by me, skipping"
@@ -1167,6 +1174,11 @@ function Update-ModsStatistics {
 		$githubLink = Get-ModRepository -modName $modName -getLink
 		$modlist.$modName.Steamlink = $steamLink
 		$modlist.$modName.Githublink = $githubLink
+		Set-Location $folder.FullName
+		if(-not $modlist.$modName.Commits) {
+			$modlist.$modName | Add-Member -MemberType NoteProperty -Name "Commits" -Value 0
+		}
+		$modlist.$modName.Commits = (git log --no-decorate --author=emipa606 --oneline).Count
 		if(-not $localOnly) {
 			$modlist.$modName.Subscribers = Get-ModSubscribers -modLink $steamLink		
 		}
@@ -1218,6 +1230,7 @@ function Update-ModsStatistics {
 		$modlist.PSObject.Properties.Remove($modName)
 	}
 	$modlist | ConvertTo-Json -EnumsAsStrings | Set-Content "$($settings.mod_staging_folder)\..\modlist.json" -Encoding UTF8
+	Set-Location $originalLocation
 }
 
 function Update-ModPreviewImage {
@@ -1509,7 +1522,16 @@ function Get-OwnerIsMeStatus {
 		Write-Host "$modFolder can not be found, exiting"
 		return $false
 	}
+	$aboutFile = "$modFolder\About\About.xml"
+	if(-not (Test-Path $aboutFile)){
+		Write-Host "$aboutFile can not be found, exiting"
+		return $false
+	}
+
 	$aboutContent = [xml](Get-Content "$($modFolder)\About\About.xml" -Raw -Encoding UTF8)
+	if(-not $aboutContent.ModMetaData.packageId) {
+		return $false
+	}
 	return $aboutContent.ModMetaData.packageId.StartsWith($settings.mod_identifier_prefix)
 }
 
@@ -1838,16 +1860,22 @@ function Get-LatestGitVersion {
 	param (
 		[switch]$mineOnly,
 		[switch]$newOnly,
-		[switch]$clean
+		[switch]$clean,
+		[switch]$force
 	)
 	$currentDirectory = (Get-Location).Path
-	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return
+	if($force) {
+		$modFolder = $currentDirectory
+		$modName = Split-Path -Leaf $modFolder
+	} else {
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+		$modFolder = "$localModFolder\$modName"
+		Set-Location $modFolder		
 	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
-	$modFolder = "$localModFolder\$modName"
-	Set-Location $modFolder
 	if($clean) {
 		Remove-Item "$modFolder\.git" -Recurse -Force -Confirm:$false
 	}
@@ -1875,22 +1903,28 @@ function Get-LatestGitVersion {
 			git fetch
 			git config core.autocrlf true
 			git add -A
-			Update-GitRepoName
+			Update-GitRepoName -modName $modName
 			git pull origin main
 		} else {
 			git clone $path $modFolder
-			Update-GitRepoName
+			Update-GitRepoName -modName $modName
 		}
+		Set-IssuesActive -repoName $modName -force:$force
 	}
 }
 
 function Update-GitRepoName {
-	$currentDirectory = (Get-Location).Path
-	if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		Write-Host "Can only be run from somewhere under $localModFolder, exiting"
-		return
+	param (
+		[string]$modName
+	)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	$path = Get-ModRepository -getLink
 	if(-not (git ls-remote --heads $path master)) {
 		Write-Host "$modName does not use the 'master' branch name, exiting"
@@ -2071,6 +2105,30 @@ function Set-ModXml {
 		}
 		$fileContent.Save($file.FullName)
 	}
+}
+
+function Get-AboutFile {
+	param (
+		$modName
+	)
+	if(-not $modName) {
+		$currentDirectory = (Get-Location).Path
+		if(-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+			Write-Host "Can only be run from somewhere under $localModFolder, exiting"
+			return
+		}
+		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+	}
+	$modFolder = "$localModFolder\$modName"
+	$aboutFile = "$modFolder\About\About.xml"
+
+	if(-not (Test-Path $aboutFile)) {
+		Write-Host "No about file found at $aboutFile"
+		return
+	}
+	$applicationPath = $settings.text_editor_path
+	$arguments = """$aboutFile"""
+	Start-Process -FilePath $applicationPath -ArgumentList $arguments
 }
 
 # Function for pushing new version of mod to git-repo
@@ -2368,7 +2426,8 @@ function New-GitRepository {
 	$repoData = @{
 		name = $repoName;
 		visibility = "public";
-		auto_init = "true"
+		auto_init = "false";
+		has_issues = "true"
 	}
 	$repoParams = @{
 		Uri = "https://api.github.com/user/repos";
@@ -2383,23 +2442,6 @@ function New-GitRepository {
 	Write-Host "Creating repo"
 	Invoke-RestMethod @repoParams | Out-Null
 	Start-Sleep -Seconds 1
-	$sha = ((Invoke-WebRequest "https://api.github.com/repos/$($settings.github_username)/$repoName/contents/README.md").Content | ConvertFrom-Json).sha
-	$repoData = @{
-		message = "Removed default Readme";
-		sha = $sha;
-	}
-	$repoParams = @{
-		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoName/contents/README.md";
-		Method = 'DELETE';
-		Headers = @{
-		Authorization = 'Basic ' + [Convert]::ToBase64String(
-		[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"));
-		}
-		ContentType = 'application/json';
-		Body = (ConvertTo-Json $repoData -Compress)
-	}
-	Write-Host "Removing basic readme"
-	Invoke-RestMethod @repoParams | Out-Null
 	Write-Host "Done"
 }
 
@@ -2436,15 +2478,16 @@ function Set-DefaultGitBranch {
 		$repoName,
 		$branchName
 	)
-	if(-not (Get-RepositoryStatus -repositoryName $repoName)) {
+	$repoNameClean = $repoName.Replace("+", "Plus")
+	if(-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
 		Write-Host "Repository $repoName does not exist"
 		return
 	}
 	$repoData = @{
-		default_branch = "$branchName";
+		default_branch = "$branchName"
 	}
 	$repoParams = @{
-		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoName";
+		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoNameClean";
 		Method = 'PATCH';
 		Headers = @{
 		Authorization = 'Basic ' + [Convert]::ToBase64String(
@@ -2453,12 +2496,40 @@ function Set-DefaultGitBranch {
 		ContentType = 'application/json';
 		Body = (ConvertTo-Json $repoData -Compress)
 	}
-	Write-Host "Changing repo default to $branchName"
+	Write-Host "Changing repo default to $branchName for $repoName"
 	Invoke-RestMethod @repoParams | Out-Null
 	Start-Sleep -Seconds 1
 	Write-Host "Done"
 }
 
+function Set-IssuesActive {
+	param(
+		$repoName,
+		$status ="true"
+	)
+	$repoNameClean = $repoName.Replace("+", "Plus")
+	if(-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
+		Write-Host "Repository $repoName does not exist"
+		return
+	}
+	$repoData = @{
+		has_issues = "$status"
+	}
+	$repoParams = @{
+		Uri = "https://api.github.com/repos/$($settings.github_username)/$repoNameClean";
+		Method = 'PATCH';
+		Headers = @{
+		Authorization = 'Basic ' + [Convert]::ToBase64String(
+		[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"));
+		}
+		ContentType = 'application/json';
+		Body = (ConvertTo-Json $repoData -Compress)
+	}
+	Write-Host "Setting issues to $status for $repoName"
+	Invoke-RestMethod @repoParams | Out-Null
+	Start-Sleep -Seconds 1
+	Write-Host "Done"
+}
 
 function Get-GitSubscriptionStatus {
 	param(
@@ -2591,7 +2662,11 @@ function Get-ZipFile {
 
 # Simple push function for git
 function Push-ModContent {
+	param([switch]$reapplyGitignore)
 	$message = Read-Host "Commit-Message"
+	if($reapplyGitignore) {
+		git rm -r --cached .
+	}
 	git add .
 	git commit -m $message
 	git push origin

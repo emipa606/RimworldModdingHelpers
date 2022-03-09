@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-	<HugsLib.UpdateFeatureDef Abstract="true" Name="UpdateFeatureBase">
+	<HugsLib.UpdateFeatureDef Abstract="true" Name="[modname]_UpdateFeatureBase">
 		<modNameReadable>[modname]</modNameReadable>
 		<linkUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=[modid]</linkUrl>
 	</HugsLib.UpdateFeatureDef>
