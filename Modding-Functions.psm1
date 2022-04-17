@@ -1178,6 +1178,7 @@ function Update-ModsStatistics {
 		}
 		if (Test-Path "$($folder.FullName)\.git") {
 			Set-Location $folder.FullName
+			Set-SafeGitFolder
 			$commits = (git log --no-decorate --author=emipa606 --oneline) 2>&1
 			if ($commits -match "fatal") {
 				Write-Host -ForegroundColor Yellow "$modName have no commits"
@@ -1896,6 +1897,7 @@ function Get-LatestGitVersion {
 		if ($newOnly) {
 			return
 		}
+		Set-SafeGitFolder
 		Write-Host "Fetching latest github for mod $modName"
 		git pull origin main --allow-unrelated-histories
 		return
@@ -1943,6 +1945,7 @@ function Update-GitRepoName {
 		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$path = Get-ModRepository -getLink
+	Set-SafeGitFolder
 	if (-not (git ls-remote --heads $path master)) {
 		Write-Host "$modName does not use the 'master' branch name, exiting"
 		return
@@ -2348,7 +2351,7 @@ function Publish-Mod {
 	(Convert-BBCodeToGithub -textToConvert $aboutContent.ModMetaData.description) >> $readmeFile
 	# robocopy $modFolder $stagingDirectory\$modNameClean /MIR /w:10 /XD .git /NFL /NDL /NJH /NJS /NP
 	# Set-Location -Path $stagingDirectory\$modNameClean
-
+	Set-SafeGitFolder
 	# Reapply gitignore-file if necessary
 	if ($reapplyGitignore) {
 		git rm -r --cached .
@@ -2684,6 +2687,7 @@ function Get-ZipFile {
 function Push-ModContent {
 	param([switch]$reapplyGitignore)
 	$message = Read-Host "Commit-Message"
+	Set-SafeGitFolder
 	if ($reapplyGitignore) {
 		git rm -r --cached .
 	}
@@ -3115,6 +3119,7 @@ function Update-IdentifierToFolderCache {
 }
 
 function Get-GitOrigin {
+	Set-SafeGitFolder
 	git remote show origin
 }
 
@@ -3123,6 +3128,7 @@ function Get-RimworldLog {
 }
 
 function Get-GitHistory {
+	Set-SafeGitFolder
 	git --no-pager log --date=format:'%Y-%m-%d' --pretty=format:'%C(bold blue)%cd%Creset - %s %C(yellow)%d%Creset' --abbrev-commit --reverse
 }
 
@@ -3139,4 +3145,23 @@ function Get-NextVersionNumber {
 		return [version]"$($currentRimworldVersion.Major).$($currentRimworldVersion.Minor).1"
 	}
 	return [version]"$($currentVersion.Major).$($currentVersion.Minor).$($currentVersion.Build + 1)"
+}
+
+function Set-SafeGitFolder {
+	$currentFolder = Get-Location
+
+	if (-not (Test-Path "$($currentFolder.Path)\.git")) {
+		Write-Host -ForegroundColor Yellow "Folder is not a git-root folder, skipping safe-check"
+		return
+	}
+
+	$safeFolders = git config --global --get-all safe.directory
+	$translatedPath = $currentFolder.Path -replace "\\", "/"
+
+	if ($safeFolders -contains $translatedPath) {
+		return
+	}
+
+	Write-Host -ForegroundColor Green "Adding folder to git safe-folders"
+	git config --global --add safe.directory $translatedPath
 }
