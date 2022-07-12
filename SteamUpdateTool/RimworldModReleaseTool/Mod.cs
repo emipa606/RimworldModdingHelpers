@@ -64,23 +64,24 @@ namespace RimworldModReleaseTool
                         continue;
                     }
 
-                    if (metaNode.Name == "supportedVersions")
+                    if (metaNode.Name != "supportedVersions")
                     {
-                        foreach (XmlNode tagNode in metaNode.ChildNodes)
-                        {
-                            Version.TryParse(tagNode.InnerText, out var version);
-                            Tags.Add(version.Major + "." + version.Minor);
-                        }
+                        continue;
+                    }
+
+                    foreach (XmlNode tagNode in metaNode.ChildNodes)
+                    {
+                        Version.TryParse(tagNode.InnerText, out var version);
+                        Tags.Add(version.Major + "." + version.Minor);
                     }
                 }
             }
 
             Dependencies = new List<ulong>();
-
-            if (XElement.Parse(aboutXml.InnerXml).Element("modDependencies") != null &&
-                XElement.Parse(aboutXml.InnerXml).Element("modDependencies").HasElements)
+            var modDependencies = XElement.Parse(aboutXml.InnerXml).Element("modDependencies");
+            if (modDependencies != null && modDependencies.HasElements)
             {
-                foreach (var xElement in XElement.Parse(aboutXml.InnerXml).Element("modDependencies")?.Elements())
+                foreach (var xElement in modDependencies.Elements())
                 {
                     var stringDependency =
                         xElement.Element("steamWorkshopUrl")?.Value.Replace("=", "/").Split('/').Last();
@@ -100,6 +101,7 @@ namespace RimworldModReleaseTool
 
             // get preview images
             var preview = PathCombine(path, "About", "Preview.png");
+
             if (File.Exists(preview))
             {
                 Preview = preview;
@@ -138,6 +140,14 @@ namespace RimworldModReleaseTool
 
                     // Console.WriteLine($"Could not find any preview in path {filePath}, will not continue looking");
                     break;
+                }
+
+                var gifPath = PathCombine(imageFolderPath, "Preview.gif");
+                if (File.Exists(gifPath))
+                {
+                    Console.WriteLine("Found a gif-preview, using it instead");
+                    Preview = gifPath;
+                    PreviewBytes = new FileInfo(gifPath).Length;
                 }
             }
 

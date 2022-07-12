@@ -1458,6 +1458,30 @@ function Set-CleanModDescription {
 	Read-Host "Continue?"
 }
 
+function Get-ModDescription {
+	param(
+		$modId
+	)
+
+	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
+	$stagingDirectory = $settings.mod_staging_folder
+	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
+	Remove-Item -Path $tempDescriptionFile -Force -ErrorAction SilentlyContinue
+	$arguments = @($modId, "SAVE", $tempDescriptionFile)  
+	Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow | Out-Null
+	if (-not (Test-Path $tempDescriptionFile)) {
+		WriteMessage -warning "No description found on steam for $modName"
+		return			
+	}
+	$currentDescription = Get-Content -Path $tempDescriptionFile -Raw -Encoding UTF8
+	if ($currentDescription.Length -eq 0) {
+		WriteMessage -warning "Description found on steam for $modName was empty"
+		return		
+	}
+
+	return $currentDescription
+}
+
 function Update-ModDescriptionFromPreviousMod {
 	param($modName,
 		[switch]$localSearch,
@@ -2351,14 +2375,24 @@ function Publish-Mod {
 		}
 	}
 
+	$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
+	$modFullName = $aboutContent.ModMetaData.name
+
 	if (-not (Test-Path $previewFile)) {
 		Read-Host "Preview-file does not exist, create one then press Enter"
 	}
+
+	if ($aboutContent -match "pufA0kM" -and (Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2022-07-11")) {
+		$answer = Read-Host "Preview-file has not been updated since we changed to gif, regenerate it? (Y or enter to skip)"
+		if ($answer -eq "y") {
+			Add-ModReuploadImage -regenerate
+		} else {
+			WriteMessage -message "Okay, skipping"
+		}
+	}
+
 	if ((Get-Item $previewFile).Length -ge 1MB) {
 		Read-Host "Preview-file is too large, resave a file under 1MB and then press Enter"
-	}
-	if ((Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2020-09-12")) {
-		Read-Host "Preview-file has not been updated since we changed logo, update first, then press Enter"
 	}
 
 	# Remove leftover-files
@@ -2375,9 +2409,6 @@ function Publish-Mod {
 	# Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
 	# Set-Location -Path $stagingDirectory
 
-	# Prepare mod-directory
-	$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
-	$modFullName = $aboutContent.ModMetaData.name
 
 	# Mod Manifest
 	if (-not (Test-Path $manifestFile)) {
@@ -2778,6 +2809,9 @@ function Start-SteamPublish {
 		$inclusions = @("*.png", "*.jpg", "*.gif")
 		Copy-Item -Path "$modfolder\Source\*" -Destination $previewDirectory -Include $inclusions
 	}
+	if (Test-Path "$modfolder\Source\Preview.gif") {
+		Copy-Item -Path "$modfolder\Source\Preview.gif" -Destination $previewDirectory		
+	}
 
 	WriteMessage -progress "Starting steam-publish"
 	$publishToolPath = "$($settings.script_root)\SteamUpdateTool\Compiled\RimworldModReleaseTool.exe"
@@ -2811,8 +2845,13 @@ function Get-ZipFile {
 
 # Simple push function for git
 function Push-ModContent {
-	param([switch]$reapplyGitignore)
-	$message = Read-Host "Commit-Message"
+	param(
+		[switch]$reapplyGitignore,
+		$message
+	)
+	if (-not $message) {
+		$message = Read-Host "Commit-Message"
+	}
 	Set-SafeGitFolder
 	if ($reapplyGitignore) {
 		git rm -r --cached .
@@ -3087,6 +3126,64 @@ function Get-HtmlPageStuff {
 		return $versions | Where-Object { $_ -and $_ -ne "Mod" }		
 	} catch {
 		WriteMessage -warning  "Failed to fetch data from $url `n$($_.ScriptStackTrace)`n$_"
+	}
+}
+
+function Get-SteamModContent {
+	param (
+		$modId,
+		$savePath,
+		[switch]$overwrite
+	)
+
+	if (-not $overwrite -and (Test-Path $savePath)) {
+		WriteMessage -failure "$savePath already exists, will not download"
+		return
+	}
+
+	if (-not $savePath.EndsWith(".zip")) {
+		WriteMessage -failure "$savePath must end with .zip"
+		return
+	}
+
+	if (-not (Get-HtmlPageStuff -url "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId")) {
+		WriteMessage -failure "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId is not working"
+		return
+	}
+	
+	$modContentPath = "$localModFolder\..\..\..\workshop\content\294100\$modId"
+	$subscribed = Test-Path "$modContentPath\About\About.xml"
+	if (-not $subscribed) {
+		Set-ModSubscription -modId $modId -subscribe $true	
+	}
+
+	$tempPath = "$env:TEMP\ModDownloadFolder"
+	if (Test-Path $tempPath) {
+		Remove-Item -Path $tempPath -Recurse -Force -Confirm:$false
+	}
+	New-Item $tempPath -ItemType Directory | Out-Null
+
+	Copy-Item -Path "$modContentPath\*" -Destination $tempPath -Recurse
+	
+	New-Item "$tempPath\Steampage" -ItemType Directory | Out-Null
+
+	Get-ModDescription -modId $modId | Out-File "$tempPath\Steampage\PublishedDescription.txt" -Force -Encoding utf8
+
+	$imageLinks = Select-String -Path "$tempPath\Steampage\PublishedDescription.txt" -Pattern "\[img\].*\[\/img\]" -AllMatches
+	if ($imageLinks) {
+		foreach ($link in $imageLinks.Matches.Value) {
+			$linkValue = $link.Split("]")[1].Split("[")[0]
+			$fileName = Split-Path -Leaf $linkValue
+			Invoke-WebRequest $linkValue -OutFile "$tempPath\Steampage\$fileName" | Out-Null
+		}
+	}
+
+	$7zipPath = $settings.zip_path
+	$arguments = "a ""$savePath"" ""$tempPath\*"" -r -mx=9 -mmt=10 -bd -bb0"
+	Start-Process -FilePath $7zipPath -ArgumentList $arguments -Wait -NoNewWindow | Out-Null
+
+	if (-not $subscribed) {
+		Set-ModSubscription -modId $modId -subscribe $false	
 	}
 }
 

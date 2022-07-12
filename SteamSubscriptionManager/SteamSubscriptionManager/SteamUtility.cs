@@ -11,6 +11,10 @@ namespace SteamCollectionManager
 
         private static RemoteStorageSubscribePublishedFileResult_t remoteStorageSubscribePublishedFileResult;
 
+        private static Callback<DownloadItemResult_t> OnDownloadItemResult;
+
+        private static DownloadItemResult_t downloadItemResult;
+
         private static CallResult<RemoteStorageSubscribePublishedFileResult_t>
             OnRemoteStorageSubscribePublishedFileResult;
 
@@ -36,10 +40,20 @@ namespace SteamCollectionManager
                     OnRemoteStorageSubscribePublishedFileResult =
                         CallResult<RemoteStorageSubscribePublishedFileResult_t>.Create(
                             OnRemoteStorageSubscribePublishedFileCompleted);
+                    OnDownloadItemResult = Callback<DownloadItemResult_t>.Create(OnDownloadItemResultCompleted);
                     remoteStorageSubscribePublishedFileResult = new RemoteStorageSubscribePublishedFileResult_t();
+                    Console.WriteLine("Subscribing");
                     var subscribeHandle = SteamUGC.SubscribeItem(modFileId);
                     OnRemoteStorageSubscribePublishedFileResult.Set(subscribeHandle);
                     while (remoteStorageSubscribePublishedFileResult.m_eResult == EResult.k_EResultNone)
+                    {
+                        Thread.Sleep(5);
+                        SteamAPI.RunCallbacks();
+                    }
+
+                    SteamUGC.DownloadItem(modFileId, true);
+                    Console.WriteLine("Subscribed, initiating download");
+                    while (downloadItemResult.m_eResult == EResult.k_EResultNone)
                     {
                         Thread.Sleep(5);
                         SteamAPI.RunCallbacks();
@@ -111,6 +125,11 @@ namespace SteamCollectionManager
             RemoteStorageUnsubscribePublishedFileResult_t pCallback, bool bIOFailure)
         {
             remoteStorageUnsubscribePublishedFileResult = pCallback;
+        }
+
+        private static void OnDownloadItemResultCompleted(DownloadItemResult_t pCallback)
+        {
+            downloadItemResult = pCallback;
         }
     }
 }

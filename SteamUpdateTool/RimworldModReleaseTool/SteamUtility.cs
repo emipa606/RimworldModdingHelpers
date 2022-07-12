@@ -165,20 +165,22 @@ namespace RimworldModReleaseTool
                 }
             }
 
-            if (mod.Archived)
+            if (!mod.Archived)
             {
-                Console.WriteLine("Removing mod to ressurection-collection");
-                SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+                return submitResult.m_eResult == EResult.k_EResultOK;
+            }
 
-                removeUGCDependencyResult = new RemoveUGCDependencyResult_t();
-                var removeDependencyHandle =
-                    SteamUGC.RemoveDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
-                OnRemoveUGCDependencyCompletedCallResult.Set(removeDependencyHandle);
-                while (removeUGCDependencyResult.m_eResult == EResult.k_EResultNone)
-                {
-                    Thread.Sleep(5);
-                    SteamAPI.RunCallbacks();
-                }
+            Console.WriteLine("Removing mod to ressurection-collection");
+            SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+
+            removeUGCDependencyResult = new RemoveUGCDependencyResult_t();
+            var removeDependencyHandle =
+                SteamUGC.RemoveDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+            OnRemoveUGCDependencyCompletedCallResult.Set(removeDependencyHandle);
+            while (removeUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+            {
+                Thread.Sleep(5);
+                SteamAPI.RunCallbacks();
             }
 
             return submitResult.m_eResult == EResult.k_EResultOK;
