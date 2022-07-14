@@ -17,7 +17,8 @@ function WriteMessage {
 	if ($failure) {
 		$textColor = "Red"
 	}
-	Write-Host -ForegroundColor $textColor $message
+	$dateStamp = Get-Date -Format "HH:mm:ss"
+	Write-Host -ForegroundColor $textColor "[$dateStamp] - $message"
 }
 
 # First get the settings from the json-file
@@ -3138,17 +3139,17 @@ function Get-SteamModContent {
 
 	if (-not $overwrite -and (Test-Path $savePath)) {
 		WriteMessage -failure "$savePath already exists, will not download"
-		return
+		return $false
 	}
 
 	if (-not $savePath.EndsWith(".zip")) {
 		WriteMessage -failure "$savePath must end with .zip"
-		return
+		return $false
 	}
 
-	if (-not (Get-HtmlPageStuff -url "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId")) {
+	if (-not (Get-HtmlPageStuff -url "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId" -subscribers)) {
 		WriteMessage -failure "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId is not working"
-		return
+		return $false
 	}
 	
 	$modContentPath = "$localModFolder\..\..\..\workshop\content\294100\$modId"
@@ -3174,7 +3175,9 @@ function Get-SteamModContent {
 		foreach ($link in $imageLinks.Matches.Value) {
 			$linkValue = $link.Split("]")[1].Split("[")[0]
 			$fileName = Split-Path -Leaf $linkValue
+			$ProgressPreference = 'SilentlyContinue' 
 			Invoke-WebRequest $linkValue -OutFile "$tempPath\Steampage\$fileName" | Out-Null
+			$ProgressPreference = 'Continue'
 		}
 	}
 
@@ -3185,6 +3188,8 @@ function Get-SteamModContent {
 	if (-not $subscribed) {
 		Set-ModSubscription -modId $modId -subscribe $false	
 	}
+
+	return $true
 }
 
 function Update-ModUsageButtons {

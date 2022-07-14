@@ -51,12 +51,29 @@ namespace SteamCollectionManager
                         SteamAPI.RunCallbacks();
                     }
 
+                    Thread.Sleep(50);
                     SteamUGC.DownloadItem(modFileId, true);
-                    Console.WriteLine("Subscribed, initiating download");
-                    while (downloadItemResult.m_eResult == EResult.k_EResultNone)
+                    Thread.Sleep(10000);
+                    while (SteamUGC.GetItemState(modFileId) == 16)
                     {
-                        Thread.Sleep(5);
-                        SteamAPI.RunCallbacks();
+                        Thread.Sleep(10000);
+                    }
+
+                    if (SteamUGC.GetItemState(modFileId) != 4)
+                    {
+                        SteamUGC.DownloadItem(modFileId, true);
+                        Thread.Sleep(10000);
+                    }
+
+                    while (SteamUGC.GetItemState(modFileId) == 16)
+                    {
+                        Thread.Sleep(10000);
+                    }
+
+                    if (SteamUGC.GetItemState(modFileId) != 4)
+                    {
+                        SteamUGC.DownloadItem(modFileId, true);
+                        Thread.Sleep(10000);
                     }
                 }
                 else
