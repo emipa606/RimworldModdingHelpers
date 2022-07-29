@@ -535,6 +535,7 @@ function Start-RimWorld {
 		[switch]$alsoLoadBefore,
 		[switch]$rimThreaded,
 		[Parameter()][ValidateSet('1.0', '1.1', '1.2', 'latest')][string[]]$version,
+		$otherModid,
 		[switch]$autotest,
 		[switch]$force,
 		[switch]$bare
@@ -652,6 +653,30 @@ function Start-RimWorld {
 				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -alsoLoadBefore
 			} else {
 				$identifiersToAdd = Get-IdentifiersFromMod -modname $modname			
+			}
+			if ($otherModid) {
+				if ($alsoLoadBefore) {
+					$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid -alsoLoadBefore
+				} else {
+					$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid			
+				}
+				$combinedIdentifiers = @()
+				if ($identifiersToAdd.Count -gt 1) {
+					for ($i = 0; $i -lt $identifiersToAdd.Count - 1; $i++) {
+						$combinedIdentifiers += $identifiersToAdd[$i]
+					}
+				}
+				foreach ($id in $extraIdentifiersToAdd) {
+					if ($identifiersToAdd -notcontains $id) {
+						$combinedIdentifiers += $id
+					}
+				}
+				if ($identifiersToAdd.Count -gt 1) {
+					$combinedIdentifiers += $identifiersToAdd[-1]
+				} else {
+					$combinedIdentifiers += $identifiersToAdd
+				}
+				$identifiersToAdd = $combinedIdentifiers
 			}
 		}
 		# if($identifiersToAdd.Length -eq 0) {
@@ -855,12 +880,13 @@ function Get-AllNonPublishedMods {
 
 # Scans a mods About-file for mod-identifiers and returns an array of them, with the selected mods identifier last
 function Get-IdentifiersFromMod {
-	param ([string]$modname, 
+	param ([string]$modname,
+		[string]$modId,
 		[switch]$oldmod, 
 		[switch]$alsoLoadBefore,
 		[string]$modFolderPath,
 		[string]$gameVersion)
-	if (-not $modName) {
+	if (-not $modName -and -not $modId) {
 		$currentDirectory = (Get-Location).Path
 		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
 			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
@@ -868,13 +894,22 @@ function Get-IdentifiersFromMod {
 		}
 		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
-	if ($modFolderPath) {		
-		$aboutFile = "$modFolderPath\About\About.xml"
+	if ($modId) {
+		if (-not (Test-Path "$localModFolder\..\..\..\workshop\content\294100\$modId")) {
+			WriteMessage -progress "Could not find mod with id $modId, subscribing"
+			Set-ModSubscription -modId $modId -subscribe $true
+			Update-IdentifierToFolderCache
+		}
+		$aboutFile = "$localModFolder\..\..\..\workshop\content\294100\$modId\About\About.xml"
 	} else {
-		$aboutFile = "$localModFolder\$modname\About\About.xml"		
+		if ($modFolderPath) {		
+			$aboutFile = "$modFolderPath\About\About.xml"
+		} else {
+			$aboutFile = "$localModFolder\$modname\About\About.xml"		
+		}
 	}
 	if (-not (Test-Path $aboutFile)) {
-		WriteMessage -failure "Could not find About-file for mod named $modname"
+		WriteMessage -failure "Could not find About-file for mod named $modname $modId"
 		return @()
 	}
 	if (-not $gameVersion) {
@@ -2383,13 +2418,11 @@ function Publish-Mod {
 		Read-Host "Preview-file does not exist, create one then press Enter"
 	}
 
-	if ($aboutContent -match "pufA0kM" -and (Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2022-07-11")) {
-		$answer = Read-Host "Preview-file has not been updated since we changed to gif, regenerate it? (Y or enter to skip)"
-		if ($answer -eq "y") {
-			Add-ModReuploadImage -regenerate
-		} else {
-			WriteMessage -message "Okay, skipping"
-		}
+	if ($aboutContent.ModMetaData.description -match "pufA0kM" -and 
+		(Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2022-07-15") -and
+		(Test-Path "$modFolder\Source\original_preview.png")) {
+		WriteMessage "Preview-file has not been updated, regenerating"
+		Add-ModReuploadImage -regenerate
 	}
 
 	if ((Get-Item $previewFile).Length -ge 1MB) {
@@ -2869,6 +2902,8 @@ function Test-Mod {
 		[ValidateSet('1.0', '1.1', '1.2', 'latest')]
 		[string[]]
 		$version = "latest",
+		$otherModid,
+		$otherModName,
 		[switch] $alsoLoadBefore,
 		[switch] $rimThreaded,
 		[switch] $autotest,
@@ -2882,13 +2917,23 @@ function Test-Mod {
 		WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
 		return			
 	}
+
+	if ($otherModName) {
+		$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound
+		if (-not $modLink) {
+			WriteMessage -failure "Could not find other mod named $otherModName, exiting"
+			return			
+		}
+		$otherModid = $modLink.Split('=')[1]
+	}
+
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\")[0]
 	if ($autotest) {
 		WriteMessage -progress "Auto-testing $modName"
 	} else {
 		WriteMessage -progress "Testing $modName"		
 	}
-	return Start-RimWorld -testMod $modName -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -rimthreaded:$rimThreaded -bare:$bare
+	return Start-RimWorld -testMod $modName -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -rimthreaded:$rimThreaded -bare:$bare -otherModid $otherModid
 }
 
 
