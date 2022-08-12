@@ -9,6 +9,7 @@
 	"discord_update_hook_url": "http://hook.url",
 	"discord_publish_hook_url": "http://hook.url",
 	"discord_remove_hook_url": "http://hook.url",
+	"discord_test_hook_url": "http://hook.url",
 	"discord_update_message": "DiscordUpdate.txt",
 	"discord_publish_message": "DiscordPublish.txt",
 	"discord_remove_message": "DiscordRemove.txt",
@@ -26,6 +27,7 @@
 	"playing_screen_height": "1440",
 	"modding_screen_witdh": "1920",
 	"playing_screen_witdh": "2560",
+	"deepl_api_key": "",
 	"zip_path": "C:\\ModPublishing\\7za.exe",
 	"gimp_folder": "C:\\Program Files\\GIMP 2\\bin",
 	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"

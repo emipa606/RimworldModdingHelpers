@@ -58,7 +58,10 @@ $Global:discordPublishMessage = "$PSScriptRoot\$($settings.discord_publish_messa
 $Global:discordRemoveMessage = "$PSScriptRoot\$($settings.discord_remove_message)"
 $Global:discordUpdateHookUrl = $settings.discord_update_hook_url
 $Global:discordPublishHookUrl = $settings.discord_publish_hook_url
-$Global:discordRemovehHookUrl = $settings.discord_remove_hook_url
+$Global:discordRemoveHookUrl = $settings.discord_remove_hook_url
+$Global:discordTestHookUrl = $settings.discord_test_hook_url
+$Global:discordHookUrl = $settings.discord_remove_hook_url
+$Global:deeplApiKey = $settings.deepl_api_key
 if (-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
 	"{}" | Out-File -Encoding utf8 -FilePath "$($settings.mod_staging_folder)\..\modlist.json"
 }
@@ -214,6 +217,15 @@ function Get-ModPage {
 	Remove-Item "$localModFolder\$modName\debug.log" -Force -ErrorAction SilentlyContinue
 }
 
+function Get-CurrentModNameFromLocation {
+	$currentDirectory = (Get-Location).Path
+	if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
+		WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
+		return
+	}
+	return $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
+}
+
 
 # Easy load of a mods git-repo
 function Get-ModRepository {
@@ -223,12 +235,10 @@ function Get-ModRepository {
 		$extraParameters
 	)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$modNameClean = $modName.Replace("+", "Plus")
 	$arguments = "https://github.com/$($settings.github_username)/$modNameClean$($extraParameters)"
@@ -249,12 +259,10 @@ function Get-ModSubscribers {
 	)
 	if (-not $modLink) {
 		if (-not $modName) {
-			$currentDirectory = (Get-Location).Path
-			if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-				WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-				return			
+			$modName = Get-CurrentModNameFromLocation
+			if (-not $modName) {
+				return
 			}
-			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 		}
 		$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
 		if (-not (Test-Path $modFileId)) {
@@ -278,24 +286,20 @@ function Get-ModVersions {
 	)
 	if ($local) {
 		if (-not $modName) {
-			$currentDirectory = (Get-Location).Path
-			if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-				WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-				return			
+			$modName = Get-CurrentModNameFromLocation
+			if (-not $modName) {
+				return
 			}
-			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 		}
 		return Get-ModVersionFromAboutFile -aboutFilePath "$localModFolder\$modName\About\About.xml"		
 	}
 
 	if (-not $modLink) {
 		if (-not $modName) {
-			$currentDirectory = (Get-Location).Path
-			if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-				WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-				return			
+			$modName = Get-CurrentModNameFromLocation
+			if (-not $modName) {
+				return
 			}
-			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 		}
 		$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
 		if (-not (Test-Path $modFileId)) {
@@ -418,12 +422,10 @@ function Set-ModUpdateFeatures {
 		[switch] $Force
 	)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	if (-not $Force -and -not (Get-OwnerIsMeStatus -modName $modName)) {
 		WriteMessage -failure "$modName is not mine, aborting update"
@@ -757,12 +759,10 @@ function Start-RimWorld {
 function Set-CorrectFolderStructure {
 	param($modName)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	if (-not (Get-OwnerIsMeStatus -modName $modName)) {
 		WriteMessage -failure "$modName is not mine, aborting update"
@@ -886,13 +886,11 @@ function Get-IdentifiersFromMod {
 		[switch]$alsoLoadBefore,
 		[string]$modFolderPath,
 		[string]$gameVersion)
-	if (-not $modName -and -not $modId) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	if ($modId) {
 		if (-not (Test-Path "$localModFolder\..\..\..\workshop\content\294100\$modId")) {
@@ -1002,12 +1000,10 @@ function Update-ModMetadata {
 		[switch] $silent
 	)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$aboutFile = "$localModFolder\$modname\About\About.xml"	
 	if (-not (Test-Path $aboutFile)) {
@@ -1141,12 +1137,10 @@ function Update-TestLoop {
 	[CmdletBinding()]
 	param($modName)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
 			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$cscprojFiles = Get-ChildItem -Recurse -Path $modFolder -Include *.csproj
 	if ($cscprojFiles) {
@@ -1201,15 +1195,13 @@ function Get-ModDependencyMaxVersion {
 	param($modName,
 		[switch]$supportsLatest)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
 			if ($supportsLatest) {
 				return $false
 			}
-			return			
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	if (-not (Get-OwnerIsMeStatus -modName $modName)) {
 		WriteMessage -failure "$modName is not mine, aborting update"
@@ -1407,12 +1399,10 @@ function Update-ModPreviewImage {
 	[CmdletBinding()]
 	param($modName)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	if (-not (Get-OwnerIsMeStatus -modName $modName)) {
 		WriteMessage -failure "$modName is not mine, aborting update"
@@ -1463,12 +1453,10 @@ function Set-CleanModDescription {
 		[switch]$noWait
 	)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	if (-not (Get-OwnerIsMeStatus -modName $modName)) {
 		WriteMessage -failure "$modName is not mine, aborting update"
@@ -1524,12 +1512,10 @@ function Update-ModDescriptionFromPreviousMod {
 		[switch]$noConfimation,
 		[switch]$Force)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	
 	if (-not $Force -and -not (Get-OwnerIsMeStatus -modName $modName)) {
@@ -1642,12 +1628,10 @@ function Update-ModDescription {
 	$modFolders = @()
 	if (-not $all) {
 		if (-not $modName) {
-			$currentDirectory = (Get-Location).Path
-			if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-				WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-				return			
+			$modName = Get-CurrentModNameFromLocation
+			if (-not $modName) {
+				return
 			}
-			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 		}
 
 		$modFolder = "$localModFolder\$modName"
@@ -1703,12 +1687,10 @@ function Update-ModDescription {
 function Get-OwnerIsMeStatus {
 	param($modName)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return $false	
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 
 	$modFolder = "$localModFolder\$modName"
@@ -1733,12 +1715,10 @@ function Sync-ModDescriptionFromSteam {
 	param($modName,
 		[switch]$Force)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 
 	$modFolder = "$localModFolder\$modName"
@@ -1780,12 +1760,10 @@ function Sync-ModDescriptionToSteam {
 	param($modName,
 		[switch]$Force)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 
 	$modFolder = "$localModFolder\$modName"
@@ -2067,11 +2045,10 @@ function Get-LatestGitVersion {
 		$modFolder = $currentDirectory
 		$modName = Split-Path -Leaf $modFolder
 	} else {
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
 			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 		$modFolder = "$localModFolder\$modName"
 		Set-Location $modFolder		
 	}
@@ -2122,12 +2099,10 @@ function Update-GitRepoName {
 		[string]$modName
 	)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
 			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$path = Get-ModRepository -getLink
 	Set-SafeGitFolder
@@ -2146,12 +2121,10 @@ function Update-GitRepoName {
 
 # Merges a repository with another, preserving history
 function Merge-GitRepositories {
-	$currentDirectory = (Get-Location).Path
-	if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-		return			
+	$modName = Get-CurrentModNameFromLocation
+	if (-not $modName) {
+		return
 	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	
 	if (-not (Get-OwnerIsMeStatus -modName $modName)) {
 		WriteMessage -failure "$modName is not mine, aborting merge"
@@ -2224,17 +2197,10 @@ function Get-NextModDependancy {
 		[switch]$alsoBefore,
 		[switch]$test)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder)) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
-		}
-		if ($currentDirectory -ne $localModFolder) {
-			$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
-		}
+		$modName = Get-CurrentModNameFromLocation		
 	}
 	if ($modName) {
-		$folders = Get-ChildItem $localModFolder -Directory | Where-Object { $_.Name -gt $modname }
+		$folders = Get-ChildItem $localModFolder -Directory | Where-Object { $_.Name -gt $modName }
 	} else {
 		$folders = Get-ChildItem $localModFolder -Directory
 	}
@@ -2317,12 +2283,10 @@ function Get-AboutFile {
 		$modName
 	)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
 			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$modFolder = "$localModFolder\$modName"
 	$aboutFile = "$modFolder\About\About.xml"
@@ -3245,12 +3209,10 @@ function Update-ModUsageButtons {
 		[switch]$silent
 	)
 	if (-not $modName) {
-		$currentDirectory = (Get-Location).Path
-		if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-			WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-			return			
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
 		}
-		$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	}
 	$aboutFile = "$localModFolder\$modName\About\About.xml"	
 	if (-not (Test-Path $aboutFile)) {
@@ -3333,13 +3295,15 @@ function Get-WrongManifest {
 
 # Simple update-notification for Discord
 function Push-UpdateNotification {
-	param([switch]$Test, [string]$Changenote, [switch]$EndOfLife)
-	$currentDirectory = (Get-Location).Path
-	if (-not $currentDirectory.StartsWith($localModFolder) -or $currentDirectory -eq $localModFolder) {
-		WriteMessage -failure "Can only be run from somewhere under $localModFolder, exiting"
-		return			
+	param(
+		[switch]$Test, 
+		[string]$Changenote, 
+		[switch]$EndOfLife
+	)
+	$modName = Get-CurrentModNameFromLocation
+	if (-not $modName) {
+		return
 	}
-	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 	$modFolder = "$localModFolder\$modName"
 	$aboutFile = "$modFolder\About\About.xml"
 	$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
@@ -3349,7 +3313,7 @@ function Push-UpdateNotification {
 	$modUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
 
 	if ($EndOfLife) {
-		$discordHookUrl = $discordRemovehHookUrl
+		$discordHookUrl = $discordRemoveHookUrl
 		$repoUrl = Get-ModRepository -getLink
 		$content = (Get-Content $discordRemoveMessage -Raw -Encoding UTF8).Replace("[modname]", $modFullName).Replace("[repourl]", $repoUrl).Replace("[endmessage]", $Changenote)
 	} else {
@@ -3363,18 +3327,19 @@ function Push-UpdateNotification {
 	}
 	
 	if ($Test) {
-		Write-Host "Would have posted the following message to Discord-channel:`n$content"
-	} else {
-		$payload = [PSCustomObject]@{
-			content  = $content
-			username = "Update Bot"
-		}
-		try {
-			Invoke-RestMethod -Uri $discordHookUrl -Method Post -Headers @{ "Content-Type" = "application/json" } -Body ($payload | ConvertTo-Json) | Out-Null
-			WriteMessage -success "Message posted to Discord"
-		} catch {
-			WriteMessage -failure "Failed to post message to Discord"
-		}
+		$discordHookUrl = $discordTestHookUrl
+		Write-Host "Posting the message to test-channel"
+	}
+	
+	$payload = [PSCustomObject]@{
+		content  = $content
+		username = "Update Bot"
+	}
+	try {
+		Invoke-RestMethod -Uri $discordHookUrl -Method Post -Headers @{ "Content-Type" = "application/json" } -Body ($payload | ConvertTo-Json) | Out-Null
+		WriteMessage -success "Message posted to Discord"
+	} catch {
+		WriteMessage -failure "Failed to post message to Discord"
 	}
 }
 
@@ -3396,20 +3361,42 @@ function Convert-BBCodeToGithub {
 
 # Helper function
 # Generates default language files for english
+# Uses rimtrans from https://github.com/Aironsoft/RimTrans
 function Set-Translation {
 	param (
-		[string] $modName
+		[string] $modName,
+		[switch] $force
 	)
-	Write-Error "Function is depricated, RImTrans does not generate correct translations"
+
+	WriteMessage -failure "RimTrans is not working at the moment"
 	return
-	if (-not (Get-OwnerIsMeStatus -modName $modName)) {
+
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+	
+	if (-not (Get-OwnerIsMeStatus -modName $modName) -and -not $force) {
 		WriteMessage -failure "$modName is not mine, aborting update"
 		return
 	}
+
+	$logFile = "E:\ModPublishing\Binaries\update.log"
+	$currentLogTime = (Get-Item $logFile).LastWriteTime
+	Update-LocalBinaries
+
 	$rimTransExe = $settings.rimtrans_path
 	$currentFile = $rimTransTemplate.Replace(".xml", "_current.xml")
 	$command = "-p:$currentFile"
 
+	if ((Get-Item $logFile).LastWriteTime -ne $currentLogTime) {
+		WriteMessage -progress "Copying game-files to RimTrans path"
+		Copy-Item "E:\ModPublishing\Binaries\*.dll" (Split-Path $rimTransExe) -Force
+		return
+	}
+	
 	WriteMessage -progress "Generating default language-data"
 
 	(Get-Content $rimTransTemplate -Raw -Encoding UTF8).Replace("[modpath]", "$localModFolder\$modName") | Out-File $currentFile -Encoding utf8
@@ -3421,9 +3408,73 @@ function Set-Translation {
 	$wshell.SendKeys('{ENTER}')
 	while (-not $process.HasExited) {
 		Start-Sleep -Milliseconds 200 
- }
+	}
 	WriteMessage -success "Generation done"	
 	Remove-Item -Path $currentFile -Force
+}
+
+function Get-DeeplAuthorizationHeader { 
+	$header = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+	$header.Add('Authorization', "DeepL-Auth-Key $deeplApiKey")
+	return $header
+}
+
+function Get-DeeplRemainingCharacters {
+	$result = Invoke-RestMethod -Method "POST" -Headers (Get-DeeplAuthorizationHeader) -Uri "https://api-free.deepl.com/v2/usage"
+	return $result.character_limit - $result.character_count
+}
+
+# Translation using https://www.deepl.com/
+function Get-DeeplTranslation {
+	param (
+		$text,
+		[switch]$chooseLanguage
+	)
+	
+	$remainingChars = Get-DeeplRemainingCharacters
+	if ($remainingChars -lt $text.Length) {
+		WriteMessage -failure "There are not enough credits left to translate, $remainingChars left and text is $($text.Length) characters"
+		return
+	}
+
+	$languages = @("Bulgarian", "Czech", "Danish", "German", "Greek", "English (British)", "English (American)", "Spanish", "Estonian", "Finnish", "French", "Hungarian", "Indonesian", "Italian", "Japanese", "Lithuanian", "Latvian", "Dutch", "Polish", "Portuguese", "Portuguese (Brazilian)", "Romanian", "Russian", "Slovak", "Slovenian", "Swedish", "Turkish", "Chinese")
+	$shorts = @("BG","CS","DA","DE","EL","EN-GB","EN-US","ES","ET","FI","FR","HU","ID","IT","JA","LT","LV","NL","PL","PT-PT","PT-BR","RO","RU","SK","SL","SV","TR","ZH")
+	if (-not $chooseLanguage) {
+		WriteMessage -progress "Assuming translation to English using auto recognize original language"
+		$selectedFrom = "AUTO"
+		$selectedTo = "EN-US"
+	} else {
+		for ($i = 0; $i -lt $languages.Count; $i++) {
+			Write-Host "$($i + 1): $($languages[$i])"
+		}
+		$answer = Read-Host "Select FROM language (empty is auto)"
+		if ($answer) {
+			$selectedFrom = $shorts[$answer - 1]
+		} else {
+			$selectedFrom = "AUTO"
+		}
+		for ($i = 0; $i -lt $languages.Count; $i++) {
+			Write-Host "$($i + 1): $($languages[$i])"
+		}
+		$answer = Read-Host "Select TO language (REQUIRED)"
+		if (-not $answer) {
+			WriteMessage -failure "You need to select a target language"
+			return
+		}
+		$selectedTo = $shorts[$answer - 1]
+	}
+
+	WriteMessage -progress "Translating from $selectedFrom to $selectedTo"
+
+	$urlSuffix = "?target_lang=$selectedTo"
+	if ($selectedFrom -ne "AUTO") { 
+		$urlSuffix += "&source_lang=$selectedFrom"
+	}
+	$urlSuffix += "&text=$text"
+
+	$result = Invoke-RestMethod -Method "POST" -Headers (Get-DeeplAuthorizationHeader) -Uri "https://api-free.deepl.com/v2/translate$urlSuffix"
+	
+	return $result.translations.text
 }
 
 function Update-IdentifierToFolderCache {
@@ -3549,7 +3600,8 @@ function Get-ModLink {
 	$counter = 1
 	foreach ($title in $html.SelectNodes("//div[contains(@class, 'workshopItemTitle')]").InnerText) {
 		$titleDecoded = [System.Web.HTTPUtility]::HtmlDecode($title)
-		Write-Host "$counter - $titleDecoded"
+		$authorName = $html.SelectNodes("//a[contains(@class, 'workshop_author_link')]")[$counter - 1].InnerText
+		Write-Host "$counter - $titleDecoded ($authorName)"
 		$counter++
 	}
 	[int]$answer = Read-Host "Select matching or empty for exit"
