@@ -67,8 +67,9 @@ if (-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
 }
 $Global:modlist = Get-Content "$($settings.mod_staging_folder)\..\modlist.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 $Global:identifierCache = @{}
+$Global:languages = @("Bulgarian", "Czech", "Danish", "German", "Greek", "English (British)", "English", "Spanish", "Estonian", "Finnish", "French", "Hungarian", "Indonesian", "Italian", "Japanese", "Lithuanian", "Latvian", "Dutch", "Polish", "Portuguese", "Portuguese (Brazilian)", "Romanian", "Russian", "Slovak", "Slovenian", "Swedish", "Turkish", "ChineseSimplified")
+$Global:shorts = @("BG","CS","DA","DE","EL","EN-GB","EN-US","ES","ET","FI","FR","HU","ID","IT","JA","LT","LV","NL","PL","PT-PT","PT-BR","RO","RU","SK","SL","SV","TR","ZH")
 $Global:faqText = @"
-
 
 [img]https://i.imgur.com/PwoNOj4.png[/img]
 [list]
@@ -2398,15 +2399,11 @@ function Publish-Mod {
 		Remove-Item "$modFolder\Source\lastrun.log" -Force
 	}
 
+	# Auto-translate keyed files if needed
+	$extraCommitInfo = Update-KeyedTranslations -modName $modName -silent -force:$Force
+
 	# Generate english-language if missing
 	# Set-Translation -ModName $modName
-
-	# Reset Staging
-	# Set-Location -Path $rootFolder
-	# Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
-	# Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
-	# Set-Location -Path $stagingDirectory
-
 
 	# Mod Manifest
 	if (-not (Test-Path $manifestFile)) {
@@ -2474,6 +2471,10 @@ function Publish-Mod {
 		Get-LatestGitVersion
 		$message = "First publish"
 		$newVersion = $version.ToString()
+	}
+
+	if ($extraCommitInfo) {
+		$message += ".`r`n$extraCommitInfo"
 	}
 
 	$version = [version]$newVersion
@@ -3428,49 +3429,79 @@ function Get-DeeplRemainingCharacters {
 function Get-DeeplTranslation {
 	param (
 		$text,
-		[switch]$chooseLanguage
+		$selectedFrom,
+		$selectedTo,
+		[switch]$chooseLanguage,
+		[switch]$silent
 	)
 	
+	if (-not $text) {
+		WriteMessage -failure "No text defined, skipping"
+		return
+	}
+
+	if (-not ($text -match '[a-zA-Z]')) {
+		WriteMessage -warning "$text does not contain words, will not translate"
+		return $text
+	}
+
 	$remainingChars = Get-DeeplRemainingCharacters
 	if ($remainingChars -lt $text.Length) {
 		WriteMessage -failure "There are not enough credits left to translate, $remainingChars left and text is $($text.Length) characters"
 		return
 	}
-
-	$languages = @("Bulgarian", "Czech", "Danish", "German", "Greek", "English (British)", "English (American)", "Spanish", "Estonian", "Finnish", "French", "Hungarian", "Indonesian", "Italian", "Japanese", "Lithuanian", "Latvian", "Dutch", "Polish", "Portuguese", "Portuguese (Brazilian)", "Romanian", "Russian", "Slovak", "Slovenian", "Swedish", "Turkish", "Chinese")
-	$shorts = @("BG","CS","DA","DE","EL","EN-GB","EN-US","ES","ET","FI","FR","HU","ID","IT","JA","LT","LV","NL","PL","PT-PT","PT-BR","RO","RU","SK","SL","SV","TR","ZH")
-	if (-not $chooseLanguage) {
-		WriteMessage -progress "Assuming translation to English using auto recognize original language"
-		$selectedFrom = "AUTO"
-		$selectedTo = "EN-US"
-	} else {
-		for ($i = 0; $i -lt $languages.Count; $i++) {
-			Write-Host "$($i + 1): $($languages[$i])"
-		}
-		$answer = Read-Host "Select FROM language (empty is auto)"
-		if ($answer) {
-			$selectedFrom = $shorts[$answer - 1]
-		} else {
-			$selectedFrom = "AUTO"
-		}
-		for ($i = 0; $i -lt $languages.Count; $i++) {
-			Write-Host "$($i + 1): $($languages[$i])"
-		}
-		$answer = Read-Host "Select TO language (REQUIRED)"
-		if (-not $answer) {
-			WriteMessage -failure "You need to select a target language"
-			return
-		}
-		$selectedTo = $shorts[$answer - 1]
+	if ($selectedTo -and -not $selectedFrom) {
+		$selectedFrom = "EN"
 	}
-
-	WriteMessage -progress "Translating from $selectedFrom to $selectedTo"
+	if (-not $selectedTo -and -not $selectedFrom) {
+		if (-not $chooseLanguage) {
+			if (-not $silent) {
+				WriteMessage -progress "Assuming translation to English using auto recognize original language"
+			}
+			$selectedFrom = "AUTO"
+			$selectedTo = "EN-US"
+		} else {
+			for ($i = 0; $i -lt $languages.Count; $i++) {
+				Write-Host "$($i + 1): $($languages[$i])"
+			}
+			$answer = Read-Host "Select FROM language (empty is auto)"
+			if ($answer) {
+				$selectedFrom = $shorts[$answer - 1]
+			} else {
+				$selectedFrom = "AUTO"
+			}
+			for ($i = 0; $i -lt $languages.Count; $i++) {
+				Write-Host "$($i + 1): $($languages[$i])"
+			}
+			$answer = Read-Host "Select TO language (REQUIRED)"
+			if (-not $answer) {
+				WriteMessage -failure "You need to select a target language"
+				return
+			}
+			$selectedTo = $shorts[$answer - 1]
+		}
+	}
 
 	$urlSuffix = "?target_lang=$selectedTo"
 	if ($selectedFrom -ne "AUTO") { 
+		if ($selectedFrom -eq "EN-US") {
+			$selectedFrom = "EN"
+		}
+		if ($selectedFrom -eq "EN-GB") {
+			$selectedFrom = "EN"
+		}
+		if ($selectedFrom -eq "PT-PT") {
+			$selectedFrom = "PT"
+		}
+		if ($selectedFrom -eq "PT-BR") {
+			$selectedFrom = "PT"
+		}
+
 		$urlSuffix += "&source_lang=$selectedFrom"
 	}
 	$urlSuffix += "&text=$text"
+
+	WriteMessage -progress "Translating '$text' from $selectedFrom to $selectedTo"
 
 	$result = Invoke-RestMethod -Method "POST" -Headers (Get-DeeplAuthorizationHeader) -Uri "https://api-free.deepl.com/v2/translate$urlSuffix"
 	
@@ -3576,7 +3607,8 @@ function Get-ModLink {
 
 	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
 	$modNameUrlEncoded = [System.Web.HTTPUtility]::UrlEncode($modName)
-	$searchString = "https://steamcommunity.com/workshop/browse/?appid=294100&browsesort=textsearch&section=items&requiredtags%5B%5D=Mod&searchtext=$modNameUrlEncoded"
+	$modVersion = Get-CurrentRimworldVersion
+	$searchString = "https://steamcommunity.com/workshop/browse/?appid=294100&browsesort=textsearch&section=items&requiredtags%5B%5D=Mod&requiredtags%5B%5D=$modVersion&searchtext=$modNameUrlEncoded"
 	$html = ConvertFrom-Html -URI $searchString
 
 	$counter = 0
@@ -3620,5 +3652,170 @@ function Get-ModLink {
 		return $link
 	} else {
 		WriteMessage -message "No selection made, exiting"
+	}
+}
+
+function Update-KeyedTranslations {
+	param (
+		$modName,
+		[switch]$test,
+		[switch]$silent,
+		[switch]$force
+	)
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+	
+	if (-not (Get-OwnerIsMeStatus -modName $modName) -and -not $force) {
+		WriteMessage -failure "$modName is not mine, aborting update"
+		return
+	}
+	$modFolder = "$localModFolder\$modName"
+
+	$allLanguagesFolders = Get-ChildItem -Path $modFolder -Recurse -Include "Languages" -Directory
+
+	if (-not $allLanguagesFolders) {
+		if (-not $silent) {
+			WriteMessage -progress "No translation-files found for $modName, ignoring"
+		}
+		return
+	}
+	$updatedLanguages = @()
+	$baseXml = @"
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+</LanguageData>
+"@
+	foreach ($folder in $allLanguagesFolders) {
+		if (-not (Test-Path "$($folder.FullName)\English\Keyed")) {
+			continue
+		}
+		$keyedSourceFiles = Get-ChildItem -Path "$($folder.FullName)\English\Keyed" -File
+
+		if (-not $keyedSourceFiles) {
+			WriteMessage -warning "$modName has empty translation-folder: $($folder.FullName)\English\Keyed"
+			continue
+		}
+
+		$allNonEnglishFolders = Get-ChildItem -Path $folder.FullName -Directory -Exclude "English"
+		if (-not $allNonEnglishFolders) {
+			continue
+		}
+		foreach ($languageFolder in $allNonEnglishFolders) {
+			if ($languages -notcontains $languageFolder.Name) {
+				WriteMessage -warning "$($languageFolder.Name) can not be translated by DeepL"
+				continue
+			}
+			$translateTo = $shorts[$languages.IndexOf($languageFolder.Name)]
+			$keyedFolder = "$($languageFolder.FullName)\Keyed"
+			if (-not (Test-Path $keyedFolder)) {
+				continue
+			}
+			$languageUpdated = $false
+			foreach ($file in $keyedSourceFiles) {
+				if (-not (Test-Path "$keyedFolder\$($file.Name)")) {
+					WriteMessage -warning "$modName has missing translation-file: "$keyedFolder\$($file.Name)". Create empty?"
+					$answer = Read-Host "(Y or empty to skip)"
+					if ($answer -eq "y") {
+						if ($test) {
+							WriteMessage -progress "Would have created $keyedFolder\$($file.Name)"
+						} else {
+							WriteMessage -progress "Creating $($file.Name) for $($languageFolder.Name) in $modName"
+							$baseXml | Out-File -FilePath "$keyedFolder\$($file.Name)" -Encoding utf8
+						} 
+					} else {
+						WriteMessage -progress "Skipping"
+						continue
+					}
+				}
+				$commentExists = $false
+				if (Select-String -Path "$($file.FullName)" -Pattern "DeepL") {
+					$commentExists = $true
+				}
+				$englishContent = [xml](Get-Content -Path "$($file.FullName)" -Encoding utf8)
+				$localContent = [xml](Get-Content -Path "$keyedFolder\$($file.Name)" -Encoding utf8)
+				$resaveFile = $false
+				foreach ($childNode in $englishContent.LanguageData.ChildNodes) {
+					if ($localContent.LanguageData."$($childNode.Name)") {
+						continue
+					}
+					if (-not $commentExists) {
+						$commentExists = $true
+						if ($test) {
+							WriteMessage -progress "Would have added a DeepL translation-comment to $keyedFolder\$($file.Name)"
+						} else {
+							$comment = $localContent.CreateComment("The following translations were generated by https://www.deepl.com/")
+							$localContent.LanguageData.AppendChild($comment) | Out-Null
+						}
+					}
+					$textToTranslate = "$($childNode.'#text')"
+					if ($textToTranslate -notmatch "{") {
+						if ($test) {
+							WriteMessage -progress "Would have translated '$textToTranslate' to $translateTo and added it to $keyedFolder\$($file.Name)"
+							continue
+						}
+						$translatedString = Get-DeeplTranslation -text $textToTranslate -selectedTo $translateTo -silent:$silent
+						
+					} else {
+						$textStrings = @()
+						$numbers = @()
+						foreach ($part in $textToTranslate.Split("{")) {
+							if (-not $part) {
+								$textStrings += "<"
+								continue
+							}
+							if ($part -notmatch "}") {
+								$textStrings += $part
+								continue
+							}
+							if ($part.Split("}")[1]) {
+								$textStrings += $part.Split("}")[1]
+							}
+							$numbers += $part.Split("}")[0]
+						}
+						if ($test) {
+							WriteMessage -progress "Would have translated '$textToTranslate', a $($textStrings.Length) part string to $translateTo and added it to $keyedFolder\$($file.Name). Strings: $textStrings, Numbers: $numbers"
+							continue
+						}
+						if ($textStrings[0] -eq "<") {
+							$translatedString = ""
+						} else {
+							$translatedString = Get-DeeplTranslation -text $textStrings[0] -selectedTo $translateTo -silent:$silent
+						}
+						for ($i = 0; $i -lt $numbers.Count; $i++) {
+							$translatedString += " {$($numbers[$i])} "
+							if ($textStrings[$i + 1] -and $textStrings[$i + 1] -ne "<") {
+								$translatedString += Get-DeeplTranslation -text $textStrings[$i + 1] -selectedTo $translateTo -silent:$silent
+							}
+						}
+					}
+					if (-not $textToTranslate.EndsWith(" ")) {
+						$translatedString = $translatedString.Trim()
+					}
+					if (-not $translatedString) {
+						continue
+					}
+					$nodeToAdd = $localContent.CreateElement($childNode.Name)
+					$textToAddToNode = $localContent.CreateTextNode($translatedString)
+					$nodeToAdd.AppendChild($textToAddToNode) | Out-Null
+					$localContent.LanguageData.AppendChild($nodeToAdd) | Out-Null
+					$resaveFile = $true
+				}
+				if ($resaveFile) {
+					WriteMessage -success "Added automatic translations to $keyedFolder\$($file.Name)"
+					$localContent.Save("$keyedFolder\$($file.Name)")
+					$languageUpdated = $true
+				}
+			}
+			if ($languageUpdated) {
+				$updatedLanguages += $languageFolder.Name
+			}
+		}
+	}
+	if ($updatedLanguages.Length -gt 0) {
+		return "Used DeepL to update translations for $($updatedLanguages -join ", ")"
 	}
 }
