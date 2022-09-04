@@ -521,6 +521,25 @@ function Start-RimworldSave {
 	}
 }
 
+function Stop-RimWorld {
+	[CmdletBinding()]
+	param()
+	if (-not (Get-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue)) {
+		return
+	}
+
+	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
+	while ((Get-ItemProperty HKCU:\Software\Valve\Steam -Name RunningAppID).RunningAppID -ne 0) {
+		Start-Sleep -Milliseconds 250
+	}
+	Start-Sleep -Milliseconds 250
+	$syncLogPath = "$(Split-Path $settings.steam_path)\logs\cloud_log.txt"
+	while ((Get-Item -Path $syncLogPath).LastWriteTime -gt (Get-Date).AddSeconds(-1)) {
+		Start-Sleep -Milliseconds 250		
+	}
+	
+}
+
 # Start RimWorld two different ways
 # Default start is as mod-publish mode
 #	- Windowed mode
@@ -578,8 +597,7 @@ function Start-RimWorld {
 		}		
 	}	
 
-	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
-	Start-Sleep -Seconds 2
+	Stop-RimWorld
 
 	if ($testAuthor) {
 		Copy-Item $testingModsConfig $modFile -Confirm:$false
@@ -749,7 +767,7 @@ function Start-RimWorld {
 	while ((Get-Item -Path $logPath).LastWriteTime -ge (Get-Date).AddSeconds(-15) -or (Get-Item -Path $logPath).LastWriteTime -lt $startTime) {
 		Start-Sleep -Seconds 1
 	}
-	Stop-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue
+	Stop-RimWorld
 	$errors = (Get-Content $logPath -Raw -Encoding UTF8).Contains("[HugsLib][ERR]")
 	if ($errors) {
 		Copy-Item $logPath "$localModFolder\$modname\Source\lastrun.log" -Force | Out-Null
@@ -3786,7 +3804,7 @@ function Update-KeyedTranslations {
 							$translatedString = Get-DeeplTranslation -text $textStrings[0] -selectedTo $translateTo -silent:$silent
 						}
 						for ($i = 0; $i -lt $numbers.Count; $i++) {
-							$translatedString += " {$($numbers[$i])} "
+							$translatedString += " {$($numbers[$i])}"
 							if ($textStrings[$i + 1] -and $textStrings[$i + 1] -ne "<") {
 								$translatedString += Get-DeeplTranslation -text $textStrings[$i + 1] -selectedTo $translateTo -silent:$silent
 							}
