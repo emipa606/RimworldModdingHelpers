@@ -2401,12 +2401,12 @@ function Publish-Mod {
 		Read-Host "Preview-file does not exist, create one then press Enter"
 	}
 
-	if ($aboutContent.ModMetaData.description -match "pufA0kM" -and 
-		(Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2022-07-15") -and
-		(Test-Path "$modFolder\Source\original_preview.png")) {
-		WriteMessage "Preview-file has not been updated, regenerating"
-		Add-ModReuploadImage -regenerate
-	}
+	# if ($aboutContent.ModMetaData.description -match "pufA0kM" -and 
+	# 	(Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2022-07-15") -and
+	# 	(Test-Path "$modFolder\Source\original_preview.png")) {
+	# 	WriteMessage "Preview-file has not been updated, regenerating"
+	# 	Add-ModReuploadImage -regenerate
+	# }
 
 	if ((Get-Item $previewFile).Length -ge 1MB) {
 		Read-Host "Preview-file is too large, resave a file under 1MB and then press Enter"
