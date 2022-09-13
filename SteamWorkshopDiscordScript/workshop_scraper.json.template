@@ -6,5 +6,6 @@
     "steam_updated_mods_search_url": "https://steamcommunity.com/workshop/browse/?appid=294100&browsesort=lastupdated&excludedtags%5B%5D=Translation&excludedtags%5B%5D=Scenario&updated_date_range_filter_end=",
     "caching_folder": "path to an empty local folder for caching things",
     "digest_title": "title for the hourly digest of updated mods with no changenotes",
-    "discord_posts_per_hour": 12
+    "discord_posts_per_hour": 12,
+    "steam_workshop_path": "if defined, will only notify about updates that are subscribed"
 }

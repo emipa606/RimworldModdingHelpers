@@ -20,11 +20,12 @@ if (len(sys.argv) > 1):
 
 
 def read_json(file_path):
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-config_path = "./workshop_scraper.json"
+config_path = Path(
+    f"{os.path.dirname(os.path.realpath(__file__))}/workshop_scraper.json")
 if (not os.path.isfile(config_path)):
     print(f"No config-file found: {config_path}, create and try again")
     sys.exit()
@@ -46,13 +47,33 @@ currentDigest = datetimesub.now().hour
 cachePath = settings["caching_folder"]
 digestTitle = settings["digest_title"]
 maxPostsPerHour = settings["discord_posts_per_hour"]
+steamWorkshopPath = settings["steam_workshop_path"]
+
+digestPath = f"{cachePath}/digest"
+updatedPath = f"{cachePath}/updated"
+newPath = f"{cachePath}/new"
+embedsPath = f"{cachePath}/embeds"
+embedsUpdatedPath = f"{embedsPath}/updated"
+embedsNewPath = f"{embedsPath}/new"
+
+if not os.path.exists(Path(digestPath)):
+    os.makedirs(Path(digestPath))
+if not os.path.exists(Path(updatedPath)):
+    os.makedirs(Path(updatedPath))
+if not os.path.exists(Path(newPath)):
+    os.makedirs(Path(newPath))
+if not os.path.exists(Path(embedsUpdatedPath)):
+    os.makedirs(Path(embedsUpdatedPath))
+if not os.path.exists(Path(embedsNewPath)):
+    os.makedirs(Path(embedsNewPath))
+onlyLocal = steamWorkshopPath and os.path.exists(Path(steamWorkshopPath))
 
 
 def postOldDigest(webhookurl):
     lastDigest = (datetimesub.now() - timedelta(hours=1)).hour
-    fileName = f'{cachePath}/digest/{lastDigest}'
+    fileName = Path(f'{digestPath}/{lastDigest}')
     if (os.path.isfile(fileName)):
-        with open(fileName, 'r') as the_file:
+        with open(fileName, 'r', encoding="utf-8") as the_file:
             lines = the_file.readlines()
         description = ""
         count = 0
@@ -76,53 +97,53 @@ def postDiscordMessages(url, updated):
     lastHour = (datetimesub.now() - timedelta(hours=1)).hour
     thisHour = (datetimesub.now()).hour
     if updated:
-        oldName = f'{cachePath}/embeds/update{lastHour}'
-        currentName = f'{cachePath}/embeds/update{thisHour}'
-        path = f'{cachePath}/embeds/updated/'
+        oldName = Path(f'{embedsPath}/update{lastHour}')
+        currentName = Path(f'{embedsPath}/update{thisHour}')
+        path = Path(embedsUpdatedPath)
     else:
-        oldName = f'{cachePath}/embeds/new{lastHour}'
-        currentName = f'{cachePath}/embeds/new{thisHour}'
-        path = f'{cachePath}/embeds/new/'
+        oldName = Path(f'{embedsPath}/new{lastHour}')
+        currentName = Path(f'{embedsPath}/new{thisHour}')
+        path = Path(embedsNewPath)
     if os.path.isfile(oldName):
         os.remove(oldName)
     if (not os.path.isfile(currentName)):
         Path(currentName).touch()
-        with open(currentName, 'a') as the_file:
+        with open(currentName, 'a', encoding="utf-8") as the_file:
             the_file.write('0')
-    with open(currentName, 'r') as the_file:
+    with open(currentName, 'r', encoding="utf-8") as the_file:
         currentPosts = int(the_file.read())
-    files = list(filter(os.path.isfile, glob.glob(path + "*")))
+    files = list(filter(os.path.isfile, path.glob('*')))
     files.sort(key=lambda x: os.path.getmtime(x))
     for file in files:
         if currentPosts > maxPostsPerHour:
             break
         sendEmbed(file, url)
         currentPosts = currentPosts + 1
-    with open(currentName, 'w') as the_file:
+    with open(currentName, 'w', encoding="utf-8") as the_file:
         the_file.write(f'{currentPosts}')
 
 
 def saveToDigest(title, author, link):
-    fileName = f'{cachePath}/digest/{currentDigest}'
+    fileName = Path(f'{digestPath}/{currentDigest}')
     if (not os.path.isfile(fileName)):
         Path(fileName).touch()
-    with open(fileName, 'a') as the_file:
+    with open(fileName, 'a', encoding="utf-8") as the_file:
         the_file.write(f'{title}|{author}|{link}\n')
 
 
 def saveEmbed(embed, folder):
     tempname = str(uuid.uuid4())
-    fileName = f'{cachePath}/embeds/{folder}/{tempname}'
+    fileName = f'{embedsPath}/{folder}/{tempname}'
     Path(fileName).touch()
     data = {'title': embed.title, 'url': embed.url, 'author': {
         'name': embed.author['name'], 'url': embed.author['url'], 'icon_url': embed.author['icon_url']}, 'description': embed.description, 'thumbnail': embed.thumbnail['url']}
     text = json.dumps(data)
-    with open(fileName, 'a') as the_file:
+    with open(fileName, 'a', encoding="utf-8") as the_file:
         the_file.write(text)
 
 
 def sendEmbed(filepath, url):
-    with open(filepath, 'r') as the_file:
+    with open(filepath, 'r', encoding="utf-8") as the_file:
         embedText = the_file.read()
     embedJson = json.loads(embedText)
     embed = DiscordEmbed(title=embedJson['title'], url=embedJson['url'])
@@ -186,6 +207,9 @@ def generateDiscordPost(each_div, script, webhookurl, updated):
     wid = link.split('=')[1]
     description = ""
     if updated:
+        if onlyLocal and not os.path.isfile(Path(f'{steamWorkshopPath}/' + wid + '/About/About.xml')):
+            print(wid + " is not subscribed, ignoring")
+            return
         changelogPage = urlopen(
             "https://steamcommunity.com/sharedfiles/filedetails/changelog/" + wid)
         changelogData = changelogPage.read().decode("utf-8")
@@ -199,11 +223,11 @@ def generateDiscordPost(each_div, script, webhookurl, updated):
         lastUpdatedString = firstPart + " " + lastPart
         date_parser = parser()
         lastUpdated = str(date_parser.parse(lastUpdatedString).timestamp())
-        if not test and os.path.isfile(f'{cachePath}/updated/' + wid + lastUpdated):
+        if not test and os.path.isfile(Path(f'{updatedPath}/' + wid + lastUpdated)):
             print(wid + " is already reported, ignoring")
             return
     else:
-        if not test and os.path.isfile(f'{cachePath}/new/' + wid):
+        if not test and os.path.isfile(Path(f'{newPath}/' + wid)):
             print(wid + " is already reported, ignoring")
             return
     title = each_div.findAll(
@@ -231,7 +255,7 @@ def generateDiscordPost(each_div, script, webhookurl, updated):
         else:
             if not test:
                 saveToDigest(title, authorName, link)
-                Path(f'{cachePath}/updated/' + wid + lastUpdated).touch()
+                Path(f'{updatedPath}/' + wid + lastUpdated).touch()
             else:
                 print(wid + " has no changelog, would add to digest instead")
             return
@@ -245,11 +269,11 @@ def generateDiscordPost(each_div, script, webhookurl, updated):
     if updated:
         saveEmbed(embed, "updated")
         if not test:
-            Path(f'{cachePath}/updated/' + wid + lastUpdated).touch()
+            Path(f'{updatedPath}/' + wid + lastUpdated).touch()
     else:
         saveEmbed(embed, "new")
         if not test:
-            Path(f'{cachePath}/new/' + wid).touch()
+            Path(f'{newPath}/' + wid).touch()
 
 
 postOldDigest(updatedDiscord)
