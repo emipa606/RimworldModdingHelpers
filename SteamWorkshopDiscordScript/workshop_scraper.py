@@ -278,32 +278,34 @@ def generateDiscordPost(each_div, script, webhookurl, updated):
 
 postOldDigest(updatedDiscord)
 
-page = urlopen(newModsUrl)
-htmldata = page.read().decode("utf-8")
-soup = BeautifulSoup(htmldata, "html.parser")
-pattern = re.compile('description":"[^"]+"', re.MULTILINE)
-workshopItems = soup.findAll("div", {"class": "workshopItem"})
-scripts = soup.findAll("script", text=pattern)
-print(f"{len(workshopItems)} workshop items, {len(scripts)} scripts")
-for i in range(len(workshopItems) - 1):
-    if (test and i >= 10):
-        print(f"Only testing, will only print {i}")
-        break
-    print(f"Parsing new item {i}")
-    generateDiscordPost(workshopItems[i], scripts[i], newDiscord, False)
-postDiscordMessages(newDiscord, False)
+if (newModsUrl):
+    page = urlopen(newModsUrl)
+    htmldata = page.read().decode("utf-8")
+    soup = BeautifulSoup(htmldata, "html.parser")
+    pattern = re.compile('description":"[^"]+"', re.MULTILINE)
+    workshopItems = soup.findAll("div", {"class": "workshopItem"})
+    scripts = soup.findAll("script", text=pattern)
+    print(f"{len(workshopItems)} workshop items, {len(scripts)} scripts")
+    for i in range(len(workshopItems) - 1):
+        if (test and i >= 10):
+            print(f"Only testing, will only print {i}")
+            break
+        print(f"Parsing new item {i}")
+        generateDiscordPost(workshopItems[i], scripts[i], newDiscord, False)
+    postDiscordMessages(newDiscord, False)
 
-page = urlopen(updatedModsUrl)
-htmldata = page.read().decode("utf-8")
-soup = BeautifulSoup(htmldata, "html.parser")
-pattern = re.compile('description":"[^"]+"', re.MULTILINE)
-workshopItems = soup.findAll("div", {"class": "workshopItem"})
-scripts = soup.findAll("script", text=pattern)
-print(f"{len(workshopItems)} workshop items, {len(scripts)} scripts")
-for i in range(len(workshopItems) - 1):
-    if (test and i >= 10):
-        print(f"Only testing, will only print {i}")
-        break
-    print(f"Parsing updated item {i}")
-    generateDiscordPost(workshopItems[i], scripts[i], updatedDiscord, True)
-postDiscordMessages(updatedDiscord, True)
+if (updatedModsUrl):
+    page = urlopen(updatedModsUrl)
+    htmldata = page.read().decode("utf-8")
+    soup = BeautifulSoup(htmldata, "html.parser")
+    pattern = re.compile('description":"[^"]+"', re.MULTILINE)
+    workshopItems = soup.findAll("div", {"class": "workshopItem"})
+    scripts = soup.findAll("script", text=pattern)
+    print(f"{len(workshopItems)} workshop items, {len(scripts)} scripts")
+    for i in range(len(workshopItems) - 1):
+        if (test and i >= 10):
+            print(f"Only testing, will only print {i}")
+            break
+        print(f"Parsing updated item {i}")
+        generateDiscordPost(workshopItems[i], scripts[i], updatedDiscord, True)
+    postDiscordMessages(updatedDiscord, True)
