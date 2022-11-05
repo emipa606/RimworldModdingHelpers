@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputPath>.</OutputPath>
+    <TargetFramework>net472</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <DebugType>None</DebugType>
+    <LangVersion>latest</LangVersion>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>Mlie_Rimworld_ModMenu</PackageId>
+    <Authors>Mlie</Authors>
+    <PackageProjectUrl>https://github.com/emipa606/RimworldModdingHelpers/tree/master/ModMenu</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/emipa606/RimworldModdingHelpers/tree/master/ModMenu</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>Rimworld</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	  <PackageReadmeFile>readme.md</PackageReadmeFile>
+  </PropertyGroup>
+	<ItemGroup>
+		<Resource Include="MliesModsOptionCategory.png" />
+		<Content Include="readme.md">
+			<Pack>true</Pack>
+			<PackagePath>\</PackagePath>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Assembly-CSharp">
+	    <HintPath>..\..\OldRimworld\beta\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
+		  <CopyLocal>False</CopyLocal>
+		  <Private>false</Private>
+	  </Reference>
+	  <Reference Include="System">
+	    <HintPath>..\..\OldRimworld\beta\RimWorldWin64_Data\Managed\System.dll</HintPath>
+		  <CopyLocal>False</CopyLocal>
+		  <Private>false</Private>
+	  </Reference>
+	  <Reference Include="UnityEngine">
+	    <HintPath>..\..\OldRimworld\beta\RimWorldWin64_Data\Managed\UnityEngine.dll</HintPath>
+		  <CopyLocal>False</CopyLocal>
+		  <Private>false</Private>
+	  </Reference>
+	  <Reference Include="UnityEngine.CoreModule">
+	    <HintPath>..\..\OldRimworld\beta\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+		  <CopyLocal>False</CopyLocal>
+		  <Private>false</Private>
+	  </Reference>
+	  <Reference Include="UnityEngine.TextRenderingModule">
+	    <HintPath>..\..\OldRimworld\beta\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+		  <CopyLocal>False</CopyLocal>
+		  <Private>false</Private>
+	  </Reference>
+	  <Reference Include="UnityEngine.IMGUIModule">
+	    <HintPath>..\..\OldRimworld\beta\RimWorldWin64_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+		  <CopyLocal>False</CopyLocal>
+		  <Private>false</Private>
+	  </Reference>
+	  <Reference Include="UnityEngine.IMGUIModule">
+	    <HintPath>..\..\OldRimworld\beta\RimWorldWin64_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+		  <CopyLocal>False</CopyLocal>
+		  <Private>false</Private>
+	  </Reference>
+	</ItemGroup>
+	<Target Name="NugetPackAutoVersioning" AfterTargets="Build">
+		<Exec Command="dotnet pack -p:PackageVersion=$([System.DateTime]::Now.ToString(&quot;yyyy.MM.dd.HHmmss&quot;)) --no-build --configuration $(Configuration) --output &quot;$(SolutionDir)nuget&quot;" />
+	</Target>
+</Project>

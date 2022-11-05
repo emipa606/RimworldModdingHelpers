@@ -62,6 +62,7 @@ $Global:discordRemoveHookUrl = $settings.discord_remove_hook_url
 $Global:discordTestHookUrl = $settings.discord_test_hook_url
 $Global:discordHookUrl = $settings.discord_remove_hook_url
 $Global:deeplApiKey = $settings.deepl_api_key
+$Global:autoTranslateLanguages = $settings.auto_translate_languages
 if (-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
 	"{}" | Out-File -Encoding utf8 -FilePath "$($settings.mod_staging_folder)\..\modlist.json"
 }
@@ -556,8 +557,9 @@ function Start-RimWorld {
 		[string]$testAuthor,
 		[switch]$alsoLoadBefore,
 		[switch]$rimThreaded,
-		[Parameter()][ValidateSet('1.0', '1.1', '1.2', 'latest')][string[]]$version,
+		[Parameter()][ValidateSet('1.0', '1.1', '1.2', '1.3', 'latest')][string[]]$version,
 		$otherModid,
+		$mlieMod,
 		[switch]$autotest,
 		[switch]$force,
 		[switch]$bare
@@ -658,6 +660,13 @@ function Start-RimWorld {
 					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -gameVersion $version		
 				}
 			}
+			if ($mlieMod) {
+				$mlieModFolder = $mlieMod.Split(".")[1]
+				if (Test-Path "$oldModFolder\$mlieModFolder") {
+					Remove-Item -Path "$oldModFolder\$mlieModFolder" -Recurse -Force
+				}
+				Copy-Item -Path "$localModFolder\$mlieModFolder" -Destination "$oldModFolder\" -Confirm:$false -Recurse -Force
+			}
 			if (Test-Path "$oldModFolder\$modname") {
 				Remove-Item -Path "$oldModFolder\$modname" -Recurse -Force
 			}
@@ -705,6 +714,15 @@ function Start-RimWorld {
 		# 	return
 		# }
 		$modIdentifiers = ""
+		if ($autotest) {
+			$modIdentifiers += "<li>mlie.autotester</li>"
+		}
+		if ($bare) {
+			$modIdentifiers += "<li>taranchuk.moderrorchecker</li>"
+		}
+		if ($mlieMod) {
+			$modIdentifiers += "<li>$($mlieMod.ToLower())</li>"
+		}
 		if ($identifiersToAdd.Count -eq 1) {
 			WriteMessage -progress "Adding $identifiersToAdd as mod to test"
 			$modIdentifiers += "<li>$identifiersToAdd</li>"
@@ -735,15 +753,15 @@ function Start-RimWorld {
 		Copy-Item $moddingModsConfig $modFile -Confirm:$false
 		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
 	}
-	if (-not $version -or $version -eq "latest") {
-		$hugsSettingsPath = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\HugsLib\ModSettings.xml"
-		$hugsContent = Get-Content $hugsSettingsPath -Encoding UTF8 -Raw
-		if ($autotest) {
-			$hugsContent.Replace("Disabled", "GenerateMap") | Out-File $hugsSettingsPath -Encoding utf8
-		} else {
-			$hugsContent.Replace("GenerateMap", "Disabled") | Out-File $hugsSettingsPath -Encoding utf8
-		}
-	}
+	# if (-not $version -or $version -eq "latest") {
+	# 	$hugsSettingsPath = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\HugsLib\ModSettings.xml"
+	# 	$hugsContent = Get-Content $hugsSettingsPath -Encoding UTF8 -Raw
+	# 	if ($autotest) {
+	# 		$hugsContent.Replace("Disabled", "GenerateMap") | Out-File $hugsSettingsPath -Encoding utf8
+	# 	} else {
+	# 		$hugsContent.Replace("GenerateMap", "Disabled") | Out-File $hugsSettingsPath -Encoding utf8
+	# 	}
+	# }
 
 	Start-Sleep -Seconds 2
 	$currentLocation = Get-Location
@@ -755,6 +773,9 @@ function Start-RimWorld {
 		$applicationPath = $settings.steam_path
 		$arguments = "-applaunch 294100"
 	}
+	if ($autotest) {
+		$arguments += " -quicktest"
+	}
 	$startTime = Get-Date
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
 	if ($currentLocation -ne (Get-Location)) {
@@ -764,11 +785,24 @@ function Start-RimWorld {
 		return $true
 	}
 	$logPath = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log"
-	while ((Get-Item -Path $logPath).LastWriteTime -ge (Get-Date).AddSeconds(-15) -or (Get-Item -Path $logPath).LastWriteTime -lt $startTime) {
+	while ($true) {
+		if ((Get-Item -Path $logPath).LastWriteTime -lt $startTime) {
+			Start-Sleep -Seconds 1
+			continue
+		}
+		
+		if (-not ((Get-Item -Path $logPath).LastWriteTime -ge (Get-Date).AddSeconds(-30))) {
+			break
+		}
+
+		if (-not (Get-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue)) {
+			break
+		}
 		Start-Sleep -Seconds 1
 	}
 	Stop-RimWorld
-	$errors = (Get-Content $logPath -Raw -Encoding UTF8).Contains("[HugsLib][ERR]")
+	$logContent = Get-Content $logPath -Raw -Encoding UTF8
+	$errors = $logContent.Contains("[ERROR]") -or $logContent.Contains("[WARNING]")
 	if ($errors) {
 		Copy-Item $logPath "$localModFolder\$modname\Source\lastrun.log" -Force | Out-Null
 	}
@@ -904,7 +938,8 @@ function Get-IdentifiersFromMod {
 		[switch]$oldmod, 
 		[switch]$alsoLoadBefore,
 		[string]$modFolderPath,
-		[string]$gameVersion)
+		[string]$gameVersion,
+		[switch]$bare)
 	if (-not $modName) {
 		$modName = Get-CurrentModNameFromLocation
 		if (-not $modName) {
@@ -941,7 +976,10 @@ function Get-IdentifiersFromMod {
 	if ($identifierCache.Count -eq 0) {
 		Update-IdentifierToFolderCache
 	}
-	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "ludeon.rimworld.ideology", "mlie.showmeyourhands"
+	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "ludeon.rimworld.ideology", "ludeon.rimworld.biotech", "mlie.showmeyourhands"
+	if ($bare) {
+		$identifiersToIgnore = "brrainz.harmony", "ludeon.rimworld", "ludeon.rimworld.royalty", "ludeon.rimworld.ideology", "ludeon.rimworld.biotech"
+	}
 	foreach ($identifier in $aboutFileContent.ModMetaData.modDependencies.li.packageId) {
 		if (-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
 			continue
@@ -986,8 +1024,13 @@ function Get-IdentifiersFromMod {
 
 function Get-IdentifiersFromSubMod {
 	param (
-		$modFolderPath
+		$modFolderPath,
+		[switch]$dontIgnore
 	)
+	if (-not $modFolderPath) {
+		$modFolderPath = (Get-Location).Path
+	}
+
 	$aboutFile = "$modFolderPath\About\About.xml"
 	if (-not (Test-Path $aboutFile)) {
 		WriteMessage -warning "Could not find About-file for mod in $modFolderPath"
@@ -995,6 +1038,9 @@ function Get-IdentifiersFromSubMod {
 	}
 	$aboutFileContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
 	$identifiersToIgnore = "brrainz.harmony", "unlimitedhugs.hugslib", "ludeon.rimworld", "ludeon.rimworld.royalty", "mlie.showmeyourhands"
+	if ($dontIgnore) {
+		$identifiersToIgnore = @()
+	}
 	$identifiersToReturn = @()
 	foreach ($identifier in $aboutFileContent.ModMetaData.modDependencies.li.packageId) {
 		if (-not ($identifier.Contains(".")) -or $identifiersToIgnore.Contains($identifier.ToLower()) -or $identifier.Contains(" ")) {
@@ -1098,12 +1144,20 @@ function Update-Mods {
 	$notFinished = Get-NotUpdatedMods -TotalOnly -NotFinished
 	$ignoredMods = @()
 	for ($i = 0; $i -lt $MaxToUpdate; $i++) {
+		WriteMessage -message "$($MaxToUpdate - $i) mods left" -progress
 		if (-not (Get-NotUpdatedMods -NoVs:$NoVs -NoDependencies:$NoDependencies -FirstOnly -ModsToIgnore $ignoredMods -NotFinished:$IncludeFailed -RandomOrder:$RandomOrder)) {
 			WriteMessage -success "Found no mods to update"
 			Set-Location $localModFolder
 			return
 		}
+
 		$currentDirectory = (Get-Location).Path
+		if ((Get-ModAuthorFromAboutFile -aboutFilePath "$currentDirectory\About\About.xml") -eq "Jecrell") {
+			WriteMessage -warning "Wont update Jecrells mods"
+			$ignoredMods += $modName
+			$i--
+			continue
+		}
 		if (-not (Test-Path "$currentDirectory\Source")) {
 			New-Item -ItemType Directory -Name "Source" | Out-Null
 		}
@@ -1121,21 +1175,44 @@ function Update-Mods {
 		"Updating folder-structure" | Add-Content $logFile -Encoding utf8
 		Update-ModStructure -ForNewVersion | Add-Content $logFile -Encoding utf8
 		"Updating VSCode if needed" | Add-Content $logFile -Encoding utf8
-		if (Update-TestLoop -modName $modName) {
-			"True" | Add-Content $logFile -Encoding utf8
-		} else {
-			"Gave up updating the mod, moving to next." | Add-Content $logFile -Encoding utf8
-			New-Item -Path "$currentDirectory\Source\lastrun.log" -ItemType File -ErrorAction SilentlyContinue | Out-Null
-			$notFinished = Get-NotUpdatedMods -TotalOnly -NotFinished
-			if ($IncludeFailed) {
-				$ignoredMods += $modName
+		
+		$cscprojFiles = Get-ChildItem -Recurse -Path $modFolder -Include *.csproj
+		if ($cscprojFiles) {
+			Start-VSProject -modname $modName
+		}
+		$skipToNext = $false
+		$continueLoop = $true
+		while ($continueLoop) {
+			$answer = Read-Host "Enter for testing mod, Y+Enter for accepting, N+Enter for aborting"
+			if ($answer.ToLower() -eq "y") {
+				WriteMessage -message "Doing last test and then publishing" -progress
+				"True" | Add-Content $logFile -Encoding utf8
+				$continueLoop = $false
+				break
 			}
-			$i--
+			if ($answer.ToLower() -eq "n") {
+				WriteMessage -message "Moving to next mod" -warning
+				"Gave up updating the mod, moving to next." | Add-Content $logFile -Encoding utf8
+				New-Item -Path "$currentDirectory\Source\lastrun.log" -ItemType File -ErrorAction SilentlyContinue | Out-Null
+				$notFinished = Get-NotUpdatedMods -TotalOnly -NotFinished
+				if ($IncludeFailed) {
+					$ignoredMods += $modName
+				}
+				$i--
+				$skipToNext = $true
+				$continueLoop = $false
+				break
+			}
+			Test-Mod -bare
+		}
+		if ($skipToNext) {
 			continue
 		}
+
 		"Testing mod" | Add-Content $logFile -Encoding utf8
 		$result = Test-Mod -autotest
 		if (-not $result) {
+			WriteMessage "Mod threw errors, aborting autotest, see Source\lastrun.log for info" -failure
 			"Mod threw errors, aborting autotest, see Source\lastrun.log for info" | Add-Content $logFile -Encoding utf8
 			$notFinished = Get-NotUpdatedMods -TotalOnly -NotFinished
 			if ($IncludeFailed) {
@@ -1143,39 +1220,14 @@ function Update-Mods {
 			}
 			continue
 		}
+		WriteMessage "Mod passed autotest, publishing" -success
 		"Mod passed autotest, publishing" | Add-Content $logFile -Encoding utf8
-		$remaining = (Get-NotUpdatedMods -TotalOnly -IgnoreLastErrors) - 1
-		Publish-Mod -ChangeNote "Mod updated for $currentVersion and passed autotests" -ExtraInfo "$($remaining + $notFinished) mods left to update of $total"
+		$remaining = (Get-NotUpdatedMods -TotalOnly -IgnoreLastErrors) + (Get-NotUpdatedMods -TotalOnly -NotFinished) - 1
+		Publish-Mod -ChangeNote "Mod updated for $currentVersion and passed autotests" -ExtraInfo "$remaining mods left to update of $total"
 		if ($ConfirmContinue) {
 			Read-Host "Continue?"
 		}
 	}	
-}
-
-function Update-TestLoop {
-	[CmdletBinding()]
-	param($modName)
-	if (-not $modName) {
-		$modName = Get-CurrentModNameFromLocation
-		if (-not $modName) {
-			return
-		}
-	}
-	$cscprojFiles = Get-ChildItem -Recurse -Path $modFolder -Include *.csproj
-	if ($cscprojFiles) {
-		Start-VSProject -modname $modName
-	}
-
-	while ($true) {
-		$answer = Read-Host "Enter for testing mod, Y+Enter for accepting, N+Enter for aborting"
-		if ($answer.ToLower() -eq "y") {
-			return $true
-		}
-		if ($answer.ToLower() -eq "n") {
-			return
-		}
-		Test-Mod -bare
-	}
 }
 
 # Returns total amount of my published mods
@@ -2418,7 +2470,9 @@ function Publish-Mod {
 	}
 
 	# Auto-translate keyed files if needed
-	$extraCommitInfo = Update-KeyedTranslations -modName $modName -silent -force:$Force
+	if (-not $EndOfLife -and ((Get-Date) -gt (Get-Date -Year 2022 -Month 11 -Day 11))) {
+		$extraCommitInfo = Update-KeyedTranslations -modName $modName -silent -force:$Force
+	}
 
 	# Generate english-language if missing
 	# Set-Translation -ModName $modName
@@ -2608,6 +2662,8 @@ function Publish-Mod {
 		Get-ModPage
 		Set-Location $localModFolder
 		Move-Item -Path $modFolder -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
+		WriteMessage -success "Archived $modName"
+		return
 	}
 	WriteMessage -success "Published $modName - $(Get-ModPage -getLink)"
 }
@@ -2882,9 +2938,9 @@ function Push-ModContent {
 # Test the mod in the current directory
 function Test-Mod {
 	param([Parameter()]
-		[ValidateSet('1.0', '1.1', '1.2', 'latest')]
+		[ValidateSet('1.0', '1.1', '1.2', '1.3', 'latest')]
 		[string[]]
-		$version = "latest",
+		$version,
 		$otherModid,
 		$otherModName,
 		[switch] $alsoLoadBefore,
@@ -2902,12 +2958,16 @@ function Test-Mod {
 	}
 
 	if ($otherModName) {
-		$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound
-		if (-not $modLink) {
-			WriteMessage -failure "Could not find other mod named $otherModName, exiting"
-			return			
+		if ($otherModName.StartsWith("Mlie.") ) {
+			$mlieMod = $otherModName
+		} else {
+			$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound
+			if (-not $modLink) {
+				WriteMessage -failure "Could not find other mod named $otherModName, exiting"
+				return			
+			}
+			$otherModid = $modLink.Split('=')[1]
 		}
-		$otherModid = $modLink.Split('=')[1]
 	}
 
 	$modName = $currentDirectory.Replace("$localModFolder\", "").Split("\")[0]
@@ -2916,9 +2976,29 @@ function Test-Mod {
 	} else {
 		WriteMessage -progress "Testing $modName"		
 	}
-	return Start-RimWorld -testMod $modName -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -rimthreaded:$rimThreaded -bare:$bare -otherModid $otherModid
+	return Start-RimWorld -testMod $modName -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -rimthreaded:$rimThreaded -bare:$bare -otherModid $otherModid -mlieMod $mlieMod
 }
 
+
+function Get-NextModFolder {
+	$allMods = Get-ChildItem -Directory $localModFolder
+	$currentFolder = (Get-Location).Path
+	$foundStart = $currentFolder -eq $localModFolder
+	$counter = $allMods.Count
+	foreach ($folder in $allMods) {
+		if (-not $foundStart) {
+			if ($folder.FullName -eq $currentFolder) {
+				$foundStart = $true
+			}
+			$counter--
+			continue
+		}
+		WriteMessage -progress "$counter of $($allMods.Count)"
+		Set-Location $folder.FullName
+		return
+	}
+	WriteMessage -warning "Already standing on the last mod-folder"
+}
 
 # Returns a list of mods that has not been updated to the latest version
 # With switch FirstOnly the current directory is changed to the next not-updated mod root path
@@ -2982,7 +3062,7 @@ function Get-NotUpdatedMods {
 			}
 		}
 		$aboutFile = "$($folder.FullName)\About\About.xml"
-		if ($NoDependencies -and (Get-IdentifiersFromMod -modname $folder.Name).Count -gt 1) {
+		if ($NoDependencies -and (Get-IdentifiersFromMod -modname $folder.Name -bare).Count -gt 1) {
 			continue
 		}
 
@@ -3620,12 +3700,16 @@ function Set-SafeGitFolder {
 function Get-ModLink {
 	param (
 		$modName,
-		[switch]$chooseIfNotFound
+		[switch]$chooseIfNotFound,
+		[switch]$lastVersion
 	)
 
 	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
 	$modNameUrlEncoded = [System.Web.HTTPUtility]::UrlEncode($modName)
 	$modVersion = Get-CurrentRimworldVersion
+	if ($lastVersion) {
+		$modVersion = "$((Get-CurrentRimworldVersion -versionObject).Major).$((Get-CurrentRimworldVersion -versionObject).Minor - 1)"
+	}
 	$searchString = "https://steamcommunity.com/workshop/browse/?appid=294100&browsesort=textsearch&section=items&requiredtags%5B%5D=Mod&requiredtags%5B%5D=$modVersion&searchtext=$modNameUrlEncoded"
 	$html = ConvertFrom-Html -URI $searchString
 
@@ -3704,8 +3788,6 @@ function Update-KeyedTranslations {
 	$updatedLanguages = @()
 	$baseXml = @"
 <?xml version="1.0" encoding="utf-8"?>
-<LanguageData>
-</LanguageData>
 "@
 	foreach ($folder in $allLanguagesFolders) {
 		if (-not (Test-Path "$($folder.FullName)\English\Keyed")) {
@@ -3716,6 +3798,13 @@ function Update-KeyedTranslations {
 		if (-not $keyedSourceFiles) {
 			WriteMessage -warning "$modName has empty translation-folder: $($folder.FullName)\English\Keyed"
 			continue
+		}
+
+		foreach ($language in $autoTranslateLanguages) {
+			if (-not (Test-Path "$($folder.FullName)\$language")) {
+				Write-Progress "No translation found for $language, autocreating"
+				New-Item "$($folder.FullName)\$language" -ItemType Directory | Out-Null
+			}
 		}
 
 		$allNonEnglishFolders = Get-ChildItem -Path $folder.FullName -Directory -Exclude "English"
@@ -3730,31 +3819,31 @@ function Update-KeyedTranslations {
 			$translateTo = $shorts[$languages.IndexOf($languageFolder.Name)]
 			$keyedFolder = "$($languageFolder.FullName)\Keyed"
 			if (-not (Test-Path $keyedFolder)) {
-				continue
+				New-Item "$($languageFolder.FullName)\Keyed" -ItemType Directory | Out-Null
 			}
 			$languageUpdated = $false
 			foreach ($file in $keyedSourceFiles) {
-				if (-not (Test-Path "$keyedFolder\$($file.Name)")) {
-					WriteMessage -warning "$modName has missing translation-file: "$keyedFolder\$($file.Name)". Create empty?"
-					$answer = Read-Host "(Y or empty to skip)"
-					if ($answer -eq "y") {
-						if ($test) {
-							WriteMessage -progress "Would have created $keyedFolder\$($file.Name)"
-						} else {
-							WriteMessage -progress "Creating $($file.Name) for $($languageFolder.Name) in $modName"
-							$baseXml | Out-File -FilePath "$keyedFolder\$($file.Name)" -Encoding utf8
-						} 
-					} else {
-						WriteMessage -progress "Skipping"
+				$currentKeyedFilePath = "$keyedFolder\$($file.Name)"
+				if (-not (Test-Path $currentKeyedFilePath)) {
+					WriteMessage -warning "$modName has missing translation-file: '$currentKeyedFilePath'. Creating..."
+					if ($test) {
+						WriteMessage -progress "Would have created $currentKeyedFilePath"
 						continue
+					} else {
+						WriteMessage -progress "Creating $($file.Name) for $($languageFolder.Name) in $modName"
+						$baseXml | Out-File -FilePath $currentKeyedFilePath -Encoding utf8
 					}
 				}
 				$commentExists = $false
-				if (Select-String -Path "$($file.FullName)" -Pattern "DeepL") {
+				if (Select-String -Path $currentKeyedFilePath -Pattern "DeepL") {
 					$commentExists = $true
 				}
 				$englishContent = [xml](Get-Content -Path "$($file.FullName)" -Encoding utf8)
-				$localContent = [xml](Get-Content -Path "$keyedFolder\$($file.Name)" -Encoding utf8)
+				$localContent = [xml](Get-Content -Path $currentKeyedFilePath -Encoding utf8)
+				if (-not $localContent.LanguageData) {
+					$languageData = $localContent.CreateElement("LanguageData")
+					$localContent.AppendChild($languageData) | Out-Null
+				}
 				$resaveFile = $false
 				foreach ($childNode in $englishContent.LanguageData.ChildNodes) {
 					if ($localContent.LanguageData."$($childNode.Name)") {
@@ -3763,16 +3852,27 @@ function Update-KeyedTranslations {
 					if (-not $commentExists) {
 						$commentExists = $true
 						if ($test) {
-							WriteMessage -progress "Would have added a DeepL translation-comment to $keyedFolder\$($file.Name)"
+							WriteMessage -progress "Would have added a DeepL translation-comment to $currentKeyedFilePath"
 						} else {
+							WriteMessage -progress "Adding DeepL translation-comment to $currentKeyedFilePath"
 							$comment = $localContent.CreateComment("The following translations were generated by https://www.deepl.com/")
-							$localContent.LanguageData.AppendChild($comment) | Out-Null
+							if ($localContent.LanguageData.ChildNodes) {
+								$localContent.LanguageData.AppendChild($comment) | Out-Null
+							} else {
+								$localContent.DocumentElement.AppendChild($comment) | Out-Null
+							}
 						}
 					}
+					if ($childNode.NodeType -eq "Comment") {
+						$comment = $localContent.CreateComment($childNode.Value)
+						$localContent.LanguageData.AppendChild($comment) | Out-Null
+						$resaveFile = $true
+						continue
+					}
 					$textToTranslate = "$($childNode.'#text')"
-					if ($textToTranslate -notmatch "{") {
+					if ($textToTranslate -notmatch "{ ") {
 						if ($test) {
-							WriteMessage -progress "Would have translated '$textToTranslate' to $translateTo and added it to $keyedFolder\$($file.Name)"
+							WriteMessage -progress "Would have translated '$textToTranslate' to $translateTo and added it to $currentKeyedFilePath"
 							continue
 						}
 						$translatedString = Get-DeeplTranslation -text $textToTranslate -selectedTo $translateTo -silent:$silent
@@ -3780,7 +3880,7 @@ function Update-KeyedTranslations {
 					} else {
 						$textStrings = @()
 						$numbers = @()
-						foreach ($part in $textToTranslate.Split("{")) {
+						foreach ($part in $textToTranslate.Split("{ ")) {
 							if (-not $part) {
 								$textStrings += "<"
 								continue
@@ -3790,12 +3890,14 @@ function Update-KeyedTranslations {
 								continue
 							}
 							if ($part.Split("}")[1]) {
-								$textStrings += $part.Split("}")[1]
+								$textStrings += $part.Split("
+    }")[1]
 							}
-							$numbers += $part.Split("}")[0]
+							$numbers += $part.Split("
+   }")[0]
 						}
 						if ($test) {
-							WriteMessage -progress "Would have translated '$textToTranslate', a $($textStrings.Length) part string to $translateTo and added it to $keyedFolder\$($file.Name). Strings: $textStrings, Numbers: $numbers"
+							WriteMessage -progress "Would have translated '$textToTranslate', a $($textStrings.Length) part string to $translateTo and added it to $currentKeyedFilePath. Strings: $textStrings, Numbers: $numbers"
 							continue
 						}
 						if ($textStrings[0] -eq "<") {
@@ -3804,7 +3906,7 @@ function Update-KeyedTranslations {
 							$translatedString = Get-DeeplTranslation -text $textStrings[0] -selectedTo $translateTo -silent:$silent
 						}
 						for ($i = 0; $i -lt $numbers.Count; $i++) {
-							$translatedString += " {$($numbers[$i])}"
+							$translatedString += " { $($numbers[$i]) }"
 							if ($textStrings[$i + 1] -and $textStrings[$i + 1] -ne "<") {
 								$translatedString += Get-DeeplTranslation -text $textStrings[$i + 1] -selectedTo $translateTo -silent:$silent
 							}
@@ -3823,8 +3925,8 @@ function Update-KeyedTranslations {
 					$resaveFile = $true
 				}
 				if ($resaveFile) {
-					WriteMessage -success "Added automatic translations to $keyedFolder\$($file.Name)"
-					$localContent.Save("$keyedFolder\$($file.Name)")
+					WriteMessage -success "Added automatic translations to $currentKeyedFilePath"
+					$localContent.Save($currentKeyedFilePath)
 					$languageUpdated = $true
 				}
 			}
@@ -3834,6 +3936,123 @@ function Update-KeyedTranslations {
 		}
 	}
 	if ($updatedLanguages.Length -gt 0) {
+		$updatedLanguages = $updatedLanguages | Get-Unique
+		$charsLeft = Get-DeeplRemainingCharacters
+		if ($charsLeft -gt 10000) {
+			WriteMessage "Remaining DeepL characters: $charsLeft/500000" -progress
+		} elseif ($charsLeft -gt 1000) {
+			WriteMessage "Remaining DeepL characters: $charsLeft/500000" -warning
+		} else {
+			WriteMessage "Remaining DeepL characters: $charsLeft/500000" -failure
+		}
+		Write-Progress -Activity "Done" -Status "Ready" -Completed
 		return "Used DeepL to update translations for $($updatedLanguages -join ", ")"
 	}
+}
+
+function GenerateDefInjectTemplate {
+	param (
+		$modName,
+		[switch]$test,
+		[switch]$silent,
+		[switch]$force,
+		$outPath
+	)
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+	
+	if (-not (Get-OwnerIsMeStatus -modName $modName) -and -not $force) {
+		WriteMessage -failure "$modName is not mine, aborting update"
+		return
+	}
+	$modFolder = "$localModFolder\$modName"
+
+	$defPath = "$modFolder\Defs"
+	if (-not (Test-Path $defPath)) {
+		$defPath = "$modFolder\$(Get-CurrentRimworldVersion)\Defs"
+		if (-not (Test-Path $defPath)) {
+			WriteMessage -message "Could not find any Defs to generate template from" -warning
+			return
+		}
+	}
+	WriteMessage -message "Using $defPath as def-folder" -progress
+
+	if (-not $outPath -or -not (Test-Path $outPath)) {
+		$outPath = "$modFolder\Source"
+		if (-not (Test-Path $outPath)) {
+			WriteMessage -message "$outPath does not exist" -warning
+			return
+		}
+	}
+	WriteMessage -message "Using $outPath as output path" -progress
+
+	$outPath = "$outPath\EnglishTemplate"
+	if (-not (Test-Path $outPath)) {
+		New-Item $outPath -ItemType Directory | Out-Null
+	}
+
+	WriteMessage -message "All paths verified, extracting data" -progress
+
+	$allDefFiles = Get-ChildItem -Path $defPath -Include *.xml -Recurse
+	$counter = 0
+	foreach ($folder in (Get-ChildItem -Path $defPath -Directory)) {
+		Copy-Item $folder.FullName $outPath -Filter { PSIsContainer } -Recurse -Force
+	}
+	foreach ($file in $allDefFiles) {
+		$xmlContent = [xml](Get-Content $file.FullName -Encoding utf8)
+		$translation = GetDescriptiveStringsFromXmlNode -xmlNode $xmlContent.Defs
+		if ($translation) {
+			$translation = @"
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+$translation
+</LanguageData>
+"@
+			$translation | Out-File $file.FullName.Replace($defPath, $outPath) -Force -Encoding utf8
+			$counter++
+		}
+	}
+
+	WriteMessage -message "Created templates for $counter def xml-files" -success
+}
+
+function GetDescriptiveStringsFromXmlNode {
+	param(
+		$xmlNode,
+		$pathSoFar
+	)
+	if (-not $pathSoFar -and $xmlNode.defName) {
+		$pathSoFar = $xmlNode.defName
+	} 
+	$returnValue = ""
+	
+	if ($xmlNode.NodeType -eq "Comment") {
+		return $returnValue
+	}
+
+	$namesToSave = @("label", "description", "jobString", "customLabel", "deathMessage", "fixedName", "pawnSingular", "pawnsPlural", "leaderTitle", "endMessage", "labelNoun", "beginLetter", "beginLetterLabel", "baseInspectLine")
+	if ($namesToSave.Contains($xmlNode.Name)) {
+		if ($xmlNode.ParentNode.Name -eq "li" -and $xmlNode.ParentNode.label) {
+			$returnValue += "<$pathSoFar.$($xmlNode.ParentNode.label.Replace(" ", "_")).$($xmlNode.Name)>$($xmlNode.'#text')</$pathSoFar.$($xmlNode.ParentNode.label.Replace(" ", "_")).$($xmlNode.Name)>`n"
+		} else {
+			$returnValue += "<$pathSoFar.$($xmlNode.Name)>$($xmlNode.'#text')</$pathSoFar.$($xmlNode.Name)>`n"
+		}
+		return $returnValue
+	}	
+	
+	if ($xmlNode.HasChildNodes) {
+		if ($pathSoFar -and $pathSoFar -ne $xmlNode.defName -and $xmlNode.Name -ne "li") {
+			$pathSoFar += ".$($xmlNode.Name)"
+		}
+		foreach ($childNode in $xmlNode.ChildNodes) {
+			$returnValue += GetDescriptiveStringsFromXmlNode -xmlNode $childNode -pathSoFar $pathSoFar
+		}
+		return $returnValue
+	}
+
+	return $returnValue
 }

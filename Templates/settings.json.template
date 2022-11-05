@@ -31,5 +31,6 @@
 	"zip_path": "C:\\ModPublishing\\7za.exe",
 	"gimp_folder": "C:\\Program Files\\GIMP 2\\bin",
 	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"
-	"mod_identifier_prefix": "Author"
+	"mod_identifier_prefix": "Author",
+	"auto_translate_languages": ["LanguageA", "LanguageB"]
 }

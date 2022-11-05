@@ -16,20 +16,17 @@ public class VersionFromManifest
     private List<string> loadAfter;
     private List<string> loadBefore;
     private string manifestUri;
-    private bool showCrossPromotions;
-    private List<string> suggests;
-    private List<string> targetVersions;
-    private string version;
+    public string version;
 
-    public static bool TryGetManifestFile(ModMetaData mod, out string filePath)
+    private static string AboutDir(ModMetaData mod)
     {
-        filePath = Path.Combine(Path.Combine(mod.RootDir.FullName, "About"), ManifestFileName);
-        return File.Exists(filePath);
+        return Path.Combine(mod.RootDir.FullName, "About");
     }
 
     public static string GetVersionFromModMetaData(ModMetaData modMetaData)
     {
-        if (!TryGetManifestFile(modMetaData, out var manifestPath))
+        var manifestPath = Path.Combine(AboutDir(modMetaData), ManifestFileName);
+        if (!File.Exists(manifestPath))
         {
             return null;
         }
@@ -41,13 +38,18 @@ public class VersionFromManifest
         }
         catch (Exception e)
         {
-            if (Prefs.DevMode)
-            {
-                Log.ErrorOnce($"Error loading manifest for '{modMetaData.Name}':\n{e.Message}\n\n{e.StackTrace}",
-                    modMetaData.Name.GetHashCode());
-            }
+            Log.ErrorOnce($"Error loading manifest for '{modMetaData.Name}':\n{e.Message}\n\n{e.StackTrace}",
+                modMetaData.Name.GetHashCode());
         }
 
         return null;
+    }
+
+    public static string GetUpdatedFromModMetaData(ModMetaData modMetaData)
+    {
+        var manifestPath = Path.Combine(AboutDir(modMetaData), ManifestFileName);
+        return !File.Exists(manifestPath)
+            ? null
+            : RelativeTime.GetRelativeTime(File.GetLastWriteTime(manifestPath));
     }
 }
