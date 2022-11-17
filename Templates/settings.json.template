@@ -15,6 +15,9 @@
 	"discord_remove_message": "DiscordRemove.txt",
 	"github_username": "username",
 	"github_api_token": "00000000000000000000000000000",
+	"trello_api_key": "00000000000000000000000000000",
+	"trello_api_token": "00000000000000000000000000000",
+	"trello_board_id": "00000000000000000000000000000",
 	"modsync_template": "ModSync.xml",
 	"manfest_template": "Manifest.xml",
 	"publisher_plus_template": "_PublisherPlus.xml",
@@ -32,5 +35,6 @@
 	"gimp_folder": "C:\\Program Files\\GIMP 2\\bin",
 	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"
 	"mod_identifier_prefix": "Author",
-	"auto_translate_languages": ["LanguageA", "LanguageB"]
+	"auto_translate_languages": ["LanguageA", "LanguageB"],
+	"faq_text": "FAQ"
 }
