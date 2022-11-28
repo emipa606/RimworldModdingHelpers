@@ -420,6 +420,23 @@ function Get-GitHistory {
 	git --no-pager log --date=format:'%Y-%m-%d' --pretty=format:'%C(bold blue)%cd%Creset - %s %C(yellow)%d%Creset' --abbrev-commit --reverse
 }
 
+# Simple push function for git
+function Push-ModContent {
+	param(
+		[switch]$reapplyGitignore,
+		$message
+	)
+	if (-not $message) {
+		$message = Read-Host "Commit-Message"
+	}
+	Set-SafeGitFolder
+	if ($reapplyGitignore) {
+		git rm -r --cached .
+	}
+	git add .
+	git commit -m $message
+	git push origin
+}
 
 # Git-fetching function
 # A simple function to update a local mod from a remote git server
@@ -2880,7 +2897,8 @@ function Publish-Mod {
 		((Get-Content -path $modPublisherPath -Raw -Encoding UTF8).Replace("[modpath]", $modFolder)) | Set-Content -Path $modPublisherPath
 	}
 
-	$firstPublish = (-not (Test-Path "$modFolder\About\PublishedFileId.txt"))
+	$modIdPath = "$modFolder\About\PublishedFileId.txt"
+	$firstPublish = (-not (Test-Path $modIdPath))
 	# Create repo if does not exists
 	if ((Get-RepositoryStatus -repositoryName $modNameClean) -eq $true) {
 		if ($ChangeNote) {
@@ -2920,17 +2938,31 @@ function Publish-Mod {
 		Sync-ModDescriptionFromSteam -modName $modName -Force:$Force
 	}
 	$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
+	$reuploadDescription = $false
+	if (-not $firstPublish) {
+		$description = $aboutContent.ModMetaData.description
+		$modId = Get-Content $modIdPath -Raw -Encoding UTF8
+		$indexOfIt = $description.IndexOf("[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated")
+		if ($indexOfIt -ne -1) {
+			$description = $description.SubString(0, $indexOfIt - 1)
+		}
+		$aboutContent.ModMetaData.description = "`n$description[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated $(Get-Date -Format "yyyy-MM-dd")[/url]"
+		$reuploadDescription = $true
+	}
 	if (-not $aboutContent.ModMetaData.description.Contains("PwoNOj4")) {
 		$aboutContent.ModMetaData.description += $faqText
-		$aboutContent.Save($aboutFile)
 		if (-not $firstPublish) {
-			Sync-ModDescriptionToSteam -modName $modName -Force:$Force
+			$reuploadDescription = $true
 		}
 	}
 	if ($EndOfLife) {
 		$aboutContent.ModMetaData.description = $aboutContent.ModMetaData.description.Replace("pufA0kM", "CN9Rs5X")
+		$reuploadDescription = $true
+	}
+	if ($reuploadDescription) {
 		$aboutContent.Save($aboutFile)
 		Sync-ModDescriptionToSteam -modName $modName -Force:$Force
+		WriteMessage -message "Updated the description" -success
 	}
 
 	# Clone current repository to staging
@@ -3000,7 +3032,7 @@ function Publish-Mod {
 
 	Start-SteamPublish -modFolder $modFolder -Force:$Force
 
-	if (-not $SkipNotifications -and (Test-Path "$modFolder\About\PublishedFileId.txt")) {
+	if (-not $SkipNotifications -and (Test-Path $modIdPath)) {
 		if ($firstPublish) {
 			Push-UpdateNotification
 			Get-ModPage
@@ -3084,24 +3116,6 @@ function Start-SteamPublish {
 	if ($copyPublishedFileId -and (Test-Path "$stagingDirectory\About\PublishedFileId.txt")) {
 		Copy-Item -Path "$stagingDirectory\About\PublishedFileId.txt" -Destination "$modfolder\About\PublishedFileId.txt" -Force
 	}
-}
-
-# Simple push function for git
-function Push-ModContent {
-	param(
-		[switch]$reapplyGitignore,
-		$message
-	)
-	if (-not $message) {
-		$message = Read-Host "Commit-Message"
-	}
-	Set-SafeGitFolder
-	if ($reapplyGitignore) {
-		git rm -r --cached .
-	}
-	git add .
-	git commit -m $message
-	git push origin
 }
 
 # Simple update-notification for Discord
