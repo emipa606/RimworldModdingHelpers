@@ -1,3 +1,8 @@
+"""Scrapes steam for comments
+
+Returns:
+_type_: _description_
+"""
 import sys
 import time
 import os
@@ -8,22 +13,23 @@ import requests
 from bs4 import BeautifulSoup
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
-if (len(sys.argv) < 2):
+if len(sys.argv) < 2:
     print('Must supply a twofactor-code')
     exit()
 
-config_path = "./comment_scraper.json"
-if (not os.path.isfile(config_path)):
-    print(f"No config-file found: {config_path}, create and try again")
+CONFIG_PATH = "./comment_scraper.json"
+if not os.path.isfile(CONFIG_PATH):
+    print(f"No config-file found: {CONFIG_PATH}, create and try again")
     sys.exit()
 
 
 def read_json(file_path):
-    with open(file_path, "r") as f:
-        return json.load(f)
+    """Reads json file"""
+    with open(file_path, "r", encoding="utf8") as file:
+        return json.load(file)
 
 
-settings = read_json(config_path)
+settings = read_json(CONFIG_PATH)
 webhookUrl = settings["discord_channel"]
 infoWebhookUrl = settings["discord_test_channel"]
 displayname = settings["steam_displayname"]
@@ -32,38 +38,44 @@ password = settings["steam_password"]
 timestampfile = settings["timestamp_filename"]
 timestampfilePath = f"./{timestampfile}"
 
-testing = False
-if (len(sys.argv) == 3):
-    testing = True
+TESTING = False
+if len(sys.argv) == 3:
+    TESTING = True
 
-if (not os.path.isfile(timestampfilePath)):
-    with open(timestampfile, 'w') as f:
+if not os.path.isfile(timestampfilePath):
+    with open(timestampfile, 'w', encoding="utf8") as f:
         f.write('')
 
 
-def sendLogPost(title, text):
-    text = htmlToDiscord(text)
+def sendlogpost(title, logtext):
+    """Sends message to the log-channel"""
+    logtext = htmltodiscord(logtext)
     embed = DiscordEmbed(title=title)
-    embed.description = text
+    embed.description = logtext
     webhook = DiscordWebhook(url=infoWebhookUrl)
     webhook.add_embed(embed)
     webhook.execute()
 
 
-def sendDiscordPost(modUrl, modName, authorName, authorPage, authorImage, text):
-    text = htmlToDiscord(text)
-    embed = DiscordEmbed(title=modName, url=modUrl)
-    embed.set_author(name=authorName, url=authorPage, icon_url=authorImage)
-    embed.description = text
-    webhook = DiscordWebhook(url=webhookUrl)
+def senddiscordpost(modurl, modtitle, authorname, authorpagelink, authorimage, messagetext, testing):
+    """Sends message to the real channel"""
+    messagetext = htmltodiscord(messagetext)
+    embed = DiscordEmbed(title=modtitle, url=modurl)
+    embed.set_author(name=authorname, url=authorpagelink, icon_url=authorimage)
+    embed.description = messagetext
+    if testing:
+        webhook = DiscordWebhook(url=infoWebhookUrl)
+    else:
+        webhook = DiscordWebhook(url=webhookUrl)
     webhook.add_embed(embed)
     webhook.execute()
 
 
-def htmlToDiscord(message):
-    linkFilter = '<a.*(?:href=")(?P<link>[^"]*)[^>]*>(?P<text>[^<]*)<\/a>'
-    imageFilter = '<img.*src="(?P<link>.*)"*.>'
-    externalLinkFilter = '<span class="bb_link_host">.*<\/span>'
+def htmltodiscord(message):
+    """Converts html-code to discord-friendly code"""
+    linkfilter = r'<a.*(?:href=")(?P<link>[^"]*)[^>]*>(?P<text>[^<]*)<\/a>'
+    imagefilter = r'<img.*src="(?P<link>.*)"*.>'
+    externallinkfilter = r'<span class="bb_link_host">.*<\/span>'
     message = message.replace('<br/><br/><br/>', '<br/><br/>')
     message = message.replace('<br/>', '\n').replace('\\n', '\n')
     message = message.replace('<i>', '*').replace('</i>', '*')
@@ -83,110 +95,150 @@ def htmlToDiscord(message):
         '<blockquote class="bb_blockquote with_author">', '>>> ')
     message = message.replace('</blockquote>', '')
     message = message.replace('</div>', '').replace('</di', '')
-    message = re.sub(linkFilter, r'[\g<text>](\g<link>)', message)
-    message = re.sub(imageFilter, r'\g<link>', message)
-    message = re.sub(externalLinkFilter, '', message)
-    if (len(message) > 4000):
+    message = re.sub(linkfilter, r'[\g<text>](\g<link>)', message)
+    message = re.sub(imagefilter, r'\g<link>', message)
+    message = re.sub(externallinkfilter, '', message)
+    if len(message) > 4000:
         message = message[0:4000]
     return message
 
 
-if (testing):
-    sendLogPost("Starting comment monitor", "Running in test-mode")
+if TESTING:
+    sendlogpost("Starting comment monitor", "Running in test-mode")
+user = wa.WebAuth(username)
+TWOFACTORCODE = sys.argv[1]
+if TESTING:
+    sendlogpost("Comment monitor", f"Logging in with code {TWOFACTORCODE}")
+
+tryagain = False
 try:
-    user = wa.WebAuth(username)
-    twoFactorCode = sys.argv[1]
-    if (testing):
-        sendLogPost("Comment monitor", f"Logging in with code {twoFactorCode}")
-    result = user.cli_login(password=password, twofactor_code=twoFactorCode)
+    result = user.login(password=password, twofactor_code=TWOFACTORCODE)
+except Exception as e:
+    if TESTING:
+        sendlogpost("Comment monitor", "Failed, trying to log in again")
+    tryagain = True
+if tryagain:
+    try:
+        result = user.login(password=password, twofactor_code=TWOFACTORCODE)
+    except Exception as e:
+        sendlogpost("Comment monitor login failed", str(e))
 
-    if (testing):
-        sendLogPost("Comment monitor", f"Login result: {result}")
+try:
+    if TESTING:
+        sendlogpost("Comment monitor", f"Login result: {result}")
 
-    while (user.session.verify):
+    while user.session.verify:
         currentNotifications = user.session.get(
             f'https://steamcommunity.com/id/{displayname}/commentnotifications/').text
         soup = BeautifulSoup(currentNotifications, 'html.parser')
 
-        lastHighestTimestamp = 0
-        with open(timestampfile, "r") as f:
+        LASTHIGHESTTIMESTAMP = 0
+        with open(timestampfile, "r", encoding="utf8") as f:
             fileContent = f.read()
-            if (fileContent):
-                lastHighestTimestamp = int(fileContent)
-        newHighestTimestamp = lastHighestTimestamp
+            if fileContent:
+                LASTHIGHESTTIMESTAMP = int(fileContent)
+        NEWHIGHESTTIMESTAMP = LASTHIGHESTTIMESTAMP
 
         notificationsDiv = soup.find(
             "div", {"class": "commentnotifications_header_commentcount"})
-
-        if (not notificationsDiv):
-            if (testing):
-                sendLogPost("Comment monitor", "No new notifications")
+        if not notificationsDiv and not TESTING:
             print('No new notifications')
-        else:
-            if (testing):
-                sendLogPost("Comment monitor",
+            time.sleep(60)
+            continue
+
+        if notificationsDiv:
+            archiveMode = False
+            if TESTING:
+                sendlogpost("Comment monitor",
                             f"Found {notificationsDiv.text} new notifications")
             print(f'Found {notificationsDiv.text} new notifications')
 
             unreadNotifications = soup.findAll(
                 "div", {"class": "commentnotification unread"})[::-1]
+        else:
+            archiveMode = True
+            sendlogpost("Comment monitor",
+                        "No new notifications, using the last 5 for testing")
+            unreadNotifications = soup.findAll(
+                "div", {"class": "commentnotification"})[:5]
 
-            for notification in unreadNotifications:
-                link = (notification.find("a")['href']).split('&')[0]
-                if (testing):
-                    linkPage = requests.get(link).text
+        for notification in unreadNotifications:
+            link = (notification.find("a")['href']).split('&')[0]
+            if TESTING:
+                linkPage = requests.get(link, timeout=10).text
+            else:
+                linkPage = user.session.get(link).text
+            linkSoup = BeautifulSoup(linkPage, 'html.parser')
+
+            if "discussion" in link:
+                modName = linkSoup.find(
+                    "div", {"class": "topic"}).text.strip()
+            elif linkSoup.find("div", {"class": "screenshotApp"}):
+                modName = "Screenshot comment"
+            else:
+                modName = linkSoup.find(
+                    "div", {"class": "workshopItemTitle"}).text.strip()
+            allComments = linkSoup.findAll(
+                "div", {"class": "commentthread_comment"})[::-1]
+            if len(allComments) == 0:
+                link = f"https://steamcommunity.com/sharedfiles/filedetails/comments/{link.split('=')[1]}"
+                if TESTING:
+                    linkPage = requests.get(link, timeout=5).text
                 else:
                     linkPage = user.session.get(link).text
                 linkSoup = BeautifulSoup(linkPage, 'html.parser')
-                modName = linkSoup.find(
-                    "div", {"class": "workshopItemTitle"}).text.strip()
                 allComments = linkSoup.findAll(
-                    "div", {"class": "commentthread_comment"})[::-1]
-                mainStamp = int(notification.find(
-                    "div", {"class": "commentnotification_date"}).find("span")['data-timestamp'])
-                newHighestTimestamp = mainStamp
-                if (lastHighestTimestamp == 0):
-                    lastHighestTimestamp = mainStamp - 1
+                    "div", {"class": "commentthread_comment"})
+            mainStamp = int(notification.find(
+                "div", {"class": "commentnotification_date"}).find("span")['data-timestamp'])
+            NEWHIGHESTTIMESTAMP = mainStamp
+            if LASTHIGHESTTIMESTAMP == 0:
+                LASTHIGHESTTIMESTAMP = mainStamp - 1
 
-                if (testing):
-                    sendLogPost("Comment monitor",
-                                f"{modName}: {mainStamp}")
-                ignored = []
-                for comment in allComments:
-                    commentStamp = comment.find(
-                        "span", {"class": "commentthread_comment_timestamp"})['data-timestamp']
-                    if (lastHighestTimestamp >= int(commentStamp)):
-                        ignored.append(commentStamp)
-                        continue
-                    author = comment.find(
-                        "a", {"class": "commentthread_author_link"}).text.split("(")[0].strip()
-                    authorPage = comment.find("a").attrs['href']
-                    imageUrl = comment.find("img")['src']
-                    textDiv = comment.find(
-                        "div", {"class": "commentthread_comment_text"})
-                    text = ""
-                    for textBit in textDiv.contents:
-                        if (str(textBit) == "<br/>"):
-                            text = text + "\n"
-                        else:
-                            text = text + str(textBit).strip()
-                    if (testing):
-                        sendLogPost(modName, text)
+            if TESTING:
+                sendlogpost("Comment monitor",
+                            f"{modName}: {mainStamp}")
+            ignored = []
+
+            if archiveMode:
+                allComments = [allComments[-1]]
+
+            for comment in allComments:
+                commentStamp = comment.find(
+                    "span", {"class": "commentthread_comment_timestamp"})['data-timestamp']
+                if not archiveMode and LASTHIGHESTTIMESTAMP >= int(commentStamp):
+                    ignored.append(commentStamp)
+                    continue
+                author = comment.find(
+                    "a", {"class": "commentthread_author_link"}).text.split("(")[0].strip()
+                authorPage = comment.find("a").attrs['href']
+                imageUrl = comment.find("img")['src']
+                textDiv = comment.find(
+                    "div", {"class": "commentthread_comment_text"})
+                TEXT = ""
+                for textBit in textDiv.contents:
+                    if str(textBit) == "<br/>":
+                        TEXT = TEXT + "\n"
                     else:
-                        sendDiscordPost(link, modName, author,
-                                        authorPage, imageUrl, text)
+                        TEXT = TEXT + str(textBit).strip()
+                if TESTING:
+                    senddiscordpost(link, modName, author,
+                                    authorPage, imageUrl, TEXT, True)
+                else:
+                    senddiscordpost(link, modName, author,
+                                    authorPage, imageUrl, TEXT, False)
 
-                if (testing):
-                    sendLogPost("Comment monitor",
-                                f"Sent {len(allComments) - len(ignored)} comments for {modName} \n{ ','.join(ignored) }")
+            if not archiveMode and TESTING:
+                sendlogpost(
+                    "Comment monitor", f"Sent {len(allComments) - len(ignored)} comments for {modName} \n{ ','.join(ignored) }")
 
-        if (testing):
-            sendLogPost("Testrun complete", "Script exited")
+        if TESTING:
+            sendlogpost("Testrun complete", "Script exited")
             exit()
-        with open(timestampfile, 'w') as f:
-            f.write(str(newHighestTimestamp))
+        with open(timestampfile, 'w', encoding="utf8") as f:
+            f.write(str(NEWHIGHESTTIMESTAMP))
         time.sleep(60)
 
-    sendLogPost("Comment monitor down", "No longer authorized")
+    sendlogpost("Comment monitor down", "No longer authorized")
 except Exception as e:
-    sendLogPost("Comment monitor failed", str(e))
+    sendlogpost("Comment monitor failed", str(e))
