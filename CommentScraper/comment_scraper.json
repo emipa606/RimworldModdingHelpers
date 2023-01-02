@@ -1,0 +1,8 @@
+{
+    "discord_channel": "https://discord.com/api/webhooks/",
+    "discord_test_channel": "https://discord.com/api/webhooks/",
+    "steam_username": "username",
+    "steam_password": "password",
+    "steam_displayname": "Name",
+    "timestamp_filename": "comment_scraper.lastrun"
+}
