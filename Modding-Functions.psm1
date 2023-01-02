@@ -2176,13 +2176,15 @@ function Start-RimworldSave {
 		if ($counter % 5 -eq 0) {
 			$answer = Read-Host "Select save to start or empty to list five more"
 			if ((([int]$counter - 5)..[int]$counter) -contains $answer) {
-				Write-Host "Selected $($allSaves[$answer - 1].BaseName)"
+				$selectedSave = $allSaves[$answer - 1]
+				Write-Host "Selected $($selectedSave.BaseName)"
 				$modFileXml = [xml](Get-Content $modFile -Encoding UTF8)
-				$saveFileXml = [xml](Get-Content $save.FullName -Encoding UTF8)
+				$saveFileXml = [xml](Get-Content $selectedSave.FullName -Encoding UTF8)
 				$modFileXml.ModsConfigData.activeMods.set_InnerXML($saveFileXml.savegame.meta.modIds.InnerXml)
 				$modFileXml.Save($modFile)
 				$applicationPath = $settings.steam_path
 				$arguments = "-applaunch 294100"
+				Stop-RimWorld
 				Start-Process -FilePath $applicationPath -ArgumentList $arguments
 				return
 			}
@@ -2944,9 +2946,9 @@ function Publish-Mod {
 		$modId = Get-Content $modIdPath -Raw -Encoding UTF8
 		$indexOfIt = $description.IndexOf("[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated")
 		if ($indexOfIt -ne -1) {
-			$description = $description.SubString(0, $indexOfIt - 1)
+			$description = $description.SubString(0, $indexOfIt)
 		}
-		$aboutContent.ModMetaData.description = "`n$description[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated $(Get-Date -Format "yyyy-MM-dd")[/url]"
+		$aboutContent.ModMetaData.description = "$description`n[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated $(Get-Date -Format "yyyy-MM-dd")[/url]"
 		$reuploadDescription = $true
 	}
 	if (-not $aboutContent.ModMetaData.description.Contains("PwoNOj4")) {
