@@ -2039,7 +2039,8 @@ function Get-ModLink {
 	param (
 		$modName,
 		[switch]$chooseIfNotFound,
-		[switch]$lastVersion
+		[switch]$lastVersion,
+		[switch]$openFolder
 	)
 
 	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
@@ -2059,6 +2060,16 @@ function Get-ModLink {
 			$item = $html.SelectNodes("//div[contains(@class, 'workshopItem')]")
 			$linkNode = $item.ChildNodes | Where-Object -Property Name -eq a | Where-Object -Property InnerText -eq $title
 			$link = $linkNode.GetAttributeValue("href", "").Split("&")[0]
+			if ($openFolder) {
+				$modId = $link.Split("=")[1]
+				$modFolder = "$localModFolder\..\..\..\workshop\content\294100\$modId"
+				if (-not (Test-Path $modFolder)) {
+					WriteMessage -failure "Mod not downloaded, cannot open modfolder: $link"
+					return $link
+				}
+				explorer.exe $modFolder
+				return
+			}
 			return $link
 		}
 		$counter++
@@ -2089,6 +2100,16 @@ function Get-ModLink {
 		}
 		$link = $linkNode.GetAttributeValue("href", "").Split("&")[0]
 		WriteMessage -success "Found link for mod named $modName"
+		if ($openFolder) {
+			$modId = $link.Split("=")[1]
+			$modFolder = "$localModFolder\..\..\..\workshop\content\294100\$modId"
+			if (-not (Test-Path $modFolder)) {
+				WriteMessage -failure "Mod not downloaded, cannot open modfolder: $link"
+				return $link
+			}
+			explorer.exe $modFolder
+			return
+		}
 		return $link
 	} else {
 		WriteMessage -message "No selection made, exiting"
@@ -2175,7 +2196,7 @@ function Start-RimworldSave {
 		Write-Host "$($counter): $($save.BaseName) ($($save.LastAccessTime))"
 		if ($counter % 5 -eq 0) {
 			$answer = Read-Host "Select save to start or empty to list five more"
-			if ((([int]$counter - 5)..[int]$counter) -contains $answer) {
+			if ($answer -and (([int]$counter - 5)..[int]$counter) -contains $answer) {
 				$selectedSave = $allSaves[$answer - 1]
 				Write-Host "Selected $($selectedSave.BaseName)"
 				$modFileXml = [xml](Get-Content $modFile -Encoding UTF8)
