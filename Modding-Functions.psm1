@@ -2206,11 +2206,42 @@ function Start-RimworldSave {
 				$applicationPath = $settings.steam_path
 				$arguments = "-applaunch 294100"
 				Stop-RimWorld
+				Set-RimworldRunMode
 				Start-Process -FilePath $applicationPath -ArgumentList $arguments
 				return
 			}
 		}
 	}
+}
+
+function Set-RimworldRunMode {
+	param (
+		$prefsFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\Prefs.xml",
+		[switch]$testing
+	)
+	if (-not (Test-Path $prefsFile)) {
+		WriteMessage -failure "Found no prefs-file at $prefsFile"
+		return
+	}
+	$prefsContent = Get-Content $prefsFile -Raw -Encoding UTF8
+
+	if ($testing) {
+		$prefsContent = $prefsContent.Replace("<devMode>False</devMode>", "<devMode>True</devMode>")
+		$prefsContent = $prefsContent.Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>")
+		$prefsContent = $prefsContent.Replace("<volumeMusic>$($settings.playing_music_volume)</volumeMusic>", "<volumeMusic>$($settings.modding_music_volume)</volumeMusic>")
+		$prefsContent = $prefsContent.Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>")
+		$prefsContent = $prefsContent.Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>")
+		$prefsContent = $prefsContent.Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>")
+		$prefsContent = $prefsContent.Replace("<testMapSizes>False</testMapSizes>", "<testMapSizes>True</testMapSizes>")
+	} else {
+		$prefsContent = $prefsContent.Replace("<devMode>True</devMode>", "<devMode>False</devMode>")
+		$prefsContent = $prefsContent.Replace("<volumeMusic>$($settings.modding_music_volume)</volumeMusic>", "<volumeMusic>$($settings.playing_music_volume)</volumeMusic>")
+		$prefsContent = $prefsContent.Replace("<screenWidth>$($settings.modding_screen_witdh)</screenWidth>", "<screenWidth>$($settings.playing_screen_witdh)</screenWidth>")
+		$prefsContent = $prefsContent.Replace("<screenHeight>$($settings.modding_screen_height)</screenHeight>", "<screenHeight>$($settings.playing_screen_height)</screenHeight>")
+		$prefsContent = $prefsContent.Replace("<fullscreen>False</fullscreen>", "<fullscreen>True</fullscreen>")
+		$prefsContent = $prefsContent.Replace("<testMapSizes>True</testMapSizes>", "<testMapSizes>False</testMapSizes>")
+	}
+	$prefsContent | Set-Content $prefsFile -Encoding utf8
 }
 
 # Stops rimworld and waits for steam to sync after
@@ -2334,7 +2365,7 @@ function Start-RimWorld {
 			$modIdentifiers += "<li>majorhoff.rimthreaded</li>"
 		}
 		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiersPrereq</activeMods>").Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
-		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
+		Set-RimworldRunMode -prefsFile $prefsFile -testing
 	}
 	if ($testMod) {
 		if ((-not $force) -and (-not (Get-OwnerIsMeStatus -modName $testMod))) {
@@ -2433,17 +2464,17 @@ function Start-RimWorld {
 			$modIdentifiers += "<li>majorhoff.rimthreaded</li>"
 		}
 		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
-		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
+		Set-RimworldRunMode -prefsFile $prefsFile -testing
 	}
 	if ($play) {
 		if (-not $version -or $version -eq "latest") {	
 			Copy-Item $playingModsConfig $modFile -Confirm:$false
-		}
-		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<devMode>True</devMode>", "<devMode>False</devMode>").Replace("<screenWidth>$($settings.modding_screen_witdh)</screenWidth>", "<screenWidth>$($settings.playing_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.modding_screen_height)</screenHeight>", "<screenHeight>$($settings.playing_screen_height)</screenHeight>").Replace("<fullscreen>False</fullscreen>", "<fullscreen>True</fullscreen>") | Set-Content $prefsFile
+		}		
+		Set-RimworldRunMode -prefsFile $prefsFile
 	}
 	if (-not $testMod -and -not $play -and -not $testAuthor ) {
 		Copy-Item $moddingModsConfig $modFile -Confirm:$false
-		(Get-Content $prefsFile -Raw -Encoding UTF8).Replace("<resetModsConfigOnCrash>True</resetModsConfigOnCrash>", "<resetModsConfigOnCrash>False</resetModsConfigOnCrash>").Replace("<devMode>False</devMode>", "<devMode>True</devMode>").Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>").Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>").Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>") | Set-Content $prefsFile
+		Set-RimworldRunMode -prefsFile $prefsFile -testing
 	}
 	# if (-not $version -or $version -eq "latest") {
 	# 	$hugsSettingsPath = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\HugsLib\ModSettings.xml"
