@@ -389,6 +389,109 @@ function Set-GitSubscriptionStatus {
 }
 
 
+function Get-GitPullRequests {
+	param(
+		$repoName,
+		[switch]$alsoClosed
+	)
+	if (-not $repoName -or -not (Get-RepositoryStatus -repositoryName $repoName)) {
+		WriteMessage -failure "Repository $repoName does not exist"
+		return
+	}
+	$state = "open"
+	if ($alsoClosed) {
+		$state = "all"
+	}
+	$repoParams = @{
+		Uri         = "https://api.github.com/repos/$($settings.github_username)/$repoName/pulls?state=$state"
+		Method      = 'GET'
+		Headers     = @{
+			Authorization = 'Basic ' + [Convert]::ToBase64String(
+				[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"))
+		}
+		ContentType = 'application/json'
+	}
+	try {
+		$pullRequests = Invoke-RestMethod @repoParams
+	} catch {
+		WriteMessage -progress "Found no pull requests for repo $repoName $_"
+		return
+	}
+	if ($pullRequests.GetType().Name -ne "Object[]") {
+		return @($pullRequests)
+	}
+	return $pullRequests
+}
+
+
+function Merge-GitPullRequest {
+	param(
+		$repoName,
+		$pullRequestNumber
+	)
+	if (-not $repoName -or -not (Get-RepositoryStatus -repositoryName $repoName)) {
+		WriteMessage -failure "Repository $repoName does not exist"
+		return
+	}
+	$repoData = @{
+		subscribed = $enabled
+	}
+	$repoParams = @{
+		Uri         = "https://api.github.com/repos/$($settings.github_username)/$repoName/pulls/$pullRequestNumber/merge"
+		Method      = 'PUT'
+		Headers     = @{
+			Authorization = 'Basic ' + [Convert]::ToBase64String(
+				[Text.Encoding]::ASCII.GetBytes($settings.github_api_token + ":x-oauth-basic"))
+		}
+		ContentType = 'application/json'
+		Body        = (ConvertTo-Json $repoData -Compress)
+	}
+	WriteMessage -progress "Merging pull requeest $pullRequestNumber for $repoName"
+	try {
+		Invoke-RestMethod @repoParams | Out-Null
+	} catch {
+		WriteMessage -failure "Failed to merge, $_"
+		return $false
+	}
+	WriteMessage -success "Merge succeeded"
+	$answer = Read-Host "Get latest git-changes now? (Enter to fetch, all other breaks)"
+
+	if ($answer) {
+		Get-LatestGitVersion
+	}
+	return $true
+}
+
+
+function Merge-ModPullRequests {
+	$modName = Get-CurrentModNameFromLocation
+	$openRequests = Get-GitPullRequests -repoName $modName
+
+	if (-not $openRequests) {
+		WriteMessage "No pull requests found"
+		return
+	}
+
+	Write-Host "Active Pull Requests"
+	for ($i = 0; $i -lt $openRequests.Count; $i++) {
+		Write-Host "$($i + 1): $($openRequests[$i].title) by $($openRequests[$i].user.login) ($($openRequests[$i].created_at))"
+	}
+	Write-Host ""
+
+	$answer = Read-Host "Select PR to merge or empty to exit"
+
+	if (-not $answer -or -not $openRequests[$answer - 1]) {
+		WriteMessage -progress "Aborting merge"
+		return
+	}
+	$selectedPullRequest = $openRequests[$answer - 1]
+
+	Write-Host "Selected PR $answer with id $($selectedPullRequest.id)"
+
+	Merge-GitPullRequest -repoName $modName -pullRequestNumber $selectedPullRequest.number
+}
+
+
 function Set-SafeGitFolder {
 	$currentFolder = Get-Location
 
