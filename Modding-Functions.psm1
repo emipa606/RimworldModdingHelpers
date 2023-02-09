@@ -26,7 +26,10 @@ function WriteMessage {
 
 # Shows the rimworld log progress
 function Get-RimworldLog {	
-	Get-content "$env:USERPROFILE\Appdata\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log" -Tail 10 -Wait
+	param(
+		$initialRows = 10
+	)
+	Get-content "$env:USERPROFILE\Appdata\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log" -Tail $initialRows -Wait
 }
 
 # First get the settings from the json-file
@@ -195,9 +198,9 @@ function Get-ModRepository {
 	)
 	if (-not $modName) {
 		$modName = Get-CurrentModNameFromLocation
-		if (-not $modName) {
-			return
-		}
+	}
+	if (-not $modName) {
+		return
 	}
 	$modNameClean = $modName.Replace("+", "Plus")
 	$arguments = "https://github.com/$($settings.github_username)/$modNameClean$($extraParameters)"
@@ -246,6 +249,10 @@ function Set-GitRepositoryToArchived {
 	param(
 		$repoName
 	)
+	
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
 	if (-not (Get-RepositoryStatus -repositoryName $repoName)) {
 		WriteMessage -failure "Repository $repoName does not exist"
 		return
@@ -275,6 +282,10 @@ function Set-DefaultGitBranch {
 		$repoName,
 		$branchName
 	)
+	
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
 	$repoNameClean = $repoName.Replace("+", "Plus")
 	if (-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
 		WriteMessage -failure "Repository $repoName does not exist"
@@ -305,6 +316,10 @@ function Set-IssuesActive {
 		$repoName,
 		$status = "true"
 	)
+	
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
 	$repoNameClean = $repoName.Replace("+", "Plus")
 	if (-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
 		WriteMessage -failure "Repository $repoName does not exist"
@@ -334,6 +349,10 @@ function Get-GitSubscriptionStatus {
 	param(
 		$repoName
 	)
+	
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
 	if (-not (Get-RepositoryStatus -repositoryName $repoName)) {
 		WriteMessage -failure "Repository $repoName does not exist"
 		return
@@ -362,6 +381,10 @@ function Set-GitSubscriptionStatus {
 		$repoName,
 		[bool]$enabled
 	)
+	
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
 	if (-not (Get-RepositoryStatus -repositoryName $repoName)) {
 		WriteMessage -failure "Repository $repoName does not exist"
 		return
@@ -394,7 +417,10 @@ function Get-GitPullRequests {
 		$repoName,
 		[switch]$alsoClosed
 	)
-	if (-not $repoName -or -not (Get-RepositoryStatus -repositoryName $repoName)) {
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
+	if (-not (Get-RepositoryStatus -repositoryName $repoName)) {
 		WriteMessage -failure "Repository $repoName does not exist"
 		return
 	}
@@ -427,9 +453,13 @@ function Get-GitPullRequests {
 function Merge-GitPullRequest {
 	param(
 		$repoName,
-		$pullRequestNumber
+		$pullRequestNumber,
+		[switch]$silent
 	)
-	if (-not $repoName -or -not (Get-RepositoryStatus -repositoryName $repoName)) {
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
+	if (-not (Get-RepositoryStatus -repositoryName $repoName)) {
 		WriteMessage -failure "Repository $repoName does not exist"
 		return
 	}
@@ -454,11 +484,14 @@ function Merge-GitPullRequest {
 		return $false
 	}
 	WriteMessage -success "Merge succeeded"
-	$answer = Read-Host "Get latest git-changes now? (Enter to fetch, all other breaks)"
-
-	if ($answer) {
+	if (-not $silent) {
+		Read-Host "Get latest git-changes now? (Enter to fetch, all other breaks)"
+	}
+	$originalLocation = Get-Location
+	if (Get-LocalModFolder -modName $repoName) {
 		Get-LatestGitVersion
 	}
+	Set-Location $originalLocation
 	return $true
 }
 
@@ -491,6 +524,34 @@ function Merge-ModPullRequests {
 	Merge-GitPullRequest -repoName $modName -pullRequestNumber $selectedPullRequest.number
 }
 
+function Sync-GitImgBotStatus {
+	param(
+		$repoName
+	)
+	if (-not $repoName) {
+		$repoName = Get-CurrentModNameFromLocation
+	}
+	
+	$repoNameClean = $repoName.Replace("+", "Plus")
+	if (-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
+		WriteMessage -failure "Repository $repoName does not exist"
+		return
+	}
+
+	$currentPullRequests = Get-GitPullRequests -repoName $repoName
+	if ($currentPullRequests.Count -eq 0) {
+		WriteMessage -progress "Repository $repoName have no active pull requests"
+		return
+	}
+
+	foreach ($pullRequest in $currentPullRequests) {
+		if ($pullRequest.title -ne "[ImgBot] Optimize images") {
+			continue
+		}
+		WriteMessage -progress "Found pull request from ImgBot, merging"
+		Merge-GitPullRequest -repoName $repoName -pullRequestNumber $pullRequest.number -silent
+	}
+}
 
 function Set-SafeGitFolder {
 	$currentFolder = Get-Location
@@ -611,9 +672,9 @@ function Update-GitRepoName {
 	)
 	if (-not $modName) {
 		$modName = Get-CurrentModNameFromLocation
-		if (-not $modName) {
-			return
-		}
+	}
+	if (-not $modName) {
+		return
 	}
 	$path = Get-ModRepository -getLink
 	Set-SafeGitFolder
@@ -701,6 +762,7 @@ function Merge-GitRepositories {
 
 	Set-Location $currentDirectory
 }
+
 
 #endregion
 
@@ -908,6 +970,19 @@ function Set-CorrectFolderStructure {
 		}
 	}
 	WriteMessage -success "$modName has correct folder structure"
+}
+
+# Jumps to a mod-folder
+function Get-LocalModFolder {
+	param($modName)
+
+	$targetPath = "$localModFolder\$modName"
+	if (-not (Test-Path $targetPath)) {
+		WriteMessage -failure "Could not find $targetPath"
+		return $false
+	}
+	Set-Location $targetPath
+	return $true
 }
 
 
@@ -2296,7 +2371,7 @@ function Start-RimworldSave {
 	$counter = 0
 	foreach ($save in $allSaves) {
 		$counter++
-		Write-Host "$($counter): $($save.BaseName) ($($save.LastAccessTime))"
+		Write-Host "$($counter): $($save.BaseName) ($($save.LastWriteTime))"
 		if ($counter % 5 -eq 0) {
 			$answer = Read-Host "Select save to start or empty to list five more"
 			if ($answer -and (([int]$counter - 5)..[int]$counter) -contains $answer) {
@@ -3101,7 +3176,7 @@ function Publish-Mod {
 		$modId = Get-Content $modIdPath -Raw -Encoding UTF8
 		$indexOfIt = $description.IndexOf("[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated")
 		if ($indexOfIt -ne -1) {
-			$description = $description.SubString(0, $indexOfIt)
+			$description = $description.SubString(0, $indexOfIt).Trim()
 		}
 		$aboutContent.ModMetaData.description = "$description`n[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated $(Get-Date -Format "yyyy-MM-dd")[/url]"
 		$reuploadDescription = $true
@@ -3117,6 +3192,7 @@ function Publish-Mod {
 		$reuploadDescription = $true
 	}
 	if ($reuploadDescription) {
+		$aboutContent.ModMetaData.description = $aboutContent.ModMetaData.description.Trim()
 		$aboutContent.Save($aboutFile)
 		Sync-ModDescriptionToSteam -modName $modName -Force:$Force
 		WriteMessage -message "Updated the description" -success
