@@ -526,30 +526,48 @@ function Merge-ModPullRequests {
 
 function Sync-GitImgBotStatus {
 	param(
+		[switch]$all,
 		$repoName
 	)
-	if (-not $repoName) {
-		$repoName = Get-CurrentModNameFromLocation
+	$repoNames = @()
+	if ($all) {
+		$cards = Find-TrelloCardByName -text "ImgBot"
+		if (-not $cards) {
+			WriteMessage -progress "No active ImgBot PRs"
+			return
+		}
+		foreach ($card in $cards) {
+			$repoNames += $card.name.Split(" ")[0]
+		}
+	} else {
+		if (-not $repoName) {
+			$repoName = Get-CurrentModNameFromLocation
+		}
+	
+		$repoNameClean = $repoName.Replace("+", "Plus")
+		if (-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
+			WriteMessage -failure "Repository $repoName does not exist"
+			return
+		}
+		$repoNames += $repoName
 	}
 	
-	$repoNameClean = $repoName.Replace("+", "Plus")
-	if (-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
-		WriteMessage -failure "Repository $repoName does not exist"
-		return
-	}
 
-	$currentPullRequests = Get-GitPullRequests -repoName $repoName
-	if ($currentPullRequests.Count -eq 0) {
-		WriteMessage -progress "Repository $repoName have no active pull requests"
-		return
-	}
-
-	foreach ($pullRequest in $currentPullRequests) {
-		if ($pullRequest.title -ne "[ImgBot] Optimize images") {
+	foreach ($repo in $repoNames) {
+		$currentPullRequests = Get-GitPullRequests -repoName $repo
+		if ($currentPullRequests.Count -eq 0) {
+			WriteMessage -progress "Repository $repo have no active pull requests"
 			continue
 		}
-		WriteMessage -progress "Found pull request from ImgBot, merging"
-		Merge-GitPullRequest -repoName $repoName -pullRequestNumber $pullRequest.number -silent
+
+		foreach ($pullRequest in $currentPullRequests) {
+			if ($pullRequest.title -ne "[ImgBot] Optimize images") {
+				continue
+			}
+			WriteMessage -progress "Found pull request from ImgBot, merging $repo"
+			Merge-GitPullRequest -repoName $repo -pullRequestNumber $pullRequest.number -silent
+			break
+		}
 	}
 }
 
@@ -4089,6 +4107,14 @@ function Add-TrelloCardComment {
 	param($cardId, $comment)
 	$comment = [uri]::EscapeDataString($comment)
 	Invoke-RestMethod -Method Post -Uri "https://api.trello.com/1/cards/$($cardId)/actions/comments?key=$trelloKey&token=$trelloToken&text=$comment" -Verbose:$false | Out-Null
+}
+
+function Find-TrelloCardByName {
+	param ($text)
+	$cards = Get-TrelloCards -boardId $trelloBoardId
+	$cards | ForEach-Object { if ($_.name.contains($text)) {
+			return $_ 		
+		} }
 }
 
 function Find-TrelloCardByCustomField {
