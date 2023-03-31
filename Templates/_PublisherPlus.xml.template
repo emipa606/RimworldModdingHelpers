@@ -2,6 +2,8 @@
 <Configuration>
   <Excluded>
     <exclude>[modpath]\.gitignore</exclude>
+    <exclude>[modpath]\.git</exclude>
+    <exclude>[modpath]\.gitmodules</exclude>
     <exclude>[modpath]\Source</exclude>
   </Excluded>
 </Configuration>

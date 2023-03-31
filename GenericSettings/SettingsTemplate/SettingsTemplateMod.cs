@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Mlie;
+using UnityEngine;
 using Verse;
 
 namespace SettingsTemplate
@@ -11,11 +12,8 @@ namespace SettingsTemplate
         /// </summary>
         public static SettingsTemplateMod instance;
 
-        /// <summary>
-        ///     The private settings
-        /// </summary>
-        private SettingsTemplateSettings settings;
-
+		private static string currentVersion;
+	
         /// <summary>
         ///     Constructor
         /// </summary>
@@ -23,24 +21,14 @@ namespace SettingsTemplate
         public SettingsTemplateMod(ModContentPack content) : base(content)
         {
             instance = this;
+			Settings = GetSettings<SettingsTemplateSettings>();
+			currentVersion = VersionFromManifest.GetVersionFromModMetaData(content.ModMetaData);
         }
 
         /// <summary>
         ///     The instance-settings for the mod
         /// </summary>
-        internal SettingsTemplateSettings Settings
-        {
-            get
-            {
-                if (settings == null)
-                {
-                    settings = GetSettings<SettingsTemplateSettings>();
-                }
-
-                return settings;
-            }
-            set => settings = value;
-        }
+        internal SettingsTemplateSettings Settings { get; }
 
         /// <summary>
         ///     The title for the mod-settings
@@ -69,7 +57,6 @@ namespace SettingsTemplate
             Settings.FloatValue = Widgets.HorizontalSlider(listing_Standard.GetRect(20), Settings.FloatValue, 0, 100f,
                 false, "Float label", null, null, 1);
             listing_Standard.End();
-            Settings.Write();
         }
     }
 }

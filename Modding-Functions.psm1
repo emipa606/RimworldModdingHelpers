@@ -1353,7 +1353,7 @@ function Get-ModSubscribers {
 	return Get-HtmlPageStuff -url $url -subscribers
 }
 
-# Fetchs a mods subscriber-number
+# Fetchs a mods supported versions
 function Get-ModVersions {
 	param(
 		$modName,
@@ -1753,6 +1753,7 @@ function Get-StringFromModFiles {
 		[switch]$noEscape,
 		[switch]$alsoCs,
 		[switch]$finalOutput,
+		[switch]$caseSensitive,
 		$fromSave) 
 	$searchStringConverted = [regex]::escape($searchString)
 	if ($noEscape) {
@@ -1804,6 +1805,18 @@ function Get-StringFromModFiles {
 					$foundFiles += $_.FullName.Replace("$baseFolder\", "") 
 				} }
 			return $foundFiles
+		}
+		if ($caseSensitive) {			
+			$ScriptBlock = {
+				# 0: $folder.FullName 1: $searchStringConverted 2: $filterPart
+				$foundFiles = @()
+				$searchString = $args[1]
+				$baseFolder = Split-Path $args[0]
+				Get-ChildItem -Path $args[0] -Recurse -File -Include $args[2] | ForEach-Object { if ((Get-Content -LiteralPath "$($_.FullName)" -Raw -Encoding utf8) -cmatch $searchString) {
+						$foundFiles += $_.FullName.Replace("$baseFolder\", "") 
+					} }
+				return $foundFiles
+			}
 		}
 		$arguments = @("$($folder.FullName)", $searchStringConverted, $filterPart)
 		Start-Job -Name "Find_$($folder.Name)" -ScriptBlock $ScriptBlock -ArgumentList $arguments | Out-Null
