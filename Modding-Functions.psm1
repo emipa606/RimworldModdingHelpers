@@ -2853,22 +2853,29 @@ function Get-ModDescription {
 
 # Replaces a string in all descriptions
 function Update-ModDescription {
-	param($searchString,
-		$replaceString,
+	param([string[]]$searchStrings,
+		[string[]]$replaceStrings,
 		$modName,
 		[switch]$all,
 		[switch]$syncBefore,
+		[switch]$mineOnly,
+		[switch]$notMine,
 		$waittime = 500)
 
-	if (-not $searchString) {
-		WriteMessage -failure "Searchstring must be defined"
+	if (-not $searchStrings) {
+		WriteMessage -failure "Searchstrings must be defined"
 		return	
 	}
-	if (-not $replaceString) {
+	if (-not $replaceStrings) {
 		$result = Read-Host "Replacestring is not defined, continue? (y/n)"
 		if ($result -eq "y") {
 			return
 		}	
+	} else {
+		if ($searchStrings.Count -ne $replaceStrings.Count) {
+			WriteMessage -failure "If replacestrings are defined, they must be the same amount as searchstrings"
+			return	
+		}
 	}
 	$modFolders = @()
 	if (-not $all) {
@@ -2889,7 +2896,7 @@ function Update-ModDescription {
 		(Get-ChildItem -Directory $localModFolder).FullName | ForEach-Object { $modFolders += $_ }
 	}
 	
-	WriteMessage -success "Will replace $searchString with $replaceString in $($modFolders.Count) mods" 
+	WriteMessage -success "Will replace $($searchStrings -join ",") with $($replaceStrings -join ",") in $($modFolders.Count) mods" 
 	$total = $modFolders.Count
 	$i = 0
 	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
@@ -2899,32 +2906,48 @@ function Update-ModDescription {
 		$modNameString = $(Split-Path $folder -Leaf)
 		Write-Progress -Activity "$($modFolders.Count) matches found, looking in $($folder.name), " -Status "$i of $total" -PercentComplete $percent;
 		if (-not (Test-Path "$($folder)\About\PublishedFileId.txt")) {
+			WriteMessage -progress "$modNameString is not published, ignoring"
 			continue
 		}		
 		if (-not (Get-OwnerIsMeStatus -modName $modNameString)) {
-			WriteMessage -warning "$modNameString is not mine, aborting sync"
+			WriteMessage -progress "$modNameString is not mine, ignoring"
+			continue
+		}
+		$modId = Get-Content "$($folder)\About\PublishedFileId.txt" -Raw
+		$aboutFile = "$($folder)\About\About.xml"
+		$isContinued = (Get-Content $aboutFile -Raw -Encoding UTF8).Contains("(Continued)")
+		if ($notMine -and -not $isContinued) {
+			WriteMessage -progress "$modNameString is mine, ignoring"
+			continue
+		}
+		if ($mineOnly -and $isContinued) {
+			WriteMessage -progress "$modNameString is not mine, ignoring"
 			continue
 		}
 		if ($syncBefore) {			
 			Sync-ModDescriptionFromSteam -modName $modNameString
 		}	
-		$modId = Get-Content "$($folder)\About\PublishedFileId.txt" -Raw
-		$aboutFile = "$($folder)\About\About.xml"
 		$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
-		if (Select-String -InputObject $aboutContent.ModMetaData.description -pattern $replaceString) {
-			WriteMessage -progress "Description for $modNameString already contains the replace-string, skipping"
-			continue
+		for ($i = 0; $i -lt $searchStrings.Count; $i++) {
+			$searchString = $searchStrings[$i]
+			if ($replaceStrings) {
+				$replaceString = $replaceStrings[$i]
+			}
+			if ($replaceStrings -and (Select-String -InputObject $aboutContent.ModMetaData.description -pattern $replaceString)) {
+				WriteMessage -progress "Description for $modNameString already contains the replace-string, skipping"
+				continue
+			}
+			if (Select-String -InputObject $aboutContent.ModMetaData.description -pattern $searchString) {
+				Start-Sleep -Milliseconds $waittime
+				$arguments = @($modId, "REPLACE", $searchString, $replaceString)   
+				Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
+				$aboutContent.ModMetaData.description = $aboutContent.ModMetaData.description.Replace($searchString, $replaceString)
+			} else {
+				WriteMessage -progress "Description for $modNameString does not contain $searchString"
+			}
 		}
-		if (Select-String -InputObject $aboutContent.ModMetaData.description -pattern $searchString) {
-			Start-Sleep -Milliseconds $waittime
-			$arguments = @($modId, "REPLACE", $searchString, $replaceString)   
-			Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
-			$aboutContent.ModMetaData.description = $aboutContent.ModMetaData.description.Replace($searchString, $replaceString)
-			$aboutContent.Save($aboutFile)
-			WriteMessage -success "Updated description for $modNameString"
-		} else {
-			WriteMessage -progress "Description for $modNameString does not contain $searchString"
-		}
+		$aboutContent.Save($aboutFile)
+		WriteMessage -success "Updated description for $modNameString"
 	}	
 }
 
@@ -3016,7 +3039,6 @@ function Sync-ModDescriptionToSteam {
 # Function for pushing new version of mod to git-repo
 # On first publish adds gitignore-file, PublisherPlus-file, Licence
 # Updates the Manifest, ModSyncfile with new version
-# Generates the default english-translation files (useful for translators as template)
 # Downloads the current git-hub version to a staging directory
 # Copies the current version of the mod to the staging directory
 # Pushes the updated source to github and generates a new release
