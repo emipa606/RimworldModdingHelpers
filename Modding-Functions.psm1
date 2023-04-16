@@ -85,6 +85,7 @@ $Global:identifierCache = @{}
 $Global:languages = @("Bulgarian", "Czech", "Danish", "German", "Greek", "English (British)", "English", "Spanish", "Estonian", "Finnish", "French", "Hungarian", "Indonesian", "Italian", "Japanese", "Lithuanian", "Latvian", "Dutch", "Polish", "Portuguese", "Portuguese (Brazilian)", "Romanian", "Russian", "Slovak", "Slovenian", "Swedish", "Turkish", "ChineseSimplified")
 $Global:shorts = @("BG","CS","DA","DE","EL","EN-GB","EN-US","ES","ET","FI","FR","HU","ID","IT","JA","LT","LV","NL","PL","PT-PT","PT-BR","RO","RU","SK","SL","SV","TR","ZH")
 $Global:faqText = $settings.faq_text
+$Global:faqTextPrivate = $settings.faq_text_private
 
 # Select folder dialog, for selecting mod-folder manually
 Function Get-Folder($initialDirectory) {
@@ -3234,8 +3235,15 @@ function Publish-Mod {
 		$aboutContent.ModMetaData.description = "$description`n[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated $(Get-Date -Format "yyyy-MM-dd")[/url]"
 		$reuploadDescription = $true
 	}
-	if (-not $aboutContent.ModMetaData.description.Contains("PwoNOj4")) {
+	$continuedMod = $aboutContent.ModMetaData.name.Contains("Continued")
+	if ($continuedMod -and -not $aboutContent.ModMetaData.description.Contains("PwoNOj4")) {
 		$aboutContent.ModMetaData.description += $faqText
+		if (-not $firstPublish) {
+			$reuploadDescription = $true
+		}
+	}	
+	if (-not $continuedMod -and -not $aboutContent.ModMetaData.description.Contains("5xwDG6H")) {
+		$aboutContent.ModMetaData.description += $faqTextPrivate
 		if (-not $firstPublish) {
 			$reuploadDescription = $true
 		}
@@ -3733,7 +3741,9 @@ function Update-KeyedTranslations {
 					$localContent.AppendChild($languageData) | Out-Null
 				}
 				$resaveFile = $false
+				$nodeCount = 0
 				foreach ($childNode in $englishContent.LanguageData.ChildNodes) {
+					$nodeCount++
 					if ($localContent.LanguageData."$($childNode.Name)") {
 						continue
 					}
@@ -3758,13 +3768,21 @@ function Update-KeyedTranslations {
 						continue
 					}
 					$textToTranslate = "$($childNode.'#text')"
+					$cdata = $false
+					if (-not $textToTranslate) {
+						$textToTranslate = $childNode.'#cdata-section'
+						$cdata = $true
+					}
+					if (-not $textToTranslate) {
+						WriteMessage -progress "Could not figure out text to translate for child node $nodeCount in $($file.Name)"
+						continue
+					}
 					if ($textToTranslate -notmatch "{ ") {
 						if ($test) {
 							WriteMessage -progress "Would have translated '$textToTranslate' to $translateTo and added it to $currentKeyedFilePath"
 							continue
 						}
-						$translatedString = Get-DeeplTranslation -text $textToTranslate -selectedTo $translateTo -silent:$silent
-						
+						$translatedString = Get-DeeplTranslation -text $textToTranslate -selectedTo $translateTo -silent:$silent						
 					} else {
 						$textStrings = @()
 						$numbers = @()
@@ -3807,7 +3825,11 @@ function Update-KeyedTranslations {
 						continue
 					}
 					$nodeToAdd = $localContent.CreateElement($childNode.Name)
-					$textToAddToNode = $localContent.CreateTextNode($translatedString)
+					if ($cdata) {
+						$textToAddToNode = $localContent.CreateCDataSection($translatedString)
+					} else {
+						$textToAddToNode = $localContent.CreateTextNode($translatedString)
+					}
 					$nodeToAdd.AppendChild($textToAddToNode) | Out-Null
 					$localContent.LanguageData.AppendChild($nodeToAdd) | Out-Null
 					$resaveFile = $true
@@ -4039,7 +4061,7 @@ function Get-DeeplTranslation {
 	WriteMessage -progress "Translating '$text' from $selectedFrom to $selectedTo"
 
 	$result = Invoke-RestMethod -Method "POST" -Headers (Get-DeeplAuthorizationHeader) -Uri "https://api-free.deepl.com/v2/translate$urlSuffix"
-	
+
 	return $result.translations.text
 }
 

@@ -38,5 +38,6 @@
 	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"
 	"mod_identifier_prefix": "Author",
 	"auto_translate_languages": ["LanguageA", "LanguageB"],
-	"faq_text": "FAQ"
+	"faq_text": "FAQ",
+	"faq_text_private": "FAQ"
 }
