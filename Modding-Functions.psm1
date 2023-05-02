@@ -455,7 +455,8 @@ function Merge-GitPullRequest {
 	param(
 		$repoName,
 		$pullRequestNumber,
-		[switch]$silent
+		[switch]$silent,
+		[switch]$openAfter
 	)
 	if (-not $repoName) {
 		$repoName = Get-CurrentModNameFromLocation
@@ -493,11 +494,19 @@ function Merge-GitPullRequest {
 		Get-LatestGitVersion
 	}
 	Set-Location $originalLocation
+
+	if ($openAfter) {
+		Start-Process -FilePath $settings.browser_path -ArgumentList "https://github.com/$($settings.github_username)/$repoName/pull/$pullRequestNumber"
+	}
 	return $true
 }
 
 
 function Merge-ModPullRequests {
+	param(
+		[switch]$noPull,
+		[switch]$noOpenAfter
+	)
 	$modName = Get-CurrentModNameFromLocation
 	$openRequests = Get-GitPullRequests -repoName $modName
 
@@ -522,7 +531,7 @@ function Merge-ModPullRequests {
 
 	Write-Host "Selected PR $answer with id $($selectedPullRequest.id)"
 
-	Merge-GitPullRequest -repoName $modName -pullRequestNumber $selectedPullRequest.number
+	Merge-GitPullRequest -repoName $modName -pullRequestNumber $selectedPullRequest.number -silent:(-not $noPull) -openAfter:(-not $noOpenAfter)	
 }
 
 function Sync-GitImgBotStatus {
@@ -1109,7 +1118,10 @@ function Update-Defs {
 			[xml]$xmlContent = $fileContent
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
-			WriteMessage -failure $_
+			WriteMessage -failure $_			
+			$applicationPath = $settings.text_editor_path
+			$arguments = """$($file.FullName)"""
+			Start-Process -FilePath $applicationPath -ArgumentList $arguments
 			continue
 		}
 		$firstNode = $xmlContent.ChildNodes[1]
@@ -1177,7 +1189,10 @@ function Set-ModXml {
 			[xml]$fileContent = $fileContentRaw
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
-			WriteMessage -failure $_
+			WriteMessage -failure $_			
+			$applicationPath = $settings.text_editor_path
+			$arguments = """$($file.FullName)"""
+			Start-Process -FilePath $applicationPath -ArgumentList $arguments
 			continue
 		}
 		if ($skipBaseCheck) {
@@ -2754,6 +2769,7 @@ function Test-Mod {
 		[switch] $rimThreaded,
 		[switch] $autotest,
 		[switch] $force,
+		[switch] $lastVersion,
 		[switch] $bare)
 	if (-not $version) {
 		$version = "latest"
@@ -2768,7 +2784,7 @@ function Test-Mod {
 		if ($otherModName.StartsWith("Mlie.") ) {
 			$mlieMod = $otherModName
 		} else {
-			$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound
+			$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound -lastVersion:$lastVersion
 			if (-not $modLink) {
 				WriteMessage -failure "Could not find other mod named $otherModName, exiting"
 				return			
@@ -3103,6 +3119,9 @@ function Publish-Mod {
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
 			WriteMessage -failure $_
+			$applicationPath = $settings.text_editor_path
+			$arguments = """$($file.FullName)"""
+			Start-Process -FilePath $applicationPath -ArgumentList $arguments
 			return
 		}
 		$fileContent.Save($file.FullName)
