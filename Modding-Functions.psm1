@@ -2607,6 +2607,31 @@ function Start-RimWorld {
 				} else {
 					$identifiersToAdd = Get-IdentifiersFromMod -modname $modname -gameVersion $version		
 				}
+				
+				if ($otherModid) {
+					if ($alsoLoadBefore) {
+						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid -alsoLoadBefore
+					} else {
+						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid			
+					}
+					$combinedIdentifiers = @()
+					if ($identifiersToAdd.Count -gt 1) {
+						for ($i = 0; $i -lt $identifiersToAdd.Count - 1; $i++) {
+							$combinedIdentifiers += $identifiersToAdd[$i]
+						}
+					}
+					foreach ($id in $extraIdentifiersToAdd) {
+						if ($identifiersToAdd -notcontains $id) {
+							$combinedIdentifiers += $id
+						}
+					}
+					if ($identifiersToAdd.Count -gt 1) {
+						$combinedIdentifiers += $identifiersToAdd[-1]
+					} else {
+						$combinedIdentifiers += $identifiersToAdd
+					}
+					$identifiersToAdd = $combinedIdentifiers
+				}
 			}
 			if ($mlieMod) {
 				$mlieModFolder = $mlieMod.Split(".")[1]
@@ -3068,7 +3093,8 @@ function Publish-Mod {
 		[string]$ChangeNote,
 		[string]$ExtraInfo,
 		[switch]$EndOfLife,
-		[switch]$Force
+		[switch]$Force,
+		[switch]$Auto
 	)
 	if ($SelectFolder) {
 		$modFolder = Get-Folder 
@@ -3357,6 +3383,10 @@ function Publish-Mod {
 				}
 			}
 		} else {
+			if (-not $Auto) {
+				Close-TrelloCardsForMod -modName $modName
+			}
+			
 			if ($ExtraInfo) {
 				$message = "$message - $ExtraInfo"
 			}
@@ -4185,6 +4215,17 @@ function Add-TrelloCardComment {
 	Invoke-RestMethod -Method Post -Uri "https://api.trello.com/1/cards/$($cardId)/actions/comments?key=$trelloKey&token=$trelloToken&text=$comment" -Verbose:$false | Out-Null
 }
 
+function Set-TrelloCardToArchived {
+	param($cardId)
+	
+	$body = @"
+{
+    "closed": "true"
+}
+"@
+	Invoke-RestMethod -Method Put -Body $body -ContentType 'application/json' -Uri "https://api.trello.com/1/cards/$($cardId)?key=$trelloKey&token=$trelloToken" -Verbose:$false | Out-Null
+}
+
 function Find-TrelloCardByName {
 	param ($text)
 	$cards = Get-TrelloCards -boardId $trelloBoardId
@@ -4201,6 +4242,69 @@ function Find-TrelloCardByCustomField {
 				return $_ 
 			} 
 		} 
+	}
+}
+
+function Get-TrelloCardsForMod {
+	param($modName)
+	
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+
+	$publishedFileId = "$localModFolder\$modname\About\PublishedFileId.txt"
+
+	if (-not (Test-Path $publishedFileId)) {
+		WriteMessage -warning "No PublishedFileId.txt found at $publishedFileId"
+		return
+	}
+
+	$modId = Get-Content -Path $publishedFileId -Encoding utf8
+	if (-not $modId) {
+		WriteMessage -warning "$publishedFileId contains no modid"
+		return
+	}
+
+	return (Find-TrelloCardByCustomField -text "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId" -fieldId $trelloLinkId)
+}
+
+function Close-TrelloCardsForMod {
+	param($modName)
+
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+
+	$foundCards = Get-TrelloCardsForMod -modName $modName
+
+	if (-not $foundCards) {
+		WriteMessage -progress "No active Trello cards found for mod"
+		return
+	}
+
+	WriteMessage -progress "Found $($foundCards.Count) active Trello cards for $modName"
+	$counter = 1
+	foreach ($card in $foundCards) {
+		Write-Host -ForegroundColor Green "`n$counter - $($card.name) ( $($card.shortUrl) )`n$($card.desc)`n"
+		$counter++
+	}
+
+	$selection = Read-Host "What card(s) do you want to close, select multiple separated by space"
+	if (-not $selection) {
+		WriteMessage -progress "No card chosen"
+		return
+	}
+
+	foreach ($choice in $selection.Split(" ")) {
+		$card = $foundCards[$choice - 1]
+		WriteMessage -progress "Closing $($choice) - $($card.name) ($($card.dateLastActivity))"
+		Set-TrelloCardToArchived -cardId $card.id
 	}
 }
 
