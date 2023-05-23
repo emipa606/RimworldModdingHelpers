@@ -62,6 +62,7 @@ if (Test-Path $settings.gimp_folder) {
 $Global:publisherPlusTemplate = "$PSScriptRoot\$($settings.publisher_plus_template)"
 $Global:rimTransTemplate = "$PSScriptRoot\$($settings.rimtrans_template)"
 $Global:updatefeaturesTemplate = "$PSScriptRoot\$($settings.updatefeatures_template)"
+$Global:updateinfoTemplate = "$PSScriptRoot\$($settings.updateinfo_template)"
 $Global:modSyncTemplate = "$PSScriptRoot\$($settings.modsync_template)"
 $Global:licenseFile = "$PSScriptRoot\$($settings.license_file)"
 $Global:discordUpdateMessage = "$PSScriptRoot\$($settings.discord_update_message)"
@@ -637,7 +638,8 @@ function Get-LatestGitVersion {
 		[switch]$mineOnly,
 		[switch]$newOnly,
 		[switch]$clean,
-		[switch]$force
+		[switch]$force,
+		[switch]$overwrite
 	)
 	$currentDirectory = (Get-Location).Path
 	if ($force) {
@@ -659,6 +661,10 @@ function Get-LatestGitVersion {
 			return
 		}
 		Set-SafeGitFolder
+		if ($overwrite) {
+			WriteMessage -progress "Reseting git to remote state for $modName"
+			git reset --hard HEAD
+		}
 		WriteMessage -progress "Fetching latest github for mod $modName"
 		git pull origin main --allow-unrelated-histories
 		return
@@ -857,6 +863,7 @@ function Update-Textures {
 
 # Adds an update post to the mod
 # If HugsLib is loaded this will be shown if new to user
+# Also generates a Tabula Rasa update message of the same type
 function Set-ModUpdateFeatures {
 	param (
 		[string] $modName,
@@ -881,29 +888,54 @@ function Set-ModUpdateFeatures {
 	} else {
 		$news = $updateMessage
 	}
-	if (-not (Test-Path "$localModFolder\$modName\News")) {
-		New-Item -Path "$localModFolder\$modName\News" -ItemType Directory | Out-Null
-	}
+
 	$modFileId = "$localModFolder\$modName\About\PublishedFileId.txt"
 	$modId = Get-Content $modFileId -Raw -Encoding UTF8
 	$updatefeaturesFileName = Split-Path $updatefeaturesTemplate -Leaf
-	if (-not (Test-Path "$localModFolder\$modName\News\$updatefeaturesFileName")) {
-		(Get-Content -Path $updatefeaturesTemplate -Raw -Encoding UTF8).Replace("[modname]", $modName).Replace("[modid]", $modId) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
-	}
+	$updateinfoFileName = Split-Path $updateinfoTemplate -Leaf
 
-	$defaultNewsObject = "	<HugsLib.UpdateFeatureDef ParentName=""$($modName)_UpdateFeatureBase"">
-		<defName>[newsid]</defName>
-		<assemblyVersion>[version]</assemblyVersion>
-		<content>[news]</content>
-	</HugsLib.UpdateFeatureDef>
-</Defs>"
+	$updateFeaturesPath = "$localModFolder\$modName\News\$updatefeaturesFileName"
+	$updateFeaturesFolder = Split-Path $updateFeaturesPath
+	$updateinfoPath = "$localModFolder\$modName\$(Get-CurrentRimworldVersion)\Defs\$updateinfoFileName"
+	if (-not (Test-Path "$localModFolder\$modName\$(Get-CurrentRimworldVersion)")) {
+		$updateinfoPath = "$localModFolder\$modName\Defs\$updateinfoFileName"
+	} 
+	$updateinfoFolder = Split-Path $updateinfoPath
+
+	if (-not (Test-Path $updateFeaturesFolder)) {
+		New-Item -Path $updateFeaturesFolder -ItemType Directory -Force | Out-Null
+	}
+	if (-not (Test-Path $updateinfoFolder)) {
+		New-Item -Path $updateinfoFolder -ItemType Directory -Force | Out-Null
+	}
+	if (-not (Test-Path $updateFeaturesPath)) {
+		(Get-Content -Path $updatefeaturesTemplate -Raw -Encoding UTF8).Replace("[modname]", $modName).Replace("[modid]", $modId) | Out-File $updateFeaturesPath
+	}
+	if (-not (Test-Path $updateinfoPath)) {
+		(Get-Content -Path $updateinfoTemplate -Raw -Encoding UTF8).Replace("[modname]", $modName).Replace("[modid]", $modId) | Out-File $updateinfoPath
+	}
+	Update-InfoBanner -modName $modName
+
 	$manifestFile = "$localModFolder\$modName\About\Manifest.xml"
 	$version = ([xml](Get-Content -path $manifestFile -Raw -Encoding UTF8)).Manifest.version
+	$defName = "$($modName.Replace(" ", "_"))_$($version.Replace(".", "_"))"
+	$newsObject = "	<HugsLib.UpdateFeatureDef ParentName=""$($modName)_UpdateFeatureBase"">
+		<defName>$defName</defName>
+		<assemblyVersion>$version</assemblyVersion>
+		<content>$news</content>
+	</HugsLib.UpdateFeatureDef>
+</Defs>"
+	(Get-Content -Path $updateFeaturesPath -Raw -Encoding UTF8).Replace("</Defs>", $newsObject) | Out-File $updateFeaturesPath
 
-	$newsObject = $defaultNewsObject.Replace("[newsid]", "$($modName.Replace(" ", "_"))_$($version.Replace(".", "_"))")
-	$newsObject = $newsObject.Replace("[version]", $version).Replace("[news]", $news)
-
-	(Get-Content -Path "$localModFolder\$modName\News\$updatefeaturesFileName" -Raw -Encoding UTF8).Replace("</Defs>", $newsObject) | Out-File "$localModFolder\$modName\News\$updatefeaturesFileName"
+	$dateString = "$((Get-Date).Year)/$((Get-Date).Month)/$((Get-Date).Day)"
+	$infoObject = "	<TabulaRasa.UpdateDef ParentName=""$($modName)_UpdateInfoBase"">
+		<defName>$defName</defName>
+		<date>$dateString</date>
+		<content>$news</content>
+	</TabulaRasa.UpdateDef>
+</Defs>"
+	(Get-Content -Path $updateinfoPath -Raw -Encoding UTF8).Replace("</Defs>", $infoObject) | Out-File $updateinfoPath
+	
 	WriteMessage -success "Added update news"
 }
 
@@ -3650,28 +3682,26 @@ function Set-ImageMaxSize {
 
 	Add-Type -AssemblyName System.Drawing
 	if (-not (Test-Path $imagePath)) {
-		Write-Host "Cannot find image at $imagePath, exiting"
+		WriteMessage -failure "Cannot find image at $imagePath, exiting"
 		return
 	}
 	$fullImagePath = (Get-Item $imagePath).FullName
 	if (-not $pixels) {
-		Write-Host "Must define a max size in pixels"
+		WriteMessage -failure "Must define a max size in pixels"
 		return
 	}
 	$originalFile = Split-Path -Leaf $fullImagePath
 	$outPath = $fullImagePath.Replace($originalFile, $outName)
-	if (Test-Path $outPath) {
-		if ($overwrite) {
-			Remove-Item $outPath -Confirm:$false -Force | Out-Null
-		} else {
-			Write-Host "$outPath already exists, remove it first"
-			return
-		}
+	if ((Test-Path $outPath) -and -not $overwrite) {
+		WriteMessage -failure "$outPath already exists, remove it first or use the overwrite parameter"
+		return
 	}
 	$img = [System.Drawing.Image]::FromFile((Get-Item $imagePath))
 	if ($img.Width -le $pixels -and $img.Height -le $pixels ) {
-		Write-Host "Image already within $pixels length/height"
-		Copy-Item $imagePath $outPath
+		WriteMessage -progress "Image already within $pixels length/height"
+		if ($fullImagePath -ne $outPath) {
+			Copy-Item $imagePath $outPath -Force
+		}
 		return
 	}
 	if ($img.Height -gt $img.Width) {
@@ -3683,19 +3713,74 @@ function Set-ImageMaxSize {
 	}
 
 	if (-not $silent) {
-		Write-Host "New size: $newWidth x $newHeight"
+		WriteMessage -progress "New size: $newWidth x $newHeight"
 	}
 
 	$canvas = New-Object System.Drawing.Bitmap($newWidth, $newHeight)
 	$graph = [System.Drawing.Graphics]::FromImage($canvas)
 	$graph.DrawImage($img, 0, 0, $newWidth, $newHeight)
+	$img.Dispose()
+	if ($fullImagePath -eq $outPath) {			
+		Remove-Item $outPath -Confirm:$false -Force | Out-Null
+	}
 	$canvas.Save($outPath)
 	$canvas.Dispose()
-	$img.Dispose()
 	if (-not $silent) {
-		Write-Host "Saved the resized image to $outPath"
+		WriteMessage -progress "Saved the resized image to $outPath"
 	}
 }
+
+function Update-InfoBanner {
+	param (
+		[string] $modName,
+		[switch] $force
+	)
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+
+	$previewPath = "$localModFolder\$modName\About\Preview.png"
+	if (-not (Test-Path $previewPath)) {
+		WriteMessage -failure "Found no preview image to create a banner from"
+		return
+	}
+	$aboutPath = "$localModFolder\$modName\About\About.xml"
+	if (-not (Test-Path $aboutPath)) {
+		WriteMessage -failure "Found no about-file to get the modname from"
+		return
+	}
+
+	$updatebannerPath = "$localModFolder\$modName\Textures\UpdateInfo\$($modName).png"
+	$updatebannerTempPath = "$localModFolder\$modName\Textures\UpdateInfo\$($modName)_temp.png"
+	if (-not $force -and (Test-Path $updatebannerPath)) {
+		return
+	}
+
+	$modDisplayName = ([xml](Get-Content $aboutPath -Raw -Encoding utf8)).ModMetaData.Name.Replace(" (Continued)", "")
+	$updatebannerFolder = Split-Path $updatebannerPath
+	if (-not (Test-Path $updatebannerFolder)) {
+		New-Item -Path $updatebannerFolder -ItemType Directory -Force | Out-Null
+	}
+
+	Add-Type -AssemblyName System.Drawing
+
+	Copy-Item $previewPath $updatebannerTempPath -Force
+	Set-ImageMaxSize -imagePath $updatebannerTempPath -pixels 200 -outName (Split-Path $updatebannerTempPath -Leaf) -overwrite -silent
+	$tempImageObject = [System.Drawing.Image]::FromFile($updatebannerTempPath)
+	$height = $tempImageObject.Height
+	$tempImageObject.Dispose() 
+
+	& magick convert "$updatebannerTempPath" -background transparent -gravity West -extent "$(500)x$($height)" "$updatebannerPath"
+	Remove-Item $updatebannerTempPath -Force
+	Move-Item $updatebannerPath $updatebannerTempPath -Force
+
+	& magick convert -background transparent -gravity West -font RimWordFont -fill 'rgba(222,222,222,1)' -size "$(275)x$($height * 0.9)" caption:"$modDisplayName" "$updatebannerTempPath" +swap -gravity East -composite "$updatebannerPath"
+	Remove-Item $updatebannerTempPath -Force
+}
+
 
 #endregion
 

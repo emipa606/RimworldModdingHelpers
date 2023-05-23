@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<TabulaRasa.UpdateDef Abstract="true" Name="[modname]_UpdateInfoBase">
+		<linkUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=[modid]</linkUrl>
+		<banner>UpdateInfo/[modname]</banner>
+	</TabulaRasa.UpdateDef>
+</Defs>

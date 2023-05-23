@@ -24,6 +24,7 @@
 	"gitignore_template": "gitignore.txt",
 	"rimtrans_template": "RimTrans.xml",
 	"updatefeatures_template": "UpdateFeatures.xml",
+	"updateinfo_template": "UpdateInfo.xml",
 	"license_file": "LICENSE.md",
 	"xml_replacement_rules_file": "ReplaceRules.txt",
 	"modding_screen_height": "1080",
