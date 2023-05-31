@@ -3781,6 +3781,27 @@ function Update-InfoBanner {
 	Remove-Item $updatebannerTempPath -Force
 }
 
+function Verify-ModPreviewImages {
+	
+	param (
+		[string] $modName
+	)
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+
+	$modLink = Get-ModPage -modName $modName -getLink
+	$imagesLink = $modLink.Replace("filedetails", "managepreviews") 
+
+	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
+	$page = ConvertFrom-Html -URI $imagesLink
+
+
+}
+
 
 #endregion
 

@@ -1,6 +1,8 @@
 # User-specific files
 settings.json
 workshop_scraper.json
+comment_scraper.json
+preview_validator.json
 *.xml
 gitignore.txt
 DiscordUpdate.txt

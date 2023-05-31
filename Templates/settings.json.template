@@ -40,5 +40,6 @@
 	"mod_identifier_prefix": "Author",
 	"auto_translate_languages": ["LanguageA", "LanguageB"],
 	"faq_text": "FAQ",
-	"faq_text_private": "FAQ"
+	"faq_text_private": "FAQ",
+	"steam_api_key" : ""
 }
