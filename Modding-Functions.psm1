@@ -627,7 +627,7 @@ function Push-ModContent {
 		git rm -r --cached .
 	}
 	git add .
-	git commit -m $message
+	git commit -S -m $message
 	git push origin
 }
 
@@ -780,7 +780,7 @@ function Merge-GitRepositories {
 	git checkout $newBranch
 	git pull origin $newBranch
 	git rm -rf *
-	git commit -m "Deleted obsolete files"
+	git commit -S -m "Deleted obsolete files"
 	git merge master-holder --allow-unrelated-histories
 	git push origin $newBranch
 	git push --tags
@@ -3351,9 +3351,9 @@ function Publish-Mod {
 	}
 
 	git add .
-	git commit -m $message
+	git commit -S -m $message
 	git push origin
-	git tag -a $newVersion -m $message
+	git tag -s -a $newVersion -m $message
 	git push --tags
 
 	$releaseData = @{

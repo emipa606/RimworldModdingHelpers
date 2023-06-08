@@ -13,7 +13,7 @@ import PIL.Image as Image
 import webbrowser
 import pyperclip
 
-if len(sys.argv) < 1:
+if len(sys.argv) < 2:
     TWOFACTORCODE = input('Must supply a twofactor-code:')
 else:
     TWOFACTORCODE = sys.argv[1]
