@@ -479,7 +479,7 @@ function Merge-GitPullRequest {
 		ContentType = 'application/json'
 		Body        = (ConvertTo-Json $repoData -Compress)
 	}
-	WriteMessage -progress "Merging pull requeest $pullRequestNumber for $repoName"
+	WriteMessage -progress "Merging pull request $pullRequestNumber for $repoName"
 	try {
 		Invoke-RestMethod @repoParams | Out-Null
 	} catch {
@@ -979,6 +979,7 @@ function Set-CorrectFolderStructure {
 		return
 	}
 	$modFolder = "$localModFolder\$modName"
+	
 	$aboutFile = "$modFolder\About\About.xml"
 	if (-not (Test-Path $aboutFile)) {
 		WriteMessage -warning "No about-file for $modName"
@@ -1265,6 +1266,33 @@ function Get-ZipFile {
 	$7zipPath = $settings.zip_path
 	$arguments = "a ""$outFile"" ""$localModFolder\$modname\"" -r -mx=9 -mmt=10 -bd $exclusionsToAdd "
 	Start-Process -FilePath $7zipPath -ArgumentList $arguments -Wait -NoNewWindow
+}
+
+# Gets the about-file from a mod
+function Get-ModAboutFile {
+	param(
+		$modName,
+		[switch]$xml
+	)
+	if (-not $modName) {
+		$modName = Get-CurrentModNameFromLocation
+		if (-not $modName) {
+			return
+		}
+	}
+	
+	$modFolder = "$localModFolder\$modName"
+	$aboutFilePath = "$modFolder\About\About.xml"
+	if (-not (Test-Path $aboutFilePath)) {
+		WriteMessage -warning "No about-file for $modName"
+		return
+	}
+
+	if ($xml) {
+		return [xml](Get-Content $aboutFilePath -Raw -Encoding UTF8)
+	}
+	
+	return (Get-Content $aboutFilePath -Raw -Encoding UTF8)
 }
 
 # Fetches a mod and saves it to a zip-file
@@ -1932,7 +1960,7 @@ function Get-OwnerIsMeStatus {
 		return $false
 	}
 
-	$aboutContent = [xml](Get-Content "$($modFolder)\About\About.xml" -Raw -Encoding UTF8)
+	$aboutContent = Get-ModAboutFile -modName $modName -xml
 	if (-not $aboutContent.ModMetaData.packageId) {
 		return $false
 	}
@@ -1966,30 +1994,6 @@ function Get-NextModDependancy {
 	}
 	WriteMessage -warning "$modId not found."
 }
-
-# Gets the about-file for a mod
-function Get-AboutFile {
-	param (
-		$modName
-	)
-	if (-not $modName) {
-		$modName = Get-CurrentModNameFromLocation
-		if (-not $modName) {
-			return
-		}
-	}
-	$modFolder = "$localModFolder\$modName"
-	$aboutFile = "$modFolder\About\About.xml"
-
-	if (-not (Test-Path $aboutFile)) {
-		WriteMessage -failure "No about file found at $aboutFile"
-		return
-	}
-	$applicationPath = $settings.text_editor_path
-	$arguments = """$aboutFile"""
-	Start-Process -FilePath $applicationPath -ArgumentList $arguments
-}
-
 
 function Get-NextModFolder {
 	$allMods = Get-ChildItem -Directory $localModFolder
@@ -2989,7 +2993,7 @@ function Update-ModDescription {
 		}
 		$modId = Get-Content "$($folder)\About\PublishedFileId.txt" -Raw
 		$aboutFile = "$($folder)\About\About.xml"
-		$isContinued = (Get-Content $aboutFile -Raw -Encoding UTF8).Contains("(Continued)")
+		$isContinued = Get-IsModContinued -modName $modNameString
 		if ($notMine -and -not $isContinued) {
 			WriteMessage -progress "$modNameString is mine, ignoring"
 			continue
@@ -3098,8 +3102,10 @@ function Sync-ModDescriptionToSteam {
 	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	$stagingDirectory = $settings.mod_staging_folder
 	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
-	$aboutFile = "$($modFolder)\About\About.xml"
-	$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
+	$aboutContent = Get-ModAboutFile -modName $modName -xml
+	if (-not $aboutContent) {
+		return
+	}
 	$aboutContent.ModMetaData.description | Set-Content -Path $tempDescriptionFile -Encoding UTF8
 	$modId = Get-Content "$($modFolder)\About\PublishedFileId.txt" -Raw
 	$arguments = @($modId, "SET", $tempDescriptionFile)
@@ -3151,10 +3157,10 @@ function Publish-Mod {
 
 	$modNameClean = $modName.Replace("+", "Plus")
 	$stagingDirectory = $settings.mod_staging_folder
-	# $rootFolder = Split-Path $stagingDirectory
 	$manifestFile = "$modFolder\About\Manifest.xml"
 	$modsyncFile = "$modFolder\About\ModSync.xml"
 	$aboutFile = "$modFolder\About\About.xml"
+	$modIconFile = "$modFolder\About\ModIcon.png"
 	$readmeFile = "$modFolder\README.md"
 	$previewFile = "$modFolder\About\Preview.png"
 	$gitIgnorePath = "$modFolder\.gitignore"
@@ -3195,15 +3201,9 @@ function Publish-Mod {
 		Read-Host "Preview-file does not exist, create one then press Enter"
 	}
 
-	# if ($aboutContent.ModMetaData.description -match "pufA0kM" -and 
-	# 	(Get-Item $previewFile).LastWriteTime -lt (Get-Date -Date "2022-07-15") -and
-	# 	(Test-Path "$modFolder\Source\original_preview.png")) {
-	# 	WriteMessage "Preview-file has not been updated, regenerating"
-	# 	Add-ModReuploadImage -regenerate
-	# }
-
 	if ((Get-Item $previewFile).Length -ge 1MB) {
-		Read-Host "Preview-file is too large, resave a file under 1MB and then press Enter"
+		WriteMessage -warning "Preview-file is too large, resizing"
+		Set-ImageSizeBelow -imagePath $previewFile -sizeInKb 999 -removeOriginal
 	}
 
 	# Remove leftover-files
@@ -3215,9 +3215,6 @@ function Publish-Mod {
 	if (-not $EndOfLife -and ((Get-Date) -gt (Get-Date -Year 2022 -Month 11 -Day 11))) {
 		$extraCommitInfo = Update-KeyedTranslations -modName $modName -silent -force:$Force
 	}
-
-	# Generate english-language if missing
-	# Set-Translation -ModName $modName
 
 	# Mod Manifest
 	if (-not (Test-Path $manifestFile)) {
@@ -3312,7 +3309,7 @@ function Publish-Mod {
 		$aboutContent.ModMetaData.description = "$description`n[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$modId]Last updated $(Get-Date -Format "yyyy-MM-dd")[/url]"
 		$reuploadDescription = $true
 	}
-	$continuedMod = $aboutContent.ModMetaData.name.Contains("Continued")
+	$continuedMod = Get-IsModContinued -modName $modName
 	if ($continuedMod -and -not $aboutContent.ModMetaData.description.Contains("PwoNOj4")) {
 		$aboutContent.ModMetaData.description += $faqText
 		if (-not $firstPublish) {
@@ -3325,6 +3322,15 @@ function Publish-Mod {
 			$reuploadDescription = $true
 		}
 	}
+	if (-not (Test-Path $modIconFile)) {
+		$modIcon = "E:\ModPublishing\Self-ModIcon.png"
+		if ($continuedMod) {
+			$modIcon = "E:\ModPublishing\ModIcon.png"
+		}
+		Copy-Item $modIcon $modIconFile -Force -Confirm:$false
+		WriteMessage -success "Added mod-icon to about-folder"
+	}
+	Add-VersionTagOnImage -modName $modName
 	if ($EndOfLife) {
 		$aboutContent.ModMetaData.description = $aboutContent.ModMetaData.description.Replace("pufA0kM", "CN9Rs5X")
 		$reuploadDescription = $true
@@ -3505,8 +3511,11 @@ function Push-UpdateNotification {
 		return
 	}
 	$modFolder = "$localModFolder\$modName"
-	$aboutFile = "$modFolder\About\About.xml"
-	$aboutContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
+	$aboutContent = Get-ModAboutFile -modName $modName -xml
+	if (-not $aboutContent) {
+		return
+	}
+
 	$modFileId = "$modFolder\About\PublishedFileId.txt"
 	$modId = Get-Content $modFileId -Raw -Encoding UTF8
 	$modFullName = $aboutContent.ModMetaData.name
@@ -3555,10 +3564,9 @@ function Add-ImageOnImage {
 		$outputPath
 	)
 
-	$tagImage = New-Object -ComObject Wia.ImageFile
-	$tagImage.LoadFile($overlayImagePath)
 	$previewImage = New-Object -ComObject Wia.ImageFile
 	$previewImage.LoadFile($baseImagePath)
+	$baseImage = $baseImagePath
 
 	if ($previewImage.Width -lt 400 -or $previewImage.Height -lt 400) {
 		WriteMessage -progress "Original preview too small, adding padding"
@@ -3570,38 +3578,24 @@ function Add-ImageOnImage {
 		$newWidth = [math]::Max($previewImage.Width, 400)
 		$newHeight = [math]::Max($previewImage.Height, 400)
 		& magick convert "$baseImagePath" -background transparent -gravity center -extent "$($newWidth)x$($newHeight)" "$newTempPath"
-		$previewImage = New-Object -ComObject Wia.ImageFile
-		$previewImage.LoadFile($newTempPath)
+		$baseImage = $newTempPath
 	}
 
-	$filter = New-Object -ComObject Wia.ImageProcess
-	$tagWidth = $previewImage.Width / 6
-	$tagHeight = ($tagWidth / $tagImage.Width) * $tagImage.Height
-	$tagMargin = $previewImage.Width / 50
-	$scale = $filter.FilterInfos.Item("Scale").FilterId
-	$filter.Filters.Add($scale)
-	$filter.Filters.Item(1).Properties.Item("PreserveAspectRatio") = $true
-	$filter.Filters.Item(1).Properties.Item("MaximumWidth") = $tagWidth
-	$filter.Filters.Item(1).Properties.Item("MaximumHeight") = $tagHeight
-	$tagImage = $filter.Apply($tagImage.PSObject.BaseObject)
+	$tagWidth = [math]::Round($previewImage.Width / 6, 3)
+	$tagHeight = [math]::Round(($tagWidth / $previewImage.Width) * $previewImage.Height, 3)
+	$tagMargin = [math]::Round($previewImage.Width / 50, 3)
 
-	$filter = New-Object -ComObject Wia.ImageProcess
-	$stamp = $filter.FilterInfos.Item("Stamp").FilterId
-	$filter.Filters.Add($stamp)
-	$filter.Filters.Item(1).Properties.Item("ImageFile") = $tagImage.PSObject.BaseObject
-	$filter.Filters.Item(1).Properties.Item("Left") = $previewImage.Width - $tagMargin - $tagWidth
-	$filter.Filters.Item(1).Properties.Item("Top") = $tagMargin
-	$previewImage = $filter.Apply($previewImage.PSObject.BaseObject)
 	if (Test-Path $outputPath) {
 		Remove-Item $outputPath -Force -Confirm:$false | Out-Null
 	}
-	$previewImage.SaveFile("$outputPath") | Out-Null
+	& magick convert "$baseImage" "$overlayImagePath" -gravity NorthEast -geometry "$($tagWidth)x$($tagHeight)+$tagMargin+$tagMargin" -composite "$outputPath"
 }
 
 function Set-ImageSizeBelow {
 	param (
 		$imagePath,
-		$sizeInKb
+		$sizeInKb,
+		[switch]$removeOriginal
 	)
 	if (-not (Test-Path $imagePath)) {
 		Write-Host "Cannot find image at $imagePath, exiting"
@@ -3623,7 +3617,11 @@ function Set-ImageSizeBelow {
 		}
 		Set-ImageSizePercent -imagePath "$env:TEMP\_$imageName" -percent $percent -outName $imageName -overwrite -silent
 	}
-	Move-Item $imagePath "$imageDir\original_$imageName" -Confirm:$false
+	if ($removeOriginal) {
+		Remove-Item $imagePath -Force -Confirm:$false
+	} else {
+		Move-Item $imagePath "$imageDir\original_$imageName" -Confirm:$false
+	}
 	Move-Item "$env:TEMP\$imageName" $imagePath -Confirm:$false
 }
 
@@ -3747,8 +3745,8 @@ function Update-InfoBanner {
 		WriteMessage -failure "Found no preview image to create a banner from"
 		return
 	}
-	$aboutPath = "$localModFolder\$modName\About\About.xml"
-	if (-not (Test-Path $aboutPath)) {
+	$aboutFile = Get-ModAboutFile -modName $modName
+	if (-not $aboutFile) {
 		WriteMessage -failure "Found no about-file to get the modname from"
 		return
 	}
@@ -3759,7 +3757,7 @@ function Update-InfoBanner {
 		return
 	}
 
-	$modDisplayName = ([xml](Get-Content $aboutPath -Raw -Encoding utf8)).ModMetaData.Name.Replace(" (Continued)", "")
+	$modDisplayName = ([xml]$aboutFile).ModMetaData.Name.Replace(" (Continued)", "")
 	$updatebannerFolder = Split-Path $updatebannerPath
 	if (-not (Test-Path $updatebannerFolder)) {
 		New-Item -Path $updatebannerFolder -ItemType Directory -Force | Out-Null
