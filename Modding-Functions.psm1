@@ -1338,12 +1338,18 @@ function Get-SteamModContent {
 
 	$imageLinks = Select-String -Path "$tempPath\Steampage\PublishedDescription.txt" -Pattern "\[img\].*\[\/img\]" -AllMatches
 	if ($imageLinks) {
+		$i = 0
 		foreach ($link in $imageLinks.Matches.Value) {
-			$linkValue = $link.Split("]")[1].Split("[")[0]
-			$fileName = Split-Path -Leaf $linkValue
+			$linkValue = $link.Split("]")[1].Split("[")[0].Split("?")[0]
+			if ($linkValue -match "steamuserimages-a") {
+				$fileName = "image_$i.jpg"
+			} else {
+				$fileName = Split-Path -Leaf $linkValue
+			}
 			$ProgressPreference = 'SilentlyContinue' 
 			Invoke-WebRequest $linkValue -OutFile "$tempPath\Steampage\$fileName" | Out-Null
 			$ProgressPreference = 'Continue'
+			$i++
 		}
 	}
 
