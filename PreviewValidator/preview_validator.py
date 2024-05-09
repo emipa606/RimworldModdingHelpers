@@ -1,5 +1,6 @@
 """Validates preview images
 
+
 Returns:
 _type_: _description_
 """
@@ -9,14 +10,10 @@ import json
 import pathlib
 import steam.webauth as wa
 from bs4 import BeautifulSoup
-import PIL.Image as Image
+from wand.image import Image
 import webbrowser
 import pyperclip
-
-if len(sys.argv) < 2:
-    TWOFACTORCODE = input('Must supply a twofactor-code:')
-else:
-    TWOFACTORCODE = sys.argv[1]
+import subprocess
 
 CONFIG_PATH = "./preview_validator.json"
 if not os.path.isfile(CONFIG_PATH):
@@ -31,28 +28,29 @@ def read_json(file_path):
 
 
 modsfolder = pathlib.Path("E:\SteamLibrary\steamapps\common\RimWorld\Mods")
+previewExecutable = "E:\ModPublishing\PowershellFunctions\SteamPreviewUploader\Compiled\SteamPreviewUploader.exe"
 allpublishedfiles = list(modsfolder.glob("*/About/PublishedFileId.txt"))
 settings = read_json(CONFIG_PATH)
 prefix = settings["modid_prefix"]
 username = settings["steam_username"]
 password = settings["steam_password"]
 
-user = wa.WebAuth(username)
-print(f"Logging in with code {TWOFACTORCODE}")
+user = wa.WebAuth2(username)
+input("Logging in, be ready to reply to two-factor code within 10 seconds. Continue?")
 
 tryagain = False
 try:
-    result = user.login(password=password, twofactor_code=TWOFACTORCODE)
+    result = user.login(username, password)
 except Exception as e:
-    print(f"Comment monitor login failed", str(e))
+    print("Comment monitor login failed", str(e))
     sys.exit()
 
 try:
     print(f"Login result: {result}")
 
     for publishfile in allpublishedfiles:
-        modname = os.path.basename(os.path.split(
-            os.path.split(publishfile)[0])[0])
+        modpath = os.path.split(os.path.split(publishfile)[0])[0]
+        modname = os.path.basename(modpath)
         print(f"Checking {modname}")
         sourcepath = os.path.join(os.path.split(
             os.path.split(publishfile)[0])[0], "source")
@@ -71,21 +69,28 @@ try:
             filter(lambda a: 'gPreviewImages' in a.text, allscripts))[0].text
         previews = previewscript.split('[')[1].split(']')[0]
         jsonlist = json.loads(f"[{previews}]")
+        if not jsonlist:
+            print(f"Skipping {modname} since it has no previews")
+            continue
         for preview in jsonlist:
             if preview['size'] > 0:
                 continue
+            # print(preview)
             filepath = os.path.join(sourcepath, preview['filename'])
             tmppath = os.path.join(sourcepath, f"{preview['filename']}.bak")
             print(f"{modname} broken preview: {preview['filename']}")
             if os.path.isfile(filepath):
-                os.rename(filepath, tmppath)
-                img = Image.open(tmppath)
-                img.save(filepath, optimize=True, quality=60)
-                os.remove(tmppath)
+                with Image(filename=filepath) as img:
+                    img.save(filename=filepath)
                 pyperclip.copy(filepath.replace('\\\\', '\\'))
 
-            webbrowser.open(uri, new=0, autoraise=True)
-            input('Continue?')
+            index = preview["sortorder"] - 1
+            previewpath = filepath.replace('\\\\', '\\')
+            callstring = f'"{previewExecutable}" "{modpath}" "{previewpath}" "{index}"'
+            # print(callstring)
+            subprocess.call(callstring)
+            # webbrowser.open(uri, new=0, autoraise=True)
+            # input('Continue?')
 
 except Exception as e:
     print("Session failed", str(e))
