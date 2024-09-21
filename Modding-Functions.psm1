@@ -1638,6 +1638,8 @@ function Set-ModXml {
 	$files = Get-ChildItem "$($modObject.ModFolderPath)\*.xml" -Recurse
 	$i = 0
 	$total = $files.Count
+	$tempFile = "$env:TEMP\temp.xml"
+	$filesChanged = 0;
 	foreach ($file in $files) {
 		if ($i % 50 -eq 0) {			
 			SetTerminalProgress -progressPercent ($i / $total * 100)
@@ -1662,8 +1664,12 @@ function Set-ModXml {
 			return $false
 		}
 		if (-not $doBaseCheck) {
-			$fileContent.Save($file.FullName)
-			(Get-Content -path $file.FullName -Raw -Encoding UTF8).Replace('&gt;', '>') | Set-Content -Path $file.FullName -Encoding UTF8
+			$fileContent.Save($tempFile) 
+			(Get-Content -path $tempFile -Raw -Encoding UTF8).Replace('&gt;', '>') | Set-Content -Path $tempFile -Encoding UTF8
+			if ((Get-Content -path $tempFile -Raw -Encoding UTF8) -ne $fileContentRaw) {
+				Copy-Item -Path $tempFile -Destination $file.FullName -Force
+				$filesChanged++
+			}
 			continue
 		}
 		$allBases = $fileContent.Defs.ChildNodes | Where-Object -Property Name -Match "Base$"
@@ -1680,8 +1686,17 @@ function Set-ModXml {
 			Write-Host "`n$($file.FullName)"
 			WriteMessage -warning "Possible redundant base-classes: $($baseWarnings -join ", ")"
 		}
-		$fileContent.Save($file.FullName)
-		(Get-Content -path $file.FullName -Raw -Encoding UTF8).Replace('&gt;', '>') | Set-Content -Path $file.FullName -Encoding UTF8
+		$fileContent.Save($tempFile)
+		(Get-Content -path $tempFile -Raw -Encoding UTF8).Replace('&gt;', '>') | Set-Content -Path $tempFile -Encoding UTF8
+		if ((Get-Content -path $tempFile -Raw -Encoding UTF8) -ne $fileContentRaw) {
+			Copy-Item -Path $tempFile -Destination $file.FullName -Force
+			$filesChanged++
+		}
+	}
+	if ($filesChanged -eq 0) {
+		WriteMessage -progress "No XML-files needed cleaning"
+	} else {
+		WriteMessage -success "Cleaned up $filesChanged XML-files"
 	}
 	SetTerminalProgress
 	Write-Progress -Completed

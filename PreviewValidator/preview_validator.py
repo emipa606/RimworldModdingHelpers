@@ -11,7 +11,6 @@ import pathlib
 import steam.webauth as wa
 from bs4 import BeautifulSoup
 from wand.image import Image
-import webbrowser
 import pyperclip
 import subprocess
 
@@ -36,11 +35,11 @@ username = settings["steam_username"]
 password = settings["steam_password"]
 
 user = wa.WebAuth2(username)
-input("Logging in, be ready to reply to two-factor code within 10 seconds. Continue?")
+twoFactorCode = input("Logging in, paste two-factor code and press enter: ")
 
 tryagain = False
 try:
-    result = user.login(username, password)
+    result = user.login(username, password, twoFactorCode)
 except Exception as e:
     print("Comment monitor login failed", str(e))
     sys.exit()
