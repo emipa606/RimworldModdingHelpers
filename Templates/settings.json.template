@@ -35,6 +35,8 @@
 	"modding_music_volume": "0",
 	"playing_music_volume": "0.4",
 	"deepl_api_key": "",
+	"openai_api_key": "",
+	"openai_model": "",
 	"zip_path": "C:\\ModPublishing\\7za.exe",
 	"gimp_folder": "C:\\Program Files\\GIMP 2\\bin",
 	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"

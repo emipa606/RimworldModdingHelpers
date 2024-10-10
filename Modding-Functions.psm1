@@ -87,6 +87,8 @@ $Global:autoModsConfig = "$PSScriptRoot\ModsConfig_Auto.xml"
 $Global:bareModsConfig = "$PSScriptRoot\ModsConfig_Bare.xml"
 $Global:replacementsFile = "$PSScriptRoot\ReplaceRules.txt"
 $Global:fundingFile = $settings.funding_path
+$Global:openAIApiKey = $settings.openai_api_key
+$Global:openAIModel = $settings.openai_model
 $Global:manifestTemplate = "$PSScriptRoot\$($settings.manfest_template)"
 if (-not (Test-Path $manifestTemplate)) {
 	WriteMessage -failure "Manifest-template not found: $manifestTemplate, exiting."
@@ -391,6 +393,25 @@ function Get-Mod {
 		$modObject.ModPublisherPath = $null
 	} 	
 	$modObject.Continued = $modObject.DisplayName.EndsWith(" (Continued)")
+	
+	$modObject.DescriptionClean = $modObject.Description
+	if (-not $modObject.Continued) {
+		$start = "[img]https://i.imgur.com/iCj5o7O.png[/img]"
+		$stop = "[table]"
+		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
+		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
+	} else {
+		$middlestop = "[img]https://i.imgur.com/pufA0kM.png[/img]"
+		$start = "[img]https://i.imgur.com/Z4GOv8H.png[/img]"
+		$stop = "[img]https://i.imgur.com/PwoNOj4.png[/img]"
+		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
+		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
+		$modObject.DescriptionClean = "$($modObject.Description.Substring(0, $modObject.Description.IndexOf($middlestop) - 1))`n$($modObject.DescriptionClean)"
+	}
+	$modObject.DescriptionClean = $modObject.DescriptionClean -replace "\[url=.*?\](.*?)\[/url\]", '$1'
+	$modObject.DescriptionClean = $modObject.DescriptionClean -replace "\[.*?\]", ""
+	$modObject.DescriptionClean = $modObject.DescriptionClean -replace "https?://\S+", ""
+
 	$modObject.Repository = "https://github.com/$($settings.github_username)/$($modObject.NameClean)"
 	$modObject.MetadataFilePath = "$($modObject.ModFolderPath)\Source\metadata.json"
 	if (-not (Test-Path $modObject.MetadataFilePath)) {
@@ -1051,6 +1072,11 @@ function Merge-GitRepositories {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting merge"
 		return
 	}
+
+	$modNameOld = "$($modObject.NameClean)_Old"
+	Get-ModRepository -modObject $modObject
+	Read-Host "Rename the current repository to $modNameOld, continue when done (Press ENTER)"
+	Read-Host "Fork the repository to merge into, using the repository name $($modObject.Name), continue when done (Press ENTER)"
 	
 	$stagingDirectory = $settings.mod_staging_folder
 	$rootFolder = Split-Path $stagingDirectory
@@ -1062,7 +1088,6 @@ function Merge-GitRepositories {
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
 	Set-Location -Path $stagingDirectory
 
-	$modNameOld = "$($modObject.NameClean)_Old"
 	if (-not (Get-RepositoryStatus -repositoryName $modObject.NameClean)) {
 		WriteMessage -failure "No repository found for $($modObject.NameClean)"
 		Set-Location $modObject.ModFolderPath
@@ -1108,6 +1133,9 @@ function Merge-GitRepositories {
 	Remove-Item "$stagingDirectory\$($modObject.NameClean)_$newVersion.zip" -Force
 
 	Set-Location $currentDirectory
+	Set-DefaultGithubRepoValues -modObject $modObject
+	Set-Clipboard "$($modObject.ModFolderPath)\About\Preview.png"
+	Start-Process -FilePath $settings.browser_path -ArgumentList "https://github.com/$($settings.github_username)/$($modObject.NameClean)/settings"
 }
 
 function Set-DefaultGithubRepoValues {
@@ -3611,6 +3639,94 @@ function Sync-ModDescriptionToSteam {
 	return
 }
 
+# Function to generate search-tags in the description
+function Update-ModDescriptionTags {
+	param(
+		$modObject,
+		[switch]$silent,
+		[switch]$force
+	)
+
+	if (-not $modObject) {
+		$modObject = Get-Mod
+		if (-not $modObject) {
+			return
+		}
+	}
+
+	if (-not $modObject.Mine) {
+		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
+		return
+	}
+
+	if ($modObject.MetadataFileJson.SearchTags -and -not $force) {
+		WriteMessage -progress "Search-tags already set for $($modObject.Name), skipping"
+		return
+	}
+
+	$prompt = @"
+Generate three to five search tags for the following Rimworld mod description.
+They should not contain the words: Rimworld, Update, Game, Mod, Discord, Forum, Translation, Version, Steam, Workshop, Ludeon, Studios, Author, Name, Description, Features, Research
+They should not contain any of the words in the description itself.
+
+Description: $($modObject.Name)
+$($modObject.DescriptionClean)
+
+Tags:
+"@
+
+	$body = @{
+		"model"      = $openAIModel
+		"prompt"     = $prompt
+		"max_tokens" = 50
+	} | ConvertTo-Json
+
+	$headers = @{
+		"Content-Type"  = "application/json"
+		"Authorization" = "Bearer $openAIApiKey"
+	}
+
+	try {
+		$response = Invoke-RestMethod -Uri "https://api.openai.com/v1/completions" -Method Post -Headers $headers -Body $body
+	} catch {
+		WriteMessage -failure "Failed to generate search-tags for $($modObject.Name)"
+		return
+	}
+	$tags = $response.choices.text.ToLower().Trim() -split ","
+	if ($tags.Length -lt 3) {
+		WriteMessage -failure "Failed to generate search-tags for $($modObject.Name)"
+		return
+	}
+	if ($tags.Length -gt 5) {
+		$tags = $tags | Get-Random -Count 5
+	}
+	if (-not $silent) {
+		WriteMessage -progress $modObject.ModUrl
+		$tagsAsNumberedList = @()
+		for ($i = 0; $i -lt $tags.Length; $i++) {
+			$tagsAsNumberedList += "$($i + 1). $($tags[$i].Trim())"
+		}
+		$answer = Read-Host "$($tagsAsNumberedList -join "`n")`n`nDo you want to update the description with these tags? `nEnter to continue, n to cancel, m to modify, numbers separated by space to select tags.`n"
+		if ($answer -eq "n") {
+			return
+		}
+		if ($answer -eq "m") {
+			$tags = Read-Host "Enter tags separated by comma"
+			$tags = $tags -split ","
+		}
+		if ($answer -match "\d") {
+			$tags = $answer -split " " | ForEach-Object { $tags[$_ - 1] }
+		}
+	}
+	if (-not $modObject.MetadataFileJson.PSObject.Properties.Name.Contains("SearchTags")) {
+		$modObject.MetadataFileJson | Add-Member -NotePropertyName "SearchTags" -NotePropertyValue $tags
+	} else {
+		$modObject.MetadataFileJson.SearchTags = $tags
+	}
+	$modObject.MetadataFileJson | ConvertTo-Json | Set-Content -Path $modObject.MetadataFilePath -Force
+	WriteMessage -success "Updated search-tags for $($modObject.Name)"
+}
+
 #endregion
 
 #region Publishing functions
@@ -3766,6 +3882,7 @@ function Publish-Mod {
 
 	$version = [version]$newVersion
 	Set-ModChangeNote -modObject $modObject -changenote "$version - $message" -Force:$Force
+	
 	$modObject = Get-Mod -originalModObject $modObject
 	if (-not $modObject.Published) {
 		$firstPublish = $true
@@ -3797,21 +3914,28 @@ function Publish-Mod {
 			$description = $description.Replace("please post it to the GitHub repository.`n", "please post it to the GitHub repository.`n[*] Use [url=https://github.com/RimSort/RimSort/releases/latest]RimSort[/url] to sort your mods`n")
 		}
 
-		if ($modObject.Continued) {
-			$logo = "https://img.shields.io/github/v/release/emipa606/$($modObject.NameClean)?label=latest%20version&style=plastic&color=9f1111&labelColor=black"
-		} else {
-			$logo = "https://img.shields.io/github/v/release/emipa606/$($modObject.NameClean)?label=latest%20version&style=plastic&labelColor=0070cd&color=white"
+		if ($modObject.Continued -and -not $description.Contains("PwoNOj4")) {
+			$description += $faqText
 		}
-		$modObject.AboutFileXml.ModMetaData.description = "$description`n`n[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$($modObject.PublishedId)][img]$logo[/img][/url]"
-		
-		if ($modObject.Continued -and -not $modObject.AboutFileXml.ModMetaData.description.Contains("PwoNOj4")) {
-			$modObject.AboutFileXml.ModMetaData.description += $faqText
-		}	
 
-		if (-not $modObject.Continued -and -not $modObject.AboutFileXml.ModMetaData.description.Contains("5xwDG6H")) {
-			$modObject.AboutFileXml.ModMetaData.description += $faqTextPrivate
+		if (-not $modObject.Continued -and -not $description.Contains("5xwDG6H")) {
+			$description += $faqTextPrivate
 		}	
+	} 
+
+	if ($modObject.Continued) {
+		$logo = "https://img.shields.io/github/v/release/emipa606/$($modObject.NameClean)?label=latest%20version&style=plastic&color=9f1111&labelColor=black"
+	} else {
+		$logo = "https://img.shields.io/github/v/release/emipa606/$($modObject.NameClean)?label=latest%20version&style=plastic&labelColor=0070cd&color=white"
 	}
+	$versionLogo = "`n`n[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$($modObject.PublishedId)][img]$logo[/img][/url]"
+	$tags = ""
+	if ($modObject.MetadataFileJson.SearchTags) {
+		$tags = "| tags: " + ($modObject.MetadataFileJson.SearchTags -join ", ")
+	}
+
+	$modObject.AboutFileXml.ModMetaData.description = "$description $versionLogo $tags"
+	
 
 	if ($modObject.MetadataFileJson.FundingSet) {
 		$githubPath = "$($modObject.ModFolderPath)\.github"
