@@ -52,16 +52,14 @@ namespace RimworldModReleaseTool
 
                 foreach (XmlNode metaNode in node.ChildNodes)
                 {
-                    if (metaNode.Name.ToLower() == "name")
+                    switch (metaNode.Name.ToLower())
                     {
-                        Name = metaNode.InnerText;
-                        continue;
-                    }
-
-                    if (metaNode.Name.ToLower() == "description")
-                    {
-                        Description = metaNode.InnerText;
-                        continue;
+                        case "name":
+                            Name = metaNode.InnerText;
+                            continue;
+                        case "description":
+                            Description = metaNode.InnerText;
+                            continue;
                     }
 
                     if (metaNode.Name != "supportedVersions")
@@ -72,17 +70,35 @@ namespace RimworldModReleaseTool
                     foreach (XmlNode tagNode in metaNode.ChildNodes)
                     {
                         Version.TryParse(tagNode.InnerText, out var version);
-                        Tags.Add(version.Major + "." + version.Minor);
+                        Tags.Add($"{version.Major}.{version.Minor}");
                     }
                 }
             }
 
             Dependencies = new List<ulong>();
+            AppDependencies = new List<uint>();
             var modDependencies = XElement.Parse(aboutXml.InnerXml).Element("modDependencies");
             if (modDependencies != null && modDependencies.HasElements)
             {
                 foreach (var xElement in modDependencies.Elements())
                 {
+                    if (xElement.Element("downloadUrl")?.Value.Contains("store.steampowered.com/app") == true)
+                    {
+                        var stringAppDependency =
+                            xElement.Element("downloadUrl")?.Value.Replace("https://store.steampowered.com/app/", "")
+                                .Split('/').First();
+                        try
+                        {
+                            AppDependencies.Add(Convert.ToUInt32(stringAppDependency));
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"Could not convert {stringAppDependency} to uint {e}");
+                        }
+
+                        continue;
+                    }
+
                     var stringDependency =
                         xElement.Element("steamWorkshopUrl")?.Value.Replace("=", "/").Split('/').Last();
                     try
@@ -175,6 +191,7 @@ namespace RimworldModReleaseTool
         public long ModBytes { get; }
         public bool Archived { get; }
         public List<ulong> Dependencies { get; }
+        public List<uint> AppDependencies { get; }
 
         public PublishedFileId_t PublishedFileId
         {

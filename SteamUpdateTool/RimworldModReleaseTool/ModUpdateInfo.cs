@@ -14,11 +14,11 @@ namespace RimworldModReleaseTool
         {
             Path = modRootFolder;
 
-            var steamPublishIDPath = Path + @"\About\PublishedFileId.txt";
+            var steamPublishIDPath = $@"{Path}\About\PublishedFileId.txt";
             if (File.Exists(steamPublishIDPath))
             {
                 var steamPublishID = File.ReadLines(steamPublishIDPath).First();
-                SteamURL = @"https://steamcommunity.com/sharedfiles/filedetails/?id=" + steamPublishID;
+                SteamURL = $@"https://steamcommunity.com/sharedfiles/filedetails/?id={steamPublishID}";
             }
 
             ///// Get the name
@@ -28,8 +28,8 @@ namespace RimworldModReleaseTool
             Name = modName; //path.Substring(path.LastIndexOf("\\", StringComparison.Ordinal) + 1);
             Author = modAuthor;
 
-            var changelogPath = Path + @"\About\Changelog.txt";
-            var manifestPath = Path + @"\About\Manifest.xml";
+            var changelogPath = $@"{Path}\About\Changelog.txt";
+            var manifestPath = $@"{Path}\About\Manifest.xml";
 
             var changelogFile = new FileInfo(changelogPath);
             var manifestFile = new FileInfo(manifestPath);
@@ -99,7 +99,7 @@ namespace RimworldModReleaseTool
 
         private static string ParseAboutXMLFor(string element, string newPath)
         {
-            var text = newPath + @"\About\About.xml";
+            var text = $@"{newPath}\About\About.xml";
             var xml = new XmlDocument();
             xml.Load(text);
             return XElement.Parse(xml.InnerXml).Element(element)?.Value ?? "NULL";

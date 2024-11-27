@@ -44,8 +44,7 @@ namespace RimworldModReleaseTool
         {
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
-                var resourceName = "AssemblyLoadingAndReflection." +
-                                   new AssemblyName(args.Name).Name + ".dll";
+                var resourceName = $"AssemblyLoadingAndReflection.{new AssemblyName(args.Name).Name}.dll";
                 using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
                 {
                     if (stream == null)
@@ -54,7 +53,7 @@ namespace RimworldModReleaseTool
                     }
 
                     var assemblyData = new byte[stream.Length];
-                    var unused = stream.Read(assemblyData, 0, assemblyData.Length);
+                    _ = stream.Read(assemblyData, 0, assemblyData.Length);
                     return Assembly.Load(assemblyData);
                 }
             };

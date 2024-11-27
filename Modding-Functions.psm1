@@ -396,17 +396,23 @@ function Get-Mod {
 	
 	$modObject.DescriptionClean = $modObject.Description
 	if (-not $modObject.Continued) {
-		$start = "[img]https://i.imgur.com/iCj5o7O.png[/img]"
-		$stop = "[table]"
-		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
-		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
+		if ($modObject.DescriptionClean.Contains("[img]https://i.imgur.com/iCj5o7O.png[/img]")) {
+			$start = "[img]https://i.imgur.com/iCj5o7O.png[/img]"
+			$stop = "[table]"
+			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
+			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
+		}
 	} else {
-		$middlestop = "[img]https://i.imgur.com/pufA0kM.png[/img]"
-		$start = "[img]https://i.imgur.com/Z4GOv8H.png[/img]"
-		$stop = "[img]https://i.imgur.com/PwoNOj4.png[/img]"
-		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
-		$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
-		$modObject.DescriptionClean = "$($modObject.Description.Substring(0, $modObject.Description.IndexOf($middlestop) - 1))`n$($modObject.DescriptionClean)"
+		if ($modObject.DescriptionClean.Contains("[img]https://i.imgur.com/pufA0kM.png[/img]") -and
+			$modObject.DescriptionClean.Contains("[img]https://i.imgur.com/Z4GOv8H.png[/img]") -and
+			$modObject.DescriptionClean.Contains("[img]https://i.imgur.com/PwoNOj4.png[/img]")) {
+			$middlestop = "[img]https://i.imgur.com/pufA0kM.png[/img]"
+			$start = "[img]https://i.imgur.com/Z4GOv8H.png[/img]"
+			$stop = "[img]https://i.imgur.com/PwoNOj4.png[/img]"
+			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
+			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
+			$modObject.DescriptionClean = "$($modObject.Description.Substring(0, $modObject.Description.IndexOf($middlestop) - 1))`n$($modObject.DescriptionClean)"
+		}
 	}
 	$modObject.DescriptionClean = $modObject.DescriptionClean -replace "\[url=.*?\](.*?)\[/url\]", '$1'
 	$modObject.DescriptionClean = $modObject.DescriptionClean -replace "\[.*?\]", ""
@@ -3665,9 +3671,11 @@ function Update-ModDescriptionTags {
 	}
 
 	$prompt = @"
-Generate three to five search tags for the following Rimworld mod description.
+Generate up to five search tags for the following Rimworld mod description.
+These should make it easier for users to find the mod in the workshop and should not be too generic.
 They should not contain the words: Rimworld, Update, Game, Mod, Discord, Forum, Translation, Version, Steam, Workshop, Ludeon, Studios, Author, Name, Description, Features, Research
 They should not contain any of the words in the description itself.
+Return them in a comma-separated list.
 
 Description: $($modObject.Name)
 $($modObject.DescriptionClean)
@@ -3685,21 +3693,23 @@ Tags:
 		"Content-Type"  = "application/json"
 		"Authorization" = "Bearer $openAIApiKey"
 	}
-
+	$tags = @()
 	try {
 		$response = Invoke-RestMethod -Uri "https://api.openai.com/v1/completions" -Method Post -Headers $headers -Body $body
+		$tags = $response.choices.text.ToLower().Trim().Replace('"', "") -split ","
 	} catch {
-		WriteMessage -failure "Failed to generate search-tags for $($modObject.Name)"
-		return
+		WriteMessage -failure "Failed to generate search-tags for $($modObject.Name)`nError: $_"
+		if ($silent) {
+			return
+		}
 	}
-	$tags = $response.choices.text.ToLower().Trim() -split ","
-	if ($tags.Length -lt 3) {
-		WriteMessage -failure "Failed to generate search-tags for $($modObject.Name)"
-		return
+	
+	if ($tags.Length -eq 0) {		
+		$tags = Read-Host "No tags genererated, enter tags separated by comma"
+		$tags = $tags -split ","
+		$silent = $true
 	}
-	if ($tags.Length -gt 5) {
-		$tags = $tags | Get-Random -Count 5
-	}
+
 	if (-not $silent) {
 		WriteMessage -progress $modObject.ModUrl
 		$tagsAsNumberedList = @()

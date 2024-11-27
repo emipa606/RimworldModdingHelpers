@@ -18,6 +18,7 @@ namespace RimworldModReleaseTool
         private static CallResult<RemoveUGCDependencyResult_t> OnRemoveUGCDependencyCompletedCallResult;
         private static RemoveUGCDependencyResult_t removeUGCDependencyResult;
         private static AddUGCDependencyResult_t addUGCDependencyResult;
+        private static AddAppDependencyResult_t addAppUGCDependencyResult;
         private static bool _initialized;
 
         private static SubmitItemUpdateResult_t submitResult;
@@ -123,11 +124,12 @@ namespace RimworldModReleaseTool
 
             if (creating)
             {
+                SteamAPICall_t addDependencyHandle;
                 foreach (var modDependency in mod.Dependencies)
                 {
                     Console.WriteLine($"Setting dependency to mod with id {modDependency}");
                     addUGCDependencyResult = new AddUGCDependencyResult_t();
-                    var addDependencyHandle =
+                    addDependencyHandle =
                         SteamUGC.AddDependency(mod.PublishedFileId, new PublishedFileId_t(modDependency));
                     OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
                     while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
@@ -137,31 +139,39 @@ namespace RimworldModReleaseTool
                     }
                 }
 
-                if (mod.Name.Contains("(Continued)"))
+                foreach (var modAppDependency in mod.AppDependencies)
                 {
-                    Console.WriteLine("Adding mod to ressurection-collection");
-                    addUGCDependencyResult = new AddUGCDependencyResult_t();
-                    var addDependencyHandle =
-                        SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
-                    OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
-                    while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+                    Console.WriteLine($"Setting app-dependency to mod with id {modAppDependency}");
+                    addAppUGCDependencyResult = new AddAppDependencyResult_t();
+                    var addAppDependencyHandle =
+                        SteamUGC.AddAppDependency(mod.PublishedFileId, new AppId_t(modAppDependency));
+                    OnAddUGCDependencyCompletedCallResult.Set(addAppDependencyHandle);
+                    while (addAppUGCDependencyResult.m_eResult == EResult.k_EResultNone)
                     {
                         Thread.Sleep(5);
                         SteamAPI.RunCallbacks();
                     }
                 }
+
+                addUGCDependencyResult = new AddUGCDependencyResult_t();
+                if (mod.Name.Contains("(Continued)"))
+                {
+                    Console.WriteLine("Adding mod to ressurection-collection");
+                    addDependencyHandle =
+                        SteamUGC.AddDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+                }
                 else
                 {
                     Console.WriteLine("Adding mod to personal-collection");
-                    addUGCDependencyResult = new AddUGCDependencyResult_t();
-                    var addDependencyHandle =
+                    addDependencyHandle =
                         SteamUGC.AddDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
-                    OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
-                    while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
-                    {
-                        Thread.Sleep(5);
-                        SteamAPI.RunCallbacks();
-                    }
+                }
+
+                OnAddUGCDependencyCompletedCallResult.Set(addDependencyHandle);
+                while (addUGCDependencyResult.m_eResult == EResult.k_EResultNone)
+                {
+                    Thread.Sleep(5);
+                    SteamAPI.RunCallbacks();
                 }
             }
 
@@ -170,12 +180,21 @@ namespace RimworldModReleaseTool
                 return submitResult.m_eResult == EResult.k_EResultOK;
             }
 
-            Console.WriteLine("Removing mod to ressurection-collection");
-            SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
-
             removeUGCDependencyResult = new RemoveUGCDependencyResult_t();
-            var removeDependencyHandle =
-                SteamUGC.RemoveDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+            SteamAPICall_t removeDependencyHandle;
+            if (mod.Name.Contains("(Continued)"))
+            {
+                Console.WriteLine("Removing mod from ressurection-collection");
+                removeDependencyHandle =
+                    SteamUGC.RemoveDependency(new PublishedFileId_t(1541984105), mod.PublishedFileId);
+            }
+            else
+            {
+                Console.WriteLine("Removing mod from personal-collection");
+                removeDependencyHandle =
+                    SteamUGC.RemoveDependency(new PublishedFileId_t(2228969861), mod.PublishedFileId);
+            }
+
             OnRemoveUGCDependencyCompletedCallResult.Set(removeDependencyHandle);
             while (removeUGCDependencyResult.m_eResult == EResult.k_EResultNone)
             {
