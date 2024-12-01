@@ -15,6 +15,7 @@ namespace RimworldModReleaseTool
         private static CallResult<SubmitItemUpdateResult_t> submitResultCallback;
         private static CallResult<CreateItemResult_t> createResultCallback;
         private static CallResult<AddUGCDependencyResult_t> OnAddUGCDependencyCompletedCallResult;
+        private static CallResult<AddAppDependencyResult_t> OnAddAppDependencyCompletedCallResult;
         private static CallResult<RemoveUGCDependencyResult_t> OnRemoveUGCDependencyCompletedCallResult;
         private static RemoveUGCDependencyResult_t removeUGCDependencyResult;
         private static AddUGCDependencyResult_t addUGCDependencyResult;
@@ -77,6 +78,8 @@ namespace RimworldModReleaseTool
             submitResultCallback = CallResult<SubmitItemUpdateResult_t>.Create(OnItemSubmitted);
             OnAddUGCDependencyCompletedCallResult =
                 CallResult<AddUGCDependencyResult_t>.Create(OnAddUGCDependencyCompleted);
+            OnAddAppDependencyCompletedCallResult =
+                CallResult<AddAppDependencyResult_t>.Create(OnAddAppDependencyCompleted);
             OnRemoveUGCDependencyCompletedCallResult =
                 CallResult<RemoveUGCDependencyResult_t>.Create(OnRemoveUGCDependencyCompleted);
             submitResultCallback.Set(call);
@@ -145,7 +148,7 @@ namespace RimworldModReleaseTool
                     addAppUGCDependencyResult = new AddAppDependencyResult_t();
                     var addAppDependencyHandle =
                         SteamUGC.AddAppDependency(mod.PublishedFileId, new AppId_t(modAppDependency));
-                    OnAddUGCDependencyCompletedCallResult.Set(addAppDependencyHandle);
+                    OnAddAppDependencyCompletedCallResult.Set(addAppDependencyHandle);
                     while (addAppUGCDependencyResult.m_eResult == EResult.k_EResultNone)
                     {
                         Thread.Sleep(5);
@@ -298,6 +301,11 @@ namespace RimworldModReleaseTool
         private static void OnAddUGCDependencyCompleted(AddUGCDependencyResult_t pCallback, bool bIOFailure)
         {
             addUGCDependencyResult = pCallback;
+        }
+
+        private static void OnAddAppDependencyCompleted(AddAppDependencyResult_t pCallback, bool bIOFailure)
+        {
+            addAppUGCDependencyResult = pCallback;
         }
 
         public static void Shutdown()
