@@ -23,7 +23,7 @@ namespace SteamCollectionManager
         private static CallResult<RemoteStorageUnsubscribePublishedFileResult_t>
             OnRemoteStorageUnsubscribePublishedFileResult;
 
-        public static void SetSubscription(string modId, bool subscribe)
+        public static void SetSubscription(string modId, bool subscribe, bool fast)
         {
             if (!Init())
             {
@@ -53,27 +53,30 @@ namespace SteamCollectionManager
 
                     Thread.Sleep(50);
                     SteamUGC.DownloadItem(modFileId, true);
-                    Thread.Sleep(10000);
-                    while (SteamUGC.GetItemState(modFileId) == 16)
+                    if (!fast)
                     {
                         Thread.Sleep(10000);
-                    }
+                        while (SteamUGC.GetItemState(modFileId) == 16)
+                        {
+                            Thread.Sleep(10000);
+                        }
 
-                    if (SteamUGC.GetItemState(modFileId) != 4)
-                    {
-                        SteamUGC.DownloadItem(modFileId, true);
-                        Thread.Sleep(10000);
-                    }
+                        if (SteamUGC.GetItemState(modFileId) != 4)
+                        {
+                            SteamUGC.DownloadItem(modFileId, true);
+                            Thread.Sleep(10000);
+                        }
 
-                    while (SteamUGC.GetItemState(modFileId) == 16)
-                    {
-                        Thread.Sleep(10000);
-                    }
+                        while (SteamUGC.GetItemState(modFileId) == 16)
+                        {
+                            Thread.Sleep(10000);
+                        }
 
-                    if (SteamUGC.GetItemState(modFileId) != 4)
-                    {
-                        SteamUGC.DownloadItem(modFileId, true);
-                        Thread.Sleep(10000);
+                        if (SteamUGC.GetItemState(modFileId) != 4)
+                        {
+                            SteamUGC.DownloadItem(modFileId, true);
+                            Thread.Sleep(10000);
+                        }
                     }
                 }
                 else

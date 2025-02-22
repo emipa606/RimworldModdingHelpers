@@ -9,11 +9,11 @@ namespace SteamCollectionManager
         public static void Main(string[] args)
         {
             InitializeProgram();
-            if (args.Length != 2)
+            if (args.Length != 2 && args.Length != 3)
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine(
-                    "First parameter is the id of the mod to sub/unsub, second should be 'True' or 'False' depending on the action");
+                    "First parameter is the id of the mod to sub/unsub, second should be 'True' or 'False' depending on the action. Optional third is no verification of subscription (True)");
                 return;
             }
 
@@ -34,6 +34,8 @@ namespace SteamCollectionManager
                 return;
             }
 
+            var fast = args.Length == 3;
+
             var subscribe = actionToTake == "true";
 
             Console.ForegroundColor = ConsoleColor.White;
@@ -41,7 +43,7 @@ namespace SteamCollectionManager
 
             Console.ForegroundColor = ConsoleColor.Gray;
 
-            SteamUtility.SetSubscription(modId, subscribe);
+            SteamUtility.SetSubscription(modId, subscribe, fast);
         }
 
 
