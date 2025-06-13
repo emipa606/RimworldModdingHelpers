@@ -13,6 +13,7 @@ namespace RimworldModReleaseTool
     {
         public readonly List<string> Tags;
         private PublishedFileId_t _publishedFileId = PublishedFileId_t.Invalid;
+        public bool SkipConfirm;
 
         public Mod(string path, string imageFolderPath)
         {

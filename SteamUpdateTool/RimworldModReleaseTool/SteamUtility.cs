@@ -60,8 +60,11 @@ namespace RimworldModReleaseTool
             {
                 // create item first.
                 creating = true;
-                Console.WriteLine("No PublishedFileId found, create new mod?");
-                Console.ReadLine();
+                if (!mod.SkipConfirm)
+                {
+                    Console.WriteLine("No PublishedFileId found, create new mod?");
+                    Console.ReadLine();
+                }
 
                 if (!Create(mod))
                 {

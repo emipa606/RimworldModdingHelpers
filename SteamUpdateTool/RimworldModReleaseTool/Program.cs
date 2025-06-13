@@ -34,10 +34,15 @@ namespace RimworldModReleaseTool
             }
 
             var confirm = args.Length > 2;
+            var skipConfirm = false;
+            if (confirm)
+            {
+                skipConfirm = args[2].ToLower() == "false";
+            }
 
             var updateInfo = new ModUpdateInfo(modFolderPath);
 
-            SteamUpdateRequest(updateInfo, modFolderPath, imageFolderPath, confirm);
+            SteamUpdateRequest(updateInfo, modFolderPath, imageFolderPath, confirm, skipConfirm);
         }
 
         private static void InitializeProgram()
@@ -60,15 +65,18 @@ namespace RimworldModReleaseTool
         }
 
         private static void SteamUpdateRequest(ModUpdateInfo updateInfo, string modRootPath, string imageFolderPath,
-            bool confirm)
+            bool confirm, bool skipConfirm)
         {
             try
             {
-                var mod = new Mod(modRootPath, imageFolderPath);
+                var mod = new Mod(modRootPath, imageFolderPath)
+                {
+                    SkipConfirm = skipConfirm
+                };
                 SteamUtility.Init();
                 Console.WriteLine(mod.ToString());
                 Console.WriteLine($"Latest changenote: {updateInfo.LatestChangeNote}");
-                if (confirm)
+                if (confirm && !skipConfirm)
                 {
                     Console.WriteLine("Continue?");
                     Console.ReadLine();
