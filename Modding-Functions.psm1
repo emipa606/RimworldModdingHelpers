@@ -193,6 +193,7 @@ $Global:discordServerId = $settings.discord_serverId
 $Global:trelloKey = $settings.trello_api_key
 $Global:trelloToken = $settings.trello_api_token
 $Global:trelloBoardId = $settings.trello_board_id
+$Global:steamApiKey = $settings.steam_api_key
 $Global:deeplApiKey = $settings.deepl_api_key
 $Global:deeplApiUrl = $settings.deepl_api_url
 $Global:autoTranslateLanguages = $settings.auto_translate_languages
@@ -211,6 +212,7 @@ if (Test-Path $translationCachePath) {
 } else {
 	$Global:translationCache = @{}
 }
+$Global:globalRequestLog = @()
 
 
 # Select folder dialog, for selecting mod-folder manually
@@ -1211,6 +1213,7 @@ function Merge-GitRepositories {
 	Set-Location -Path $rootFolder
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
 	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
+	Write-Progress -Completed
 	Set-Location -Path $stagingDirectory
 
 	if (-not (Get-RepositoryStatus -repositoryName $modObject.NameClean)) {
@@ -1256,6 +1259,7 @@ function Merge-GitRepositories {
 	Remove-Item .\debug.log -Force -ErrorAction SilentlyContinue
 	Read-Host "Waiting for zip to be uploaded from $stagingDirectory, continue when done (Press ENTER)"
 	Remove-Item "$stagingDirectory\$($modObject.NameClean)_$newVersion.zip" -Force
+	Write-Progress -Completed
 
 	Set-Location $currentDirectory
 	Set-DefaultGithubRepoValues -modObject $modObject
@@ -1427,6 +1431,7 @@ function Update-Textures {
 		$newPath = $file.FullName.Replace($file.Name, $newName)
 		Move-Item $file.FullName "$newPath" -ErrorAction SilentlyContinue | Out-Null
 	}
+	Write-Progress -Completed
 }
 
 
@@ -1599,6 +1604,7 @@ function Set-CorrectFolderStructure {
 				WriteMessage -progress "$($modObject.ModFolderPath)\$subfolderName doeas not exist, version-specific folder"
 			}
 		}
+		Write-Progress -Completed
 	}
 	WriteMessage -success "$($modObject.Name) has correct folder structure"
 }
@@ -1905,8 +1911,8 @@ function Get-SteamModContent {
 		return $false
 	}
 
-	if (-not (Get-HtmlPageStuff -url "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId" -subscribers)) {
-		WriteMessage -failure "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId is not working"
+	if (-not (Get-ModInfo -steamIds $modId).Exists) {
+		WriteMessage -failure "$modId is not working"
 		return $false
 	}
 	
@@ -1954,6 +1960,53 @@ function Get-SteamModContent {
 	}
 
 	return $true
+}
+
+function Update-ModWildness {
+	param(
+		$folderPath
+	)
+
+	if (-not (Test-Path $folderPath)) {
+		WriteMessage -failure "Folder $folderPath does not exist, exiting"
+		return
+	}
+
+	$files = Get-ChildItem -Path $folderPath -Filter "*.xml" -Recurse
+
+	foreach ($filePath in $files) {
+		# Load the XML content
+		[xml]$xml = Get-Content $filePath
+
+		# Find all <ThingDef> nodes
+		foreach ($thingDef in $xml.Defs.ThingDef) {
+			# Locate the <wildness> element inside <race> (Ensure it's treated as an XmlNode)
+			$wildnessNode = $thingDef.race ? $thingDef.race.SelectSingleNode("wildness") : $null
+
+			if (-not $wildnessNode) {
+				continue
+			}
+			
+			# Find or create the <statBases> node
+			if ($null -eq $thingDef.statBases) {
+				$thingDef.AppendChild($xml.CreateElement("statBases")) | Out-Null
+			}
+
+			# Create a new <Wildness> element and transfer the value
+			$newWildnessNode = $xml.CreateElement("Wildness")
+			$newWildnessNode.InnerText = $wildnessNode.InnerText
+
+			# Add <Wildness> to <statBases>
+			$thingDef.statBases.AppendChild($newWildnessNode) | Out-Null
+
+			# Remove the original <wildness> node (This time, using the correct reference)
+			$thingDef.race.RemoveChild($wildnessNode)
+		}
+
+		# Save the modified XML back to the file
+		$xml.Save($filePath)
+	}
+	WriteMessage -success "Updated wildness in all XML files in $folderPath"
 }
 
 #endregion
@@ -2004,62 +2057,6 @@ function Get-CurrentModNameFromLocation {
 	return $currentDirectory.Replace("$localModFolder\", "").Split("\\")[0]
 }
 
-# Fetchs a mods subscriber-number
-function Get-ModSubscribers {
-	param(
-		$modObject,
-		$modLink
-	)
-	if ($modLink) {
-		return Get-HtmlPageStuff -url $modLink -subscribers
-	}
-		
-	if (-not $modObject) {
-		$modObject = Get-Mod
-		if (-not $modObject) {
-			return
-		}
-	}
-
-	if (-not $modObject.ModUrl) {
-		WriteMessage -failure "Mod has no url registered"
-		return
-	}
-	
-	return Get-HtmlPageStuff -url $modObject.ModUrl -subscribers
-}
-
-# Fetchs a mods supported versions
-function Get-ModVersions {
-	param(
-		$modObject,
-		$modLink,
-		[switch] $local
-	)
-
-	if ($modLink) {
-		return Get-HtmlPageStuff -url $modLink
-	}
-		
-	if (-not $modObject) {
-		$modObject = Get-Mod
-		if (-not $modObject) {
-			return
-		}
-	}
-
-	if ($local) {
-		return $modObject.SupportedVersions 
-	}
-
-	if (-not $modObject.ModUrl) {
-		WriteMessage -failure "Mod has no url registered"
-		return
-	}
-
-	return Get-HtmlPageStuff -url $modObject.ModUrl
-}
-
 # Returns true if the mod supports the latest game-version
 function Get-ModSteamStatus {
 	[CmdletBinding()]
@@ -2069,7 +2066,7 @@ function Get-ModSteamStatus {
 	)
 	
 	if ($modLink) {
-		$modVersions = Get-ModVersions -modLink $modLink
+		$modVersions = (Get-ModInfo -steamIds $modLink.Split("=")[1]).Tags
 	} else {
 		if (-not $modObject) {
 			$modObject = Get-Mod
@@ -2077,7 +2074,7 @@ function Get-ModSteamStatus {
 				return
 			}
 		}
-		$modVersions = Get-ModVersions -modObject $modObject
+		$modVersions = (Get-ModInfo -steamIds $modObject.PublishedId).Tags
 	}
 
 	$currentVersionString = Get-CurrentRimworldVersion
@@ -2176,11 +2173,9 @@ function Test-ValidIdentifier {
 		return $false
 	}
 	if ($identifier -eq "brrainz.harmony") {
-		WriteMessage -progress "Identifier $identifier is always loaded"
 		return $false
 	}
 	if ($identifier.StartsWith("ludeon.")) {
-		WriteMessage -progress "Identifier $identifier is always loaded"
 		return $false
 	}
 	return $true
@@ -2848,17 +2843,151 @@ function Get-LastRimworldVersion {
 	return "$($currentVersion.Major).$($currentVersion.Minor - 1)"
 }
 
-# Helper function to scrape page
-function Get-HtmlPageStuff {
+function Get-SteamRateLimit {
+	[CmdletBinding()]
+	param (	)
+	
+	if (-not $globalRequestLog) {
+		$globalRequestLog = @()
+	}
+	
+	# Calculate the number of requests in the last 5 minutes
+	$timeWindow = [datetime]::UtcNow.AddMinutes(-5)
+	$recentRequests = $globalRequestLog | Where-Object { $_ -gt $timeWindow }
+	
+	if ($recentRequests.Count -ge 200) {
+		WriteMessage -progress "Steam API rate limit reached, waiting for requests to clear"
+		while ($recentRequests.Count -ge 200) {
+			Start-Sleep -Seconds 1  # Wait and re-check every second
+			$recentRequests = $globalRequestLog | Where-Object { $_ -gt $timeWindow }
+		}
+	}
+	$globalRequestLog += [datetime]::UtcNow
+	
+	return
+}
+
+function Get-ModInfo {
+	[CmdletBinding()]
+	param (
+		[string[]]$steamIds,
+		[switch]$expandAuthor
+	)
+	# Calculate the number of items to fetch
+	$itemCount = $steamIds.Count
+	Get-SteamRateLimit
+
+	# API endpoint for fetching published file details
+	$uri = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
+
+	# Build the POST parameters as a hashtable. Note that itemcount is sent as a string.
+	$postParams = @{
+		"itemcount" = "$itemCount"
+	}
+	# Add each mod ID in the proper key format expected by the API.
+	for ($i = 0; $i -lt $itemCount; $i++) {
+		$postParams["publishedfileids[$i]"] = $steamIds[$i]
+	}
+
+	# Convert the hashtable to URL-encoded form data
+	$encodedEntries = $postParams.GetEnumerator() | ForEach-Object {
+		[System.Net.WebUtility]::UrlEncode($_.Key) + "=" + [System.Net.WebUtility]::UrlEncode($_.Value)
+	}
+	$encodedBody = $encodedEntries -join "&"
+
+	# Make the POST request and parse the JSON response
+	Write-Verbose "Fetching mod details for IDs: $($steamIds -join ', ')"
+	Write-Debug "Calling url: $uri with body: $encodedBody, itemcount: $itemCount, expandAuthor: $expandAuthor"
+	$response = Invoke-RestMethod -Uri $uri -Method Post -Body $encodedBody -ContentType "application/x-www-form-urlencoded"
+	$returnArray = @()
+
+	# Loop over each mod's details in the response
+	foreach ($details in $response.response.publishedfiledetails) {
+		if ($details -and $details.result -eq 1) {
+			$modName = $details.title
+			$author = $details.creator
+			if ($expandAuthor) {
+				$author = Get-AuthorInformation -authorId $details.creator
+			}
+			$previewUrl = $details.preview_url
+			$subscriptions = $details.subscriptions
+			$visibility = $details.visibility 
+			$tags = $details.tags | ForEach-Object { $_.tag } | Where-Object { $_ -match "^[0-9]+\.[0-9]+$" } | Sort-Object
+			$visibility = switch ($visibility) {
+				0 {
+					"Public" 
+				}
+				1 {
+					"Friends" 
+				}	   
+				2 {
+					"Private"     
+				}
+				3 {
+					"Unlisted" 
+				}
+				default {
+					"Unknown" 
+				}	
+			}					
+
+			$returnArray += @{
+				SteamId       = $details.publishedfileid
+				Exists        = $true
+				Name          = $modName
+				Author        = $author
+				PreviewUrl    = $previewUrl
+				Subscriptions = $subscriptions
+				Visibility    = $visibility
+				Tags          = $tags
+			}
+		} else {
+			$returnArray += @{
+				SteamId       = $details.publishedfileid
+				Exists        = $false
+				Name          = "Unknown"
+				Author        = "Unknown"
+				PreviewUrl    = ""
+				Subscriptions = 0
+				Visibility    = "Unknown"
+				Tags          = ""
+			}
+			WriteMessage -warning "Failed to fetch details for mod ID $($details.publishedfileid)"
+			Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
+			Write-Debug "Response body: $($response | ConvertTo-Json -Depth 5)"
+		}
+	}
+
+	return $returnArray
+}
+
+function Get-AuthorInformation {
+	[CmdletBinding()]
+	param (
+		$authorId
+	)
+
+	Get-SteamRateLimit
+	# Build the request URL using the creator's Steam ID
+	$userSummariesUri = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=$steamApiKey&steamids=$authorId"
+
+	# Fetch the user summaries from Steam
+	$userResponse = Invoke-RestMethod -Uri $userSummariesUri -Method Get
+
+	# The response structure contains an array of players
+	if ($userResponse.response.players -and $userResponse.response.players.Count -gt 0) {
+		$player = $userResponse.response.players[0]
+		$steamPersonaName = $player.personaname
+		return $steamPersonaName
+	} 
+
+	return "Unknown Author"
+}
+
+function Get-ModPreviewImages {
 	[CmdletBinding()]
 	param (
 		$url,
-		$cacheTime = 30,
-		[switch] $previewUrl,
-		[switch] $subscribers,
-		[switch] $visibility,
-		[switch] $author,
-		[switch] $modName,
 		$previewSavePath
 	)
 	# WriteMessage -progress "Fetching $url"
@@ -2882,87 +3011,57 @@ function Get-HtmlPageStuff {
 	try {
 		if ($html.InnerText -match "You must be logged in to view this item.") {
 			WriteMessage -warning "$url requires login, can not fetch data"
-			return
+			return $false
 		}
 
 		if ($html.InnerText -match "An error was encountered while processing your request:") {
-			return
+			WriteMessage -warning "An error was encountered while processing your request: $url"
+			return $false
 		}
-		if ($visibility) {
-			if ($html.InnerText -match "Current visibility: Unlisted") {
-				return "Unlisted"
-			}
-			if ($html.InnerText -match "Current visibility: Hidden") {
-				return "Hidden"
-			}
-			if ($html.InnerText -match "Current visibility: Friends-only") {
-				return "Friends"
-			}
-			return "Public"
+		if (-not (Test-Path $previewSavePath)) {
+			WriteMessage -warning "$previewSavePath does not exist, will not download preview images"
+			return $false
 		}
-		if ($modName) {
-			return $html.SelectNodes("//div[@class='workshopItemTitle']").InnerText
+		$previewNodes = $html.SelectNodes("//div[@class='highlight_strip_item highlight_strip_screenshot']")
+		if (-not $previewNodes) {
+			WriteMessage -progress  "No preview images found, ignoring"
+			return $true
 		}
-		if ($subscribers) {
-			return $html.SelectNodes("//table").SelectNodes("//td")[2].InnerText.Replace(",", "")
-		}
-		if ($author) {
-			return $html.SelectNodes("//div[@class='breadcrumbs']").Nodes().InnerText[-2].Replace("'s Workshop", "")
-		}
-		if ($previewUrl) {
-			$imgSrc = $html.SelectNodes("//img[contains(@id, 'previewImageMain')]").GetAttributeValue("src", "")
-			if (-not $imgSrc) {
-				$imgSrc = $html.SelectNodes("//img[contains(@id, 'previewImage')]").GetAttributeValue("src", "")
-			}
-			if ($imgSrc) {
-				return "$($imgSrc.Split("?")[0])"
-			}
-			return
-		}
-		if ($previewSavePath) {
-			if (-not (Test-Path $previewSavePath)) {
-				WriteMessage -warning "$previewSavePath does not exist, will not download preview images"
-				return
-			}
-			$previewNodes = $html.SelectNodes("//div[@class='highlight_strip_item highlight_strip_screenshot']")
-			if (-not $previewNodes) {
-				WriteMessage -progress  "No preview images found, ignoring"
-				return
-			}
-			$counter = 0
-			WriteMessage -progress  "Trying to download $($previewNodes.Count) preview images"
-			$total = $previewNodes.Count
+		$counter = 0
+		WriteMessage -progress  "Trying to download $($previewNodes.Count) preview images"
+		$total = $previewNodes.Count
 
-			$progressObject = WriteProgress -initiate -title "Downloading previews" -totalActions $total
-			for ($i = 1; $i -le $previewNodes.Count; $i++) {	
-				WriteProgress -progressObject $progressObject
-				$node = $previewNodes[$i - 1]
-				$image = $node.ChildNodes | Where-Object -Property Name -eq img
-				if (-not $image) {
-					continue
-				}
-				$imageSource = $image.GetAttributeValue("src", "").Split("?")[0]
-				$ProgressPreference = 'SilentlyContinue' 
-				$request = Invoke-WebRequest -Uri $imageSource -MaximumRedirection 0 -ErrorAction Ignore
-				$extension = $request.Headers['Content-Type'].Split('/')[1].Replace("jpeg", "jpg")
-				$outputPath = "$previewSavePath\$i.$extension"
-				Invoke-WebRequest $imageSource -OutFile $outputPath
-				$ProgressPreference = 'Continue'
-				if ((Get-Item $outputPath).Length -gt 1MB) {
-					WriteMessage -progress "Lowering the size of previewimage to below 1MB"
-					Set-ImageSizeBelow -imagePath $outputPath -sizeInKb 999
-				}
-				$counter++
+		$progressObject = WriteProgress -initiate -title "Downloading previews" -totalActions $total
+		for ($i = 1; $i -le $previewNodes.Count; $i++) {	
+			WriteProgress -progressObject $progressObject
+			$node = $previewNodes[$i - 1]
+			$image = $node.ChildNodes | Where-Object -Property Name -eq img
+			if (-not $image) {
+				continue
 			}
-			WriteProgress -progressObject $progressObject -finished
-			WriteMessage -success "Saved $counter preview-images to $previewSavePath"
-			return
+			$imageSource = $image.GetAttributeValue("src", "").Split("?")[0]
+			$ProgressPreference = 'SilentlyContinue' 
+			$request = Invoke-WebRequest -Uri $imageSource -MaximumRedirection 0 -ErrorAction Ignore
+			$extension = $request.Headers['Content-Type'].Split('/')[1].Replace("jpeg", "jpg")
+			$outputPath = "$previewSavePath\$i.$extension"
+			Invoke-WebRequest $imageSource -OutFile $outputPath
+			$ProgressPreference = 'Continue'
+			if ((Get-Item $outputPath).Length -gt 1MB) {
+				WriteMessage -progress "Lowering the size of previewimage to below 1MB"
+				Set-ImageSizeBelow -imagePath $outputPath -sizeInKb 999
+			}
+			$counter++
 		}
-		$versionsHtml = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")[0].InnerText.Trim()
-		return $versionsHtml.Replace("Tags:", ",").Replace(" ", "").Split(",") | Where-Object { $_ -and $_ -match "^[0-9]+\.[0-9]+$" }
+		WriteProgress -progressObject $progressObject -finished
+		WriteMessage -success "Saved $counter preview-images to $previewSavePath"
 	} catch {
 		WriteMessage -warning  "Failed to fetch data from $url `n$($_.ScriptStackTrace)`n$_"
+		return $false
 	}
+	if ($counter -eq 0) {
+		WriteMessage "No preview images found in $url"
+	}
+	return $true
 }
 
 
@@ -3277,7 +3376,7 @@ function Set-RimworldRunMode {
 		$prefsContent = $prefsContent.Replace("<fullscreen>True</fullscreen>", "<fullscreen>False</fullscreen>")
 		$prefsContent = $prefsContent.Replace("<testMapSizes>False</testMapSizes>", "<testMapSizes>True</testMapSizes>")
 	} elseif ($autoTesting) {
-		$prefsContent = $prefsContent.Replace("<devMode>True</devMode>", "<devMode>False</devMode>")
+		$prefsContent = $prefsContent.Replace("<devMode>False</devMode>", "<devMode>True</devMode>")
 		$prefsContent = $prefsContent.Replace("<volumeMusic>$($settings.playing_music_volume)</volumeMusic>", "<volumeMusic>$($settings.modding_music_volume)</volumeMusic>")
 		$prefsContent = $prefsContent.Replace("<screenWidth>$($settings.playing_screen_witdh)</screenWidth>", "<screenWidth>$($settings.modding_screen_witdh)</screenWidth>")
 		$prefsContent = $prefsContent.Replace("<screenHeight>$($settings.playing_screen_height)</screenHeight>", "<screenHeight>$($settings.modding_screen_height)</screenHeight>")
@@ -4053,7 +4152,8 @@ function Publish-Mod {
 		[switch]$Force,
 		[switch]$Auto,
 		[switch]$ReRelease,
-		[switch]$Replacement
+		[switch]$Replacement,
+		[switch]$Silent
 	)
 
 	$modObject = Get-Mod
@@ -4180,8 +4280,9 @@ function Publish-Mod {
 		} elseif ($ReRelease) {
 			Set-ModUpdateFeatures -modObject $modObject -updateMessage "This mod has been re-released for the new version of the game. This version will remain but will not be updated further."
 		} elseif ($ReplacedBy) {
-			$replacedByName = Get-HtmlPageStuff -url https://steamcommunity.com/sharedfiles/filedetails/?id=$ReplacedBy -modName
-			$replacedByAuthor = Get-HtmlPageStuff -url https://steamcommunity.com/sharedfiles/filedetails/?id=$ReplacedBy -author
+			$modInfo = Get-ModInfo -steamIds $ReplacedBy -expandAuthor
+			$replacedByName = $modInfo.Name
+			$replacedByAuthor = $modInfo.Author
 			$replacedByLink = "[url=https://steamcommunity.com/sharedfiles/filedetails/?id=$ReplacedBy]$replacedByName[/url] by $replacedByAuthor"
 			Set-ModUpdateFeatures -modObject $modObject -updateMessage "This mod will not be further updated, please use $replacedByName by $replacedByAuthor instead."
 		} elseif (-not $ChangeNote) {
@@ -4312,9 +4413,18 @@ function Publish-Mod {
 		WriteMessage -success "Reverted mod-icon from Textures to About-folder"
 	}
 
-	if (Test-Path "$($modObject.ModFolderPath)\Textures\ModIcon") {
-		WriteMessage -progress "Removing empty modicon-folder from Textures-folder"
-		Remove-Item "$($modObject.ModFolderPath)\Textures\ModIcon" -Force -Confirm:$false
+	WriteMessage -progress "Removing any empty folders in $($modObject.Name)"
+	$allFolders = Get-ChildItem -Path $modObject.ModFolderPath -Directory -Recurse | Sort-Object { $_.FullName.Length } -Descending
+	$removedFolders = 0
+	foreach ($folder in $allFolders) {
+		if (-not (Get-ChildItem -Path $folder.FullName -Recurse | Where-Object { -not $_.PSIsContainer })) {
+			Remove-Item -Path $folder.FullName -Force -Recurse
+			WriteMessage -progress "Removed empty folder: $($folder.FullName)"
+			$removedFolders++
+		}
+	}
+	if ($removedFolders -ne 0) {
+		WriteMessage -success "Removed $removedFolders empty folders for $($modObject.Name)"
 	}
 
 	if (-not $modObject.AboutFileXml.ModMetaData.modVersion) {
@@ -4449,13 +4559,15 @@ function Publish-Mod {
 				}
 			}
 		} else {
-			if ($Auto) {
-				Close-TrelloCardsForMod -modObject $modObject -justMajorVersion
-				if (-not $Replacement) {
-					Push-ModComment -modObject $modObject -Comment "Mod updated for $(Get-CurrentRimworldVersion)"
+			if (-not $Silent) {
+				if ($Auto) {
+					Close-TrelloCardsForMod -modObject $modObject -justMajorVersion
+					if (-not $Replacement) {
+						Push-ModComment -modObject $modObject -Comment "Mod updated for $(Get-CurrentRimworldVersion)"
+					}
+				} else {
+					Close-TrelloCardsForMod -modObject $modObject -closeAll:($skipInteraction)
 				}
-			} else {
-				Close-TrelloCardsForMod -modObject $modObject -closeAll:($skipInteraction)
 			}
 		}
 			
@@ -4531,10 +4643,10 @@ function Start-SteamPublish {
 	$copyPublishedFileId = -not $modObject.Published
 	$stagingDirectory = $settings.mod_staging_folder
 	$previewDirectory = "$($settings.mod_staging_folder)\..\PreviewStaging"
-	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
-	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse
-	Get-ChildItem -Path $previewDirectory -Recurse | Remove-Item -force -recurse
-	Get-ChildItem -Path $previewDirectory -Recurse | Remove-Item -force -recurse
+	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse -ProgressAction SilentlyContinue
+	Get-ChildItem -Path $stagingDirectory -Recurse | Remove-Item -force -recurse -ProgressAction SilentlyContinue
+	Get-ChildItem -Path $previewDirectory -Recurse | Remove-Item -force -recurse -ProgressAction SilentlyContinue
+	Get-ChildItem -Path $previewDirectory -Recurse | Remove-Item -force -recurse -ProgressAction SilentlyContinue
 
 	WriteMessage -progress "Copying mod-files to publish-dir"
 	$exclusions = @()
@@ -4887,6 +4999,7 @@ function New-AssetBundle {
 	$sourcePath = $modObject.AssetSourcePath
 	$targetPath = $modObject.AssetBundlesPath
 	$prefix = $modObject.ModId
+	$assetFileName = $prefix.Replace(".", "_")
 
 	if (-not (Test-Path $sourcePath)) {
 		WriteMessage -failure "Cannot find $sourcePath, exiting"
@@ -4907,33 +5020,34 @@ function New-AssetBundle {
 
 	$inputPath = "$($unityBundleProjectPath)\Assets\Data"
 	WriteMessage -progress "Cleaning up $inputPath"
-	Remove-Item -Path $inputPath -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+	Remove-Item -Path $inputPath -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 	New-Item -Path $inputPath -ItemType Directory -Force | Out-Null
 
 	$outputPath = "$($unityBundleProjectPath)\Assets\AssetBundles"
 	WriteMessage -progress "Cleaning up $outputPath"
-	Remove-Item -Path $outputPath -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+	Remove-Item -Path $outputPath -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 	New-Item -Path $outputPath -ItemType Directory -Force | Out-Null
-
-	if ($prefix ) {
-		$inputPath = "$($unityBundleProjectPath)\Assets\Data\$prefix"
-		WriteMessage -progress "Creating $inputPath"
-		New-Item -Path $inputPath -ItemType Directory -Force | Out-Null
-	}
+	
+	$inputPath = "$($unityBundleProjectPath)\Assets\Data\$prefix"
+	WriteMessage -progress "Creating $inputPath"
+	New-Item -Path $inputPath -ItemType Directory -Force | Out-Null
 
 	WriteMessage -progress "Copying files to $inputPath"
 	Copy-Item -Path "$sourcePath\*" -Destination $inputPath -Recurse -Force -Confirm:$false
 
 	WriteMessage "Generating AssetBundle for $($targetPath)"
-	Start-Process -FilePath $unityPath -ArgumentList "-batchmode","-quit","-projectPath ""$unityBundleProjectPath""","-executeMethod ModAssetBundleBuilder.BuildBundles","-logfile -" -NoNewWindow -Wait
+	Start-Process -FilePath $unityPath -ArgumentList "-batchmode","-quit","-projectPath ""$unityBundleProjectPath""","-executeMethod ModAssetBundleBuilder.BuildBundles","--assetBundleName=$assetFileName" -NoNewWindow -Wait
 	
-	if (-not (Test-Path "$($unityBundleProjectPath)\Assets\AssetBundles\assetBundle")) {
+	if (-not (Test-Path "$($unityBundleProjectPath)\Assets\AssetBundles\$assetFileName")) {
 		WriteMessage -failure "Failed to create AssetBundle, exiting"
 		return
 	}
-
-	Copy-Item -Path "$($unityBundleProjectPath)\Assets\AssetBundles\assetBundle" -Destination $targetPath -Force -Confirm:$false
-	Copy-Item -Path "$($unityBundleProjectPath)\Assets\AssetBundles\assetBundle.manifest" -Destination $targetPath -Force -Confirm:$false
+	
+	WriteMessage -progress "Cleaning up $targetPath"
+	Remove-Item -Path $targetPath -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+	New-Item -Path $targetPath -ItemType Directory -Force | Out-Null
+	Copy-Item -Path "$($unityBundleProjectPath)\Assets\AssetBundles\$assetFileName" -Destination $targetPath -Force -Confirm:$false
+	Copy-Item -Path "$($unityBundleProjectPath)\Assets\AssetBundles\$($assetFileName).manifest" -Destination $targetPath -Force -Confirm:$false
 	WriteMessage -success "Created AssetBundle for $($modObject.Name) at $targetPath"
 }
 
@@ -4969,7 +5083,7 @@ function Set-ModAssetBundle {
 
 		if (-not (Get-ChildItem "$($modObject.ModFolderPath)\Textures" -Recurse -File)) {
 			WriteMessage -progress "Removing now empty Textures-folder"
-			Remove-Item "$($modObject.ModFolderPath)\Textures" -Recurse -Force -Confirm:$false
+			Remove-Item "$($modObject.ModFolderPath)\Textures" -Recurse -Force -Confirm:$false -ProgressAction SilentlyContinue
 		}
 
 		if ($modObject.aboutFileXml.ModMetaData.modIconPath) {
@@ -5017,15 +5131,16 @@ function Set-ModAssetBundle {
 		}
 
 		$noLegacy = $false
-		if ((($assetFiles | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum) -gt $assetSizeLimit)) {
+		$assetSize = ($assetFiles | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum)
+		if ($assetSize -gt $assetSizeLimit) {
 			if (-not $force) {
-				WriteMessage -failure "Total size of asset files in $($modObject.ModFolderPath) exceeds $assetSizeLimit, skipping AssetBundle creation"
+				WriteMessage -failure "Total size of asset files in $($modObject.ModFolderPath) is $([math]::Round($assetSize / 1MB, 2)) Mb, exceeding the limit of $assetSizeLimitMb, skipping AssetBundle creation"
 				return $false
 			}
 			$noLegacy = $true
 		}
 
-		WriteMessage -success "Asset files found in $($modObject.ModFolderPath) was $($assetFiles.Count), exceeding limit of $assetCountLimit, proceeding with AssetBundle creation"
+		WriteMessage -success "Asset files found in $($modObject.ModFolderPath) ($([math]::Round($assetSize / 1MB, 2)) Mb) was $($assetFiles.Count), exceeding limit of $assetCountLimit, proceeding with AssetBundle creation"
 
 		if ($check) {
 			return $true
@@ -5135,6 +5250,11 @@ function Update-Translations {
 	
 	if (-not $modObject.Mine -and -not $force) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
+		return
+	}
+
+	if (Get-DeeplRemainingCharacters -lt 1000) {
+		WriteMessage -failure "Not enough characters left for translation, skipping $($modObject.Name)"
 		return
 	}
 
@@ -5275,6 +5395,12 @@ function Update-TranslationFile {
 		$modObject,
 		[switch]$test
 	)
+
+	# Check if the source file path contains RulePackDef, if so skip it
+	if ($sourceFilePath -match "RulePackDef") {
+		WriteMessage -progress "Skipping RulePackDef file: $sourceFilePath"
+		return $true
+	}
 
 	$baseXml = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -5605,7 +5731,7 @@ function Set-Translation {
 		Start-Sleep -Milliseconds 200 
 	}
 	WriteMessage -success "Generation done"	
-	Remove-Item -Path $currentFile -Force
+	Remove-Item -Path $currentFile -Force -ProgressAction SilentlyContinue
 }
 
 #endregion
