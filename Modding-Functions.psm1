@@ -111,6 +111,8 @@ function Get-RimworldLog {
 	param(
 		$initialRows = 10
 	)
+	
+	$Host.UI.RawUI.WindowTitle = "RimWorld Log"
 	$logFile = "$env:USERPROFILE\Appdata\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log"
 	while ($true) {
 		if (-not (Test-Path $logFile)) {
@@ -157,6 +159,8 @@ $Global:replacementsFile = "$PSScriptRoot\ReplaceRules.txt"
 $Global:fundingFile = $settings.funding_path
 $Global:openAIApiKey = $settings.openai_api_key
 $Global:openAIModel = $settings.openai_model
+$Global:openAIChatModel = $settings.openai_chat_model
+$Global:visualStudioPath = $settings.visual_studio_path
 $Global:manifestTemplate = "$PSScriptRoot\$($settings.manfest_template)"
 $Global:assetCountLimit = $settings.asset_count_limit
 $Global:assetSizeLimit = $settings.asset_max_size_mb * 1MB
@@ -196,6 +200,7 @@ $Global:trelloBoardId = $settings.trello_board_id
 $Global:steamApiKey = $settings.steam_api_key
 $Global:deeplApiKey = $settings.deepl_api_key
 $Global:deeplApiUrl = $settings.deepl_api_url
+$Global:nugetPackagesPath = $settings.nuget_packages_path
 $Global:autoTranslateLanguages = $settings.auto_translate_languages
 if (-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
 	"{}" | Out-File -Encoding utf8 -FilePath "$($settings.mod_staging_folder)\..\modlist.json"
@@ -214,6 +219,60 @@ if (Test-Path $translationCachePath) {
 }
 $Global:globalRequestLog = @()
 
+Add-Type -TypeDefinition @"
+public enum ModCodeSize {
+    None = 0,
+    Tiny = 1,
+    Small = 2,
+    Medium = 3,
+    Large = 4,
+    Huge = 5
+}
+"@
+
+function Update-MSEdgeDriverIfNeeded {
+	return
+	$driverPath = "$nugetPackagesPath\Edge"
+	$timestampFile = "$driverPath\lastUpdate.txt"
+
+	# Create the folder if it doesn't exist
+	if (-not (Test-Path $driverPath)) {
+		New-Item -Path $driverPath -ItemType Directory | Out-Null
+	}
+
+	# Check timestamp
+	$needsUpdate = $true
+	if (Test-Path $timestampFile) {
+		$lastRun = Get-Content $timestampFile | Get-Date
+		if ($lastRun -gt (Get-Date).AddDays(-1)) {
+			WriteMessage -progress "Edge WebDriver was updated less than a day ago. Skipping update."
+			$needsUpdate = $false
+		}
+	}
+
+	if (-not $needsUpdate) {
+		return
+	}
+	try {
+		WriteMessage -progress "Updating msedgedriver"
+			
+		nuget install Selenium.WebDriver -ExcludeVersion -OutputDirectory $nugetPackagesPath -ForceEnglishOutput -NonInteractive | Out-Null
+		$edgeVersion = (Get-ItemProperty -Path "HKCU:\Software\Microsoft\Edge\BLBeacon").version
+		$driverUrl = "https://msedgedriver.azureedge.net/$edgeVersion/edgedriver_win64.zip"
+		$zipPath = "$env:TEMP\edgedriver.zip"
+
+		Invoke-WebRequest -Uri $driverUrl -OutFile $zipPath
+		Expand-Archive -Path $zipPath -DestinationPath $driverPath -Force
+		Remove-Item $zipPath
+
+		(Get-Date).ToString("o") | Out-File $timestampFile -Force
+		Write-Host "✅ msedgedriver updated successfully."
+	} catch {
+		Write-Warning "⚠️ Failed to update msedgedriver: $_"
+	}
+}
+
+Update-MSEdgeDriverIfNeeded
 
 # Select folder dialog, for selecting mod-folder manually
 Function Get-Folder($initialDirectory) {
@@ -911,7 +970,7 @@ function Merge-GitPullRequest {
 		Read-Host "Get latest git-changes now? (Enter to fetch, all other breaks)"
 	}
 	$originalLocation = Get-Location
-	if (Get-LocalModFolder -modName $repoName) {
+	if (Get-LocalModFolder -repoName $repoName) {
 		Get-LatestGitVersion
 	}
 	Set-Location $originalLocation
@@ -1285,6 +1344,11 @@ function Set-DefaultGithubRepoValues {
 
 	WriteMessage -progress "Verifying default github values for $($modObject.NameClean)"
 
+	$currentLocation = Get-Location
+	Set-Location $modObject.ModFolderPath
+	git maintenance start
+	Set-Location $currentLocation
+
 	$currentValues = Get-GithubRepoInfo -repoName $modObject.NameClean
 
 	$repoData = @{}
@@ -1387,11 +1451,11 @@ function New-ModSyncFile {
 	}
 	$targetPath = $modObject.ModSyncFilePath
 	Copy-Item $modSyncTemplate $targetPath -Force
-  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[guid]", [guid]::NewGuid().ToString())) | Set-Content -Path $modObject.ModSyncFilePath
-  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[modname]", $modObject.DisplayName)) | Set-Content -Path $modObject.ModSyncFilePath
-  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[version]", $version)) | Set-Content -Path $modObject.ModSyncFilePath
-  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[username]", $settings.github_username)) | Set-Content -Path $modObject.ModSyncFilePath
-  ((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[modwebpath]", $modObject.NameClean)) | Set-Content -Path $modObject.ModSyncFilePath
+	((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[guid]", [guid]::NewGuid().ToString())) | Set-Content -Path $modObject.ModSyncFilePath
+	((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[modname]", $modObject.DisplayName)) | Set-Content -Path $modObject.ModSyncFilePath
+	((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[version]", $version)) | Set-Content -Path $modObject.ModSyncFilePath
+	((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[username]", $settings.github_username)) | Set-Content -Path $modObject.ModSyncFilePath
+	((Get-Content -path $targetPath -Raw -Encoding UTF8).Replace("[modwebpath]", $modObject.NameClean)) | Set-Content -Path $modObject.ModSyncFilePath
 }
 
 # Texturename function
@@ -1611,8 +1675,14 @@ function Set-CorrectFolderStructure {
 
 # Jumps to a mod-folder
 function Get-LocalModFolder {
-	param($modName)
+	param(
+		$modName,
+		$repoName
+	)
 
+	if ($repoName) {
+		$modName = $repoName.Replace("+", "Plus")
+	}
 	$targetPath = "$localModFolder\$modName"
 	if (-not (Test-Path $targetPath)) {
 		WriteMessage -failure "Could not find $targetPath"
@@ -1992,12 +2062,19 @@ function Update-ModWildness {
 				$thingDef.AppendChild($xml.CreateElement("statBases")) | Out-Null
 			}
 
+			$statBasesNode = $thingDef.SelectSingleNode("statBases")
+			if (-not $statBasesNode) {
+				$statBasesNode = $xml.CreateElement("statBases")
+				$thingDef.AppendChild($statBasesNode) | Out-Null
+			}
+
+
 			# Create a new <Wildness> element and transfer the value
 			$newWildnessNode = $xml.CreateElement("Wildness")
 			$newWildnessNode.InnerText = $wildnessNode.InnerText
 
 			# Add <Wildness> to <statBases>
-			$thingDef.statBases.AppendChild($newWildnessNode) | Out-Null
+			$statBasesNode.AppendChild($newWildnessNode) | Out-Null
 
 			# Remove the original <wildness> node (This time, using the correct reference)
 			$thingDef.race.RemoveChild($wildnessNode)
@@ -2448,7 +2525,7 @@ function Get-ModDependencyMaxVersion {
 		$referenceMod = Get-Mod -modPath $modPath
 		$currentMax = $referenceMod.HighestSupportedVersion
 		if ($referenceMod.Mine) {
-			if ((Get-Item $referenceMod.ChangelogPath).LastWriteTime.AddMinutes(1) -lt (Get-Item $referenceMod.AboutFilePath).LastWriteTime) {	
+			if ([version]$referenceMod.Version -lt [version]$referenceMod.HighestSupportedVersion) {	
 				WriteMessage -warning "$identifier has unpublished updates, assumes not ready"
 				$currentMax = ($referenceMod.SupportedVersions | Sort-Object)[-2]
 			}
@@ -2624,7 +2701,8 @@ function Get-NotUpdatedMods {
 		$ModsToIgnore,
 		[int]$MaxToFetch = -1,
 		[switch]$RandomOrder,
-		[switch]$ListMissingDependencies
+		[switch]$ListMissingDependencies,
+		$MaxCodeSize = [ModCodeSize]::Huge
 	)
 	$currentVersionString = Get-CurrentRimworldVersion
 	$allMods = Get-ChildItem -Directory $localModFolder
@@ -2640,7 +2718,7 @@ function Get-NotUpdatedMods {
 		} else {
 			$allMods = $allMods | Where-Object { $betaProgress.$($_.Name) -ne "Success" }
 		}
-		WriteMessage -progress "Searching beta successful = $BetaTested, $($allMods.Count) mods"
+		WriteMessage -progress "Searching beta successful = $BetaTested, $($allMods.Count) mods, max codesize $MaxCodeSize"
 	}
 	if ($MaxToFetch -eq 0) {
 		$MaxToFetch = $allMods.Length
@@ -2690,6 +2768,13 @@ function Get-NotUpdatedMods {
 			}
 			continue
 		}
+
+		if ([int](Get-ModCodeSize -modObject $modObject) -gt [int]$MaxCodeSize) {
+			if ($VerbosePreference) {
+				WriteMessage -progress "Skipping $($modObject.Name) since its code size is too large ($($modObject.MetadataFileJson.CodeSize))"
+			}
+			continue
+		}
 		if (-not $IgnoreLastErrors -and (Test-Path "$($folder.FullName)Source\lastrun.log")) {
 			if ($VerbosePreference) {
 				WriteMessage -progress "Skipping $($modObject.Name) since it has previous errors logged"
@@ -2714,7 +2799,7 @@ function Get-NotUpdatedMods {
 		}
 
 		if ($modObject.SupportedVersions.Contains($currentVersionString)) {
-			if ((Get-Item $modObject.ChangelogPath).LastWriteTime -ge (Get-Item $modObject.AboutFilePath).LastWriteTime.AddMinutes(-5)) {
+			if ([version]$modObject.Version -ge [version]$modObject.HighestSupportedVersion) {
 				if ($VerbosePreference) {
 					WriteMessage -progress "Skipping $($modObject.Name) since its already published"
 				}
@@ -2867,15 +2952,174 @@ function Get-SteamRateLimit {
 	return
 }
 
+function Invoke-SteamApi {
+	[CmdletBinding()]
+	param(
+		$uri,
+		$method = "Get",
+		$body
+	)
+
+	Get-SteamRateLimit
+	for ($i = 0; $i -lt 5; $i++) {
+		Write-Debug "Calling url: $uri with body: $body, method: $method"
+		try {
+			if ($body) {
+				$response = Invoke-RestMethod -Uri $uri -Method $method -Body $body -ContentType "application/x-www-form-urlencoded"
+			} else {
+				$response = Invoke-RestMethod -Uri $uri -Method $method
+			}
+		} catch {
+			if ($_.Exception.Message -match "429") {
+				WriteMessage -progress "Steam API rate limit reached, waiting for 5 seconds"
+				Start-Sleep -Seconds 5
+				continue
+			} else {
+				WriteMessage -failure "Failed to call Steam API: $($_.Exception.Message)"
+				return
+			}
+		}
+		Write-Verbose "Response: $($response | ConvertTo-Json -Depth 5)"
+		return $response
+	}	
+}
+
+function Get-LatestPackageVersion {
+	[CmdletBinding()]
+	param (
+		[string]$packageId,
+		[switch]$clearCache
+	)
+
+	$packageId = $packageId.ToLowerInvariant()
+	$cacheFile = "$env:TEMP\nuget_version_cache.json"
+	$cacheTTL = [TimeSpan]::FromHours(1)
+
+	# Load or initialize cache
+	if (Test-Path $cacheFile) {
+		$cache = Get-Content $cacheFile | ConvertFrom-Json -ErrorAction Ignore
+	} else {
+		$cache = @{}
+	}
+
+	$now = Get-Date
+	if ($cache.$packageId -and ($now - [datetime]$cache.$packageId.Timestamp) -lt $cacheTTL) {
+		if ($clearCache) {
+			Write-Verbose "Clearing cache for package $packageId"
+			$cache.$packageId = $null
+		} else {
+			Write-Verbose "Using cached version for package $packageId"
+			return $cache.$packageId.Version
+		}
+	}
+
+	# Query NuGet
+	$index = Invoke-RestMethod "https://api.nuget.org/v3/index.json"
+	$pkgBase = ($index.resources | Where-Object { $_.'@type' -eq 'PackageBaseAddress/3.0.0' }).'@id'
+	Write-Verbose "Fetching: $pkgBase$packageId/index.json"
+	$versions = (Invoke-RestMethod "$pkgBase$packageId/index.json").versions
+
+	$latest = $versions | Sort-Object { [Version]($_ -replace '[^0-9\.].*','') } -Descending | Select-Object -First 1
+
+	$useWildcard = $latest -notlike "*-*"
+	$result = if ($useWildcard) {
+		"*" 
+	} else {
+		$latest 
+	}
+
+	$cache.$packageId = @{ Version = $result; Timestamp = $now }
+	$cache | ConvertTo-Json -Depth 5 | Set-Content $cacheFile
+
+	return $result
+}
+
+function Get-SteamWorkshopModInfo {
+	param (
+		[string]$modId
+	)
+	$result = [ordered]@{
+		SteamId       = "$modId"
+		Exists        = $false
+		Name          = $null
+		AuthorName    = $null
+		Subscriptions = $null
+		Tags          = @()
+		Visibility    = $null
+		PreviewUrl    = $null
+	}
+	$url = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
+	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
+	$fileName = $url.Split("=")[1].Trim()
+	$filePath = "$($env:TEMP)\$fileName.html"
+	if (Test-Path $filePath) {
+		$counter = 0
+		while ((Get-Content -Path $filePath) -match "Please try again later") {
+			(ConvertFrom-Html -URI $url).InnerHtml | Out-File $filePath
+			$counter++
+			if ($counter -gt 5) {
+				break
+			}
+		}
+	}
+	if (-not (Test-Path $filePath) -or (Get-Item $filePath).LastWriteTime -lt ((get-date).AddMinutes(-5))) {
+		(ConvertFrom-Html -URI $url).InnerHtml | Out-File $filePath
+	}
+	$html = ConvertFrom-Html -Path $filePath
+
+	try {
+		if ($html.InnerText -match "You must be logged in to view this item.") {
+			WriteMessage -warning "$url requires login, can not fetch data"
+			return $result
+		}
+
+		if ($html.InnerText -match "An error was encountered while processing your request:") {
+			return $result
+		}
+		$result.Exists = $true
+		if ($html.InnerText -match "Current visibility: Unlisted") {
+			$result.Visibility = "Unlisted"
+		}
+		if ($html.InnerText -match "Current visibility: Hidden") {
+			$result.Visibility = "Hidden"
+		}
+		if ($html.InnerText -match "Current visibility: Friends-only") {
+			$result.Visibility = "Friends"
+		}
+		$result.Visibility = "Public"
+	
+		$result.Name = $html.SelectNodes("//div[@class='workshopItemTitle']").InnerText
+
+		$result.Subscriptions = $html.SelectNodes("//table").SelectNodes("//td")[2].InnerText.Replace(",", "")
+	
+		$result.AuthorName = $html.SelectNodes("//div[@class='breadcrumbs']").Nodes().InnerText[-2].Replace("'s Workshop", "")
+	
+		$imgSrc = $html.SelectNodes("//img[contains(@id, 'previewImageMain')]")
+		if (-not $imgSrc) {
+			$imgSrc = $html.SelectNodes("//img[contains(@id, 'previewImage')]")
+		}
+		if ($imgSrc) {
+			$result.PreviewUrl = "$($imgSrc.GetAttributeValue('src', '').Split('?')[0])"
+		}
+	
+		$versionsHtml = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")[0].InnerText.Trim()
+		$result.Tags = $versionsHtml.Replace("Tags:", ",").Replace(" ", "").Split(",") | Where-Object { $_ -and $_ -match "^[0-9]+\.[0-9]+$" }
+	} catch {
+		WriteMessage -warning  "Failed to fetch data from $url `n$($_.ScriptStackTrace)`n$_"
+	}
+	return $result
+}
+
+
 function Get-ModInfo {
 	[CmdletBinding()]
 	param (
 		[string[]]$steamIds,
 		[switch]$expandAuthor
 	)
+
 	# Calculate the number of items to fetch
-	$itemCount = $steamIds.Count
-	Get-SteamRateLimit
+	$itemCount = $steamIds.Count	
 
 	# API endpoint for fetching published file details
 	$uri = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
@@ -2898,12 +3142,33 @@ function Get-ModInfo {
 	# Make the POST request and parse the JSON response
 	Write-Verbose "Fetching mod details for IDs: $($steamIds -join ', ')"
 	Write-Debug "Calling url: $uri with body: $encodedBody, itemcount: $itemCount, expandAuthor: $expandAuthor"
-	$response = Invoke-RestMethod -Uri $uri -Method Post -Body $encodedBody -ContentType "application/x-www-form-urlencoded"
+	$response = Invoke-SteamApi -uri $uri -method Post -body $encodedBody
 	$returnArray = @()
 
 	# Loop over each mod's details in the response
 	foreach ($details in $response.response.publishedfiledetails) {
-		if ($details -and $details.result -eq 1) {
+		if ($null -eq $details) {
+			WriteMessage -warning "No details found for mod ID $($details.publishedfileid)"
+			$returnArray += @{
+				SteamId       = "$($details.publishedfileid)"
+				Exists        = $false
+				Name          = "Unknown"
+				Author        = "Unknown"
+				PreviewUrl    = ""
+				Subscriptions = 0
+				Visibility    = "Unknown"
+				Tags          = ""
+			}
+			continue
+		}
+
+		if ($details.result -eq 9) {
+			WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
+			$returnArray += Get-SteamWorkshopModInfo -modId $details.publishedfileid
+			continue
+		}
+
+		if ($details.result -eq 1) {
 			$modName = $details.title
 			$author = $details.creator
 			if ($expandAuthor) {
@@ -2932,7 +3197,7 @@ function Get-ModInfo {
 			}					
 
 			$returnArray += @{
-				SteamId       = $details.publishedfileid
+				SteamId       = "$($details.publishedfileid)"
 				Exists        = $true
 				Name          = $modName
 				Author        = $author
@@ -2943,7 +3208,7 @@ function Get-ModInfo {
 			}
 		} else {
 			$returnArray += @{
-				SteamId       = $details.publishedfileid
+				SteamId       = "$($details.publishedfileid)"
 				Exists        = $false
 				Name          = "Unknown"
 				Author        = "Unknown"
@@ -2967,12 +3232,11 @@ function Get-AuthorInformation {
 		$authorId
 	)
 
-	Get-SteamRateLimit
 	# Build the request URL using the creator's Steam ID
 	$userSummariesUri = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=$steamApiKey&steamids=$authorId"
 
 	# Fetch the user summaries from Steam
-	$userResponse = Invoke-RestMethod -Uri $userSummariesUri -Method Get
+	$userResponse = Invoke-SteamApi -uri $userSummariesUri -Method Get
 
 	# The response structure contains an array of players
 	if ($userResponse.response.players -and $userResponse.response.players.Count -gt 0) {
@@ -3261,9 +3525,28 @@ function Start-RimworldSave {
 			$answer = Read-Host "Select save to start or empty to list five more"
 			if ($answer -and (([int]$counter - 5)..[int]$counter) -contains $answer) {
 				$selectedSave = $allSaves[$answer - 1]
-				WriteMessage -progress "Selected $($selectedSave.BaseName)"
+				WriteMessage -progress "Selected $($selectedSave.BaseName), parsing"
 				$modFileXml = [xml](Get-Content $modFile -Encoding UTF8)
 				$saveFileXml = [xml](Get-Content $selectedSave.FullName -Encoding UTF8)
+				$counter = -1
+				Update-IdentifierToFolderCache
+				foreach ($modId in $saveFileXml.savegame.meta.modIds.li) {
+					$counter++
+					if ($modId.StartsWith("ludeon.")) {
+						continue						
+					}
+					WriteMessage -progress "Checking status for mod with id $modId"
+					if ($identifierCache.ContainsKey($modId)) {
+						WriteMessage -success "Found mod with id $modId in cache"
+						continue
+					}
+					$modName = $saveFileXml.savegame.meta.modNames.li[$counter]
+					WriteMessage -warning "$modName with id $modId not found, finding"
+					$result = Set-ModSubscription -modName $modName -subscribe $true
+					if (-not $result) {
+						WriteMessage -failure "Failed to find $modName with id $modId"
+					}
+				}
 				$modFileXml.ModsConfigData.activeMods.set_InnerXML($saveFileXml.savegame.meta.modIds.InnerXml)
 				$modFileXml.Save($modFile)
 				$applicationPath = $settings.steam_path
@@ -3925,18 +4208,21 @@ function Update-ModDescription {
 		
 		for ($i = 0; $i -lt $searchStrings.Count; $i++) {
 			$searchString = $searchStrings[$i]
+			$searchStringEscaped = [Regex]::Escape($searchString)
+			
 			if ($replaceStrings) {
 				$replaceString = $replaceStrings[$i]
+				$replaceStringEscaped = [Regex]::Escape($replaceString)
 			}
-			if ($replaceStrings -and (Select-String -InputObject $modObject.AboutFileXml.ModMetaData.description -pattern $replaceString)) {
+			if ($replaceStrings -and (Select-String -InputObject $modObject.AboutFileXml.ModMetaData.description -pattern $replaceStringEscaped)) {
 				WriteMessage -progress "Description for $($modObject.Name) already contains the replace-string, skipping"
 				continue
 			}
-			if (Select-String -InputObject $modObject.AboutFileXml.ModMetaData.description -pattern $searchString) {
+			if (Select-String -InputObject $modObject.AboutFileXml.ModMetaData.description -pattern $searchStringEscaped) {
 				Start-Sleep -Milliseconds $waittime
-				$arguments = @($modObject.PublishedId, "REPLACE", $searchString, $replaceString)   
+				$arguments = @($modObject.PublishedId, "REPLACE", """$searchString""", """$replaceString""")   
 				Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
-				$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace($searchString, $replaceString)
+				$modObject.AboutFileXml.ModMetaData.description = [regex]::Replace($modObject.AboutFileXml.ModMetaData.description, $searchStringEscaped, $replaceString)
 			} else {
 				WriteMessage -progress "Description for $($modObject.Name) does not contain $searchString"
 			}
@@ -4127,6 +4413,130 @@ Tags:
 	WriteMessage -success "Updated search-tags for $($modObject.Name)"
 }
 
+function Update-ModCopilotMetadata {
+	param(
+		$modObject,
+		[switch]$force
+	)
+
+	if (-not $modObject) {
+		$modObject = Get-Mod
+		if (-not $modObject) {
+			return
+		}
+	}
+
+	if (-not $modObject.Mine) {
+		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
+		return
+	}
+
+	if (-not $modObject.MetadataFileJson.Assemblies) {
+		WriteMessage -progress "Mod has no assemblies $($modObject.Name)"
+		return
+	}
+
+	# Define paths
+	$sourcePath = Join-Path $modObject.ModFolderPath "Source"
+	$githubPath = Join-Path $modObject.ModFolderPath ".github"
+	$instructionsPath = Join-Path $githubPath "copilot-instructions.md"
+
+	if (-not $force -and (Test-Path $instructionsPath)) {
+		WriteMessage -progress "copilot-instructions.md already exists, skipping update"
+		return
+	}
+
+
+	WriteMessage -progress "Generating copilot-instructions.md for $($modObject.Name)"
+	# Summarize C# files
+	$csSummary = Get-ChildItem -Path $sourcePath -Recurse -Include *.cs -ErrorAction SilentlyContinue | ForEach-Object {
+		$content = Get-Content $_.FullName -Raw
+		$classes = ($content -split "`n") | Where-Object { $_ -match 'class\s+\w+' }
+		$methods = ($content -split "`n") | Where-Object { $_ -match '\b(public|private|protected|internal)\s+\w+\s+\w+\(' }
+		"File: $($_.Name)`nClasses:`n$($classes -join "`n")`nMethods:`n$($methods -join "`n")`n"
+	}
+
+	# Summarize XML files with tag and attribute analysis
+	$xmlSummary = Get-ChildItem -Path $sourcePath -Recurse -Include *.xml -ErrorAction SilentlyContinue |
+	Where-Object { $_.FullName -like "*Defs*" } |
+	ForEach-Object {
+		try {
+			[xml]$xml = Get-Content $_.FullName -Raw
+			$root = $xml.DocumentElement.Name
+			$tags = @{}
+			$attributes = @{}
+
+			$xml.SelectNodes("//*") | ForEach-Object {
+				$tagName = $_.Name
+				if ($tags.ContainsKey($tagName)) {
+					$tags[$tagName]++
+				} else {
+					$tags[$tagName] = 1
+				}
+
+				$_.Attributes | ForEach-Object {
+					$attrName = $_.Name
+					$attributes[$attrName] = $true
+				}
+			}
+
+			$tagSummary = $tags.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key): $($_.Value)" } -join ", "
+			$attrSummary = ($attributes.Keys | Sort-Object) -join ", "
+
+			"File: $($_.Name)`nRoot: $root`nTags: $tagSummary`nAttributes: $attrSummary`n"
+		} catch {
+			"File: $($_.Name)`nError parsing XML.`n"
+		}
+	}
+
+	# Construct prompt
+	$prompt = @"
+You are an assistant that generates GitHub Copilot instruction files for RimWorld modding projects in C#. 
+Based on the following summarized content from a mod project, generate a detailed .github/copilot-instructions.md file that includes:
+
+- Mod overview and purpose
+- Key features and systems
+- Coding patterns and conventions
+- XML integration
+- Harmony patching
+- Suggestions for Copilot
+
+C# Summary:
+$csSummary
+
+XML Summary:
+$xmlSummary
+"@
+
+	# Prepare request
+	$headers = @{ "Authorization" = "Bearer $openAIApiKey" }
+	$body = @{
+		model    = $openAIChatModel
+		messages = @(
+			@{ role = "system"; content = "You are a helpful assistant for game mod developers." },
+			@{ role = "user"; content = $prompt }
+		)
+	}
+	$jsonBody = $body | ConvertTo-Json -Depth 10
+
+	# Send request
+	$response = Invoke-RestMethod -Uri "https://api.openai.com/v1/chat/completions" -Method Post -Headers $headers -Body $jsonBody -ContentType "application/json"
+
+	# Save result
+	if (-not (Test-Path $githubPath)) {
+		New-Item -ItemType Directory -Path $githubPath | Out-Null
+	}
+	$response.choices[0].message.content | Set-Content -Path $instructionsPath
+
+	# Remove any ```markdown code blocks and ``` lines
+	$instructionsContent = Get-Content -Path $instructionsPath -Raw
+	$instructionsContent = $instructionsContent -replace '```markdown', '' -replace '```', ''
+	$instructionsContent = $instructionsContent.Trim()
+	$instructionsContent | Set-Content -Path $instructionsPath -Encoding UTF8
+
+	WriteMessage -success "copilot-instructions.md created at $instructionsPath"
+}
+
 #endregion
 
 #region Publishing functions
@@ -4249,7 +4659,7 @@ function Publish-Mod {
 		$modObject.ModSyncFilePath = "$($modObject.ModFolderPath)\About\ModSync.xml"
 		New-ModSyncFile -modObject $modObject -version $version.ToString()
 	}
-	if ((Test-Path $publisherPlusTemplate) -and -not $modObject.ModPublisherPath -or ((Get-Item $publisherPlusTemplate).LastWriteTime -gt (Get-Item $modObject.ModPublisherPath ).LastWriteTime)) {
+	if (Test-Path $publisherPlusTemplate) {
 		$modObject.ModPublisherPath = "$($modObject.ModFolderPath)\_PublisherPlus.xml"
 		Copy-Item -Path $publisherPlusTemplate $modObject.ModPublisherPath -Force | Out-Null
 		((Get-Content -path $modObject.ModPublisherPath -Raw -Encoding UTF8).Replace("[modpath]", $modObject.ModFolderPath)) | Set-Content -Path $modObject.ModPublisherPath
@@ -4440,7 +4850,7 @@ function Publish-Mod {
 	if ($EndOfLife) {
 		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "CN9Rs5X")
 		if ($modObject.OriginalPublishedId) {
-			Remove-ModReplacement -steamId $modObject.OriginalPublishedId
+			Remove-ModReplacement -steamId $modObject.OriginalPublishedId -reverse
 		}
 	}
 	if ($Depricated) {
@@ -4600,7 +5010,7 @@ function Publish-Mod {
 	if ($Abandoned -or $ReplacedBy) {
 		WriteMessage -success "Repository set to archived. Moving local mod-folder to Archived"
 		if ($ReplacedBy) {
-			Push-UpdateNotification -modObject $modObject -Changenote "Mod will not be further updated, please use $replacedByNameposh instead: https://steamcommunity.com/sharedfiles/filedetails/?id=$ReplacedBy" -EndOfLife
+			Push-UpdateNotification -modObject $modObject -Changenote "Mod will not be further updated, please use $replacedByName instead: https://steamcommunity.com/sharedfiles/filedetails/?id=$ReplacedBy" -EndOfLife
 		} else {
 			Push-UpdateNotification -modObject $modObject -Changenote "Mod will not be further updated" -EndOfLife
 		}
