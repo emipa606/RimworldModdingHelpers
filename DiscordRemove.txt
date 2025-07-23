@@ -1,3 +1,3 @@
-**[modname]** 
+**[modname]** removed
 [endmessage]
 <[repourl]>

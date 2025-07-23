@@ -8,6 +8,7 @@ namespace SteamCollectionManager
     {
         public static void Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.DarkGray;
             InitializeProgram();
             if (args.Length != 2 && args.Length != 3)
             {

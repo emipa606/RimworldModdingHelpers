@@ -8,17 +8,22 @@ namespace RimworldModReleaseTool
     {
         public static void Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.Gray;
             InitializeProgram();
             if (args.Length < 1 || args.Length > 3)
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine("You must at least specify the path to the mod-folder.");
+                Console.ForegroundColor = ConsoleColor.White;
                 return;
             }
 
             var modFolderPath = args[0];
             if (!Directory.Exists(modFolderPath))
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine($"{modFolderPath} not found");
+                Console.ForegroundColor = ConsoleColor.White;
                 return;
             }
 
@@ -28,7 +33,9 @@ namespace RimworldModReleaseTool
                 imageFolderPath = args[1];
                 if (!Directory.Exists(imageFolderPath))
                 {
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine($"{imageFolderPath} not found");
+                    Console.ForegroundColor = ConsoleColor.White;
                     return;
                 }
             }
@@ -82,17 +89,22 @@ namespace RimworldModReleaseTool
                     Console.ReadLine();
                 }
 
-                if (SteamUtility.Upload(mod, updateInfo.LatestChangeNote))
+                if (!SteamUtility.Upload(mod, updateInfo.LatestChangeNote))
                 {
-                    Console.WriteLine("Upload done");
+                    return;
                 }
+
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.WriteLine("Upload done");
             }
             catch (Exception e)
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine(e.Message);
             }
             finally
             {
+                Console.ForegroundColor = ConsoleColor.White;
                 SteamUtility.Shutdown();
             }
         }

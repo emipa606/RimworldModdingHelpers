@@ -4001,8 +4001,7 @@ function Start-RimWorld {
 	WriteMessage -progress "Stopping rimworld"
 	Stop-RimWorld
 	$logContent = Get-Content $logPath -Raw -Encoding UTF8
-	$errors = $logContent.Contains("[ERROR]") -or $logContent.Contains("[WARNING]")
-	if ($errors) {
+	if ($logContent.Contains("[[Autotest failed]]")) {
 		Copy-Item $logPath "$($modObject.ModFolderPath)\Source\lastrun.log" -Force | Out-Null
 		return $false
 	} 
@@ -4891,12 +4890,16 @@ function Publish-Mod {
 	git push origin
 
 	if (-not $ReRelease) {
-		git tag -s -a $newVersion -m $message
+		$tagMessage = $message
+		if ($tagMessage.Length -gt 256) {
+			$tagMessage = $tagMessage.Substring(0, 252) + "..."
+		}
+		git tag -s -a $newVersion -m $tagMessage
 		git push --tags
 
 		$releaseData = @{
 			tag_name = $newVersion;
-			name     = $message;
+			name     = $tagMessage;
 		}
 		$releaseParams = @{
 			Uri         = "https://api.github.com/repos/$($settings.github_username)/$($modObject.NameClean)/releases";

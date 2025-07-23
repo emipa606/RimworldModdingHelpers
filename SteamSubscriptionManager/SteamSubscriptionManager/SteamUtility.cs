@@ -25,6 +25,7 @@ namespace SteamCollectionManager
 
         public static void SetSubscription(string modId, bool subscribe, bool fast)
         {
+            Console.ForegroundColor = ConsoleColor.DarkGray;
             if (!Init())
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;

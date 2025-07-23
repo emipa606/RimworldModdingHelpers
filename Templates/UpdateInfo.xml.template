@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-	<TabulaRasa.UpdateDef Abstract="true" Name="[modname]_UpdateInfoBase">
+	<TabulaRasa.UpdateDef Abstract="true" Name="[modname]_UpdateInfoBase" MayRequire="neronix17.toolbox">
 		<linkUrl>https://steamcommunity.com/sharedfiles/filedetails/?id=[modid]</linkUrl>
 		<banner>UpdateInfo/[modname]</banner>
 	</TabulaRasa.UpdateDef>

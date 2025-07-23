@@ -9,15 +9,18 @@ namespace SteamUpdateTool
 {
     internal class Program
     {
-        private const uint rimworldId = 294100;
+        private const uint RimworldId = 294100;
         private static uint workshopId;
         private static Item workshopItem;
 
         private static async Task Main(string[] args)
         {
+            Console.ForegroundColor = ConsoleColor.Gray;
             if (args.Length == 0)
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine("No workshop-id defined.");
+                Console.ForegroundColor = ConsoleColor.White;
                 return;
             }
 
@@ -27,18 +30,21 @@ namespace SteamUpdateTool
             }
             catch (Exception)
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine($"{args[0]} is not a valid workshopId");
+                Console.ForegroundColor = ConsoleColor.White;
                 return;
             }
 
             try
             {
-                SteamClient.Init(rimworldId);
-                //Console.WriteLine($"Initiated steam-client.");
+                SteamClient.Init(RimworldId);
             }
             catch (Exception exception)
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine($"Could not connect to steam.\n{exception}");
+                Console.ForegroundColor = ConsoleColor.White;
                 return;
             }
 
@@ -56,7 +62,9 @@ namespace SteamUpdateTool
             var operation = args[1];
             if (args.Length == 2)
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine($"Missing parameters for operation {operation}");
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.SetOut(TextWriter.Null);
                 SteamClient.Shutdown();
                 return;
@@ -65,8 +73,10 @@ namespace SteamUpdateTool
             var validOperations = new List<string> { "REPLACE", "SET", "SYNC", "SAVE", "GET", "UPDATE" };
             if (!validOperations.Contains(operation))
             {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine(
                     $"{operation} is not a valid operation. \nValid values are: {string.Join(",", validOperations)}");
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.SetOut(TextWriter.Null);
                 SteamClient.Shutdown();
                 return;
@@ -78,7 +88,9 @@ namespace SteamUpdateTool
                 case "REPLACE":
                     if (args.Length != 4)
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine($"{operation} demands two arguments, a searchstring and a replacestring.");
+                        Console.ForegroundColor = ConsoleColor.White;
                         Console.SetOut(TextWriter.Null);
                         SteamClient.Shutdown();
                         return;
@@ -89,8 +101,10 @@ namespace SteamUpdateTool
                     await LoadModInfoAsync();
                     if (!workshopItem.Description.Contains(searchString))
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine(
                             $"{workshopItem.Title} description does not contain {searchString}, skipping update");
+                        Console.ForegroundColor = ConsoleColor.White;
                         Console.SetOut(TextWriter.Null);
                         SteamClient.Shutdown();
                         return;
@@ -102,7 +116,9 @@ namespace SteamUpdateTool
                 case "SET":
                     if (args.Length != 3)
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine($"{operation} demands one argument, the file containing the description");
+                        Console.ForegroundColor = ConsoleColor.White;
                         Console.SetOut(TextWriter.Null);
                         SteamClient.Shutdown();
                         return;
@@ -116,7 +132,9 @@ namespace SteamUpdateTool
                     validArguments = new List<string> { "REMOTE", "LOCAL" };
                     if (args.Length != 3 || !validArguments.Contains(args[2]))
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine($"{operation} demands one argument, REMOTE or LOCAL");
+                        Console.ForegroundColor = ConsoleColor.White;
                         Console.SetOut(TextWriter.Null);
                         return;
                     }
@@ -124,12 +142,15 @@ namespace SteamUpdateTool
                     await LoadModInfoAsync();
 
 
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
                     Console.WriteLine($"{operation} not implemented yet");
                     break;
                 case "SAVE":
                     if (args.Length != 3)
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine($"{operation} demands one argument, the path to the local file to save to");
+                        Console.ForegroundColor = ConsoleColor.White;
                         Console.SetOut(TextWriter.Null);
                         return;
                     }
@@ -145,8 +166,10 @@ namespace SteamUpdateTool
                     validArguments = new List<string> { "AUTHOR" };
                     if (args.Length != 4 || !validArguments.Contains(args[2]))
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine(
                             $"{operation} demands two arguments, AUTHOR as the first, path to file as the second");
+                        Console.ForegroundColor = ConsoleColor.White;
                         Console.SetOut(TextWriter.Null);
                         return;
                     }
@@ -168,8 +191,10 @@ namespace SteamUpdateTool
                     validArguments = new List<string> { "PREVIEW" };
                     if (args.Length != 4 || !validArguments.Contains(args[2]))
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.WriteLine(
                             $"{operation} demands two arguments, PREVIEW as the first, path to file as the second");
+                        Console.ForegroundColor = ConsoleColor.White;
                         Console.SetOut(TextWriter.Null);
                         return;
                     }
@@ -199,18 +224,36 @@ namespace SteamUpdateTool
         {
             var result = await new Editor(workshopId).WithDescription(description).SubmitAsync();
 
-            Console.WriteLine(result.Success
-                ? $"Description of {workshopItem.Title} updated"
-                : $"Failed to update description of {workshopItem.Title}");
+            if (result.Success)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.WriteLine($"Description of {workshopItem.Title} updated");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Failed to update description of {workshopItem.Title}");
+            }
+
+            Console.ForegroundColor = ConsoleColor.White;
         }
 
         private static async Task SetModPreviewAsync(string previewFile)
         {
             var result = await new Editor(workshopId).WithPreviewFile(previewFile).SubmitAsync();
 
-            Console.WriteLine(result.Success
-                ? $"Preview of {workshopItem.Title} updated"
-                : $"Failed to update preview of {workshopItem.Title}");
+            if (result.Success)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.WriteLine($"Preview of {workshopItem.Title} updated");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Failed to update preview of {workshopItem.Title}");
+            }
+
+            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }
