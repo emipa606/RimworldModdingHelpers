@@ -2032,6 +2032,137 @@ function Get-SteamModContent {
 	return $true
 }
 
+function Update-ModEggDefs {	
+	[CmdletBinding()]
+	param(
+		$folderPath
+	)
+	if (-not (Test-Path $folderPath)) {
+		WriteMessage -failure "Folder $folderPath does not exist, exiting"
+		return
+	}
+
+	$files = Get-ChildItem -Path $folderPath -Filter "*.xml" -Recurse
+
+	foreach ($filePath in $files) {
+
+		try {
+		
+			[xml]$xml = Get-Content $filePath
+			
+			# Update egg layer definitions
+			$eggLayerNodes = $xml.SelectNodes("//li[@Class='CompProperties_EggLayer']")
+
+			if ($eggLayerNodes -and $eggLayerNodes.Count -gt 0) {
+				foreach ($eggLayer in $eggLayerNodes) {
+					$fertNode = $eggLayer.SelectSingleNode("eggFertilizedDef")
+					$unfertNode = $eggLayer.SelectSingleNode("eggUnfertilizedDef")
+
+					if ($fertNode -and -not $unfertNode) {
+						# Generate unfertilized def name
+						$fertDefName = $fertNode.InnerText
+						$unfertDefName = $fertDefName -replace "EggFertilized$", "EggUnFertilized"
+
+						# Create new node
+						$newUnfertNode = $xml.CreateElement("eggUnfertilizedDef")
+						$newUnfertNode.InnerText = $unfertDefName
+
+						# Insert after fertilized node
+						$null = $eggLayer.InsertAfter($newUnfertNode, $fertNode)
+					}
+				}
+				WriteMessage -success "Updated egg layer definitions in $($filePath.FullName)"
+				$xml.Save($filePath.FullName)
+				[xml]$xml = Get-Content $filePath
+			}
+
+			$thingDefs = $xml.SelectNodes("//ThingDef[@ParentName='EggFertBase']")
+			$unfertThings = $xml.SelectNodes("//ThingDef[@ParentName='EggUnfertBase']")
+
+			if ( -not $thingDefs -or $thingDefs.Count -eq 0) {
+				continue
+			}
+
+			# Build a list of existing unfertilized defNames for quick lookup
+
+			$existingUnfertDefNames = @{}
+			Write-Verbose "Checking existing unfertilized egg definitions"
+			foreach ($unfert in $unfertThings) {
+				$defNameNode = $unfert.SelectSingleNode("defName")
+				if ($defNameNode) {
+					$existingUnfertDefNames[$defNameNode.InnerText] = $true
+				}
+			}
+
+			foreach ($def in $thingDefs) {
+				Write-Verbose "Starting processing for $($def.defName)"
+				$fertDefName = $def.defName
+				
+				if ( -not $fertDefName -or -not $fertDefName.EndsWith("EggFertilized")) {
+					Write-Verbose "Skipping $fertDefName as it does not end with 'EggFertilized'"
+					continue
+				}
+
+				$unfertDefName = $fertDefName -replace "EggFertilized$", "EggUnFertilized"
+
+				# Skip if unfertilized version already exists
+				if ($existingUnfertDefNames.ContainsKey($unfertDefName)) {
+					Write-Verbose "Skipping $fertDefName as unfertilized version $unfertDefName already exists"
+					continue
+				}
+
+				$newDef = $def.Clone()
+
+				# Change ParentName
+				$newDef.ParentName = "EggUnfertBase"
+
+				# Modify defName
+				$newDef.defName = $unfertDefName
+			
+				# Modify label
+				Write-Verbose "Modifying label for $fertDefName to $unfertDefName"
+				$labelNode = $newDef.SelectSingleNode("label")
+				if ($labelNode) {
+					$labelNode.InnerText = $labelNode.InnerText -replace "\(fert\.\)", "(unfert.)"
+				}
+
+				# Modify description
+				Write-Verbose "Modifying description for $fertDefName to $unfertDefName"
+				$descText = $newDef.description
+				$descText = "An unfertilized" + (($descText -replace "^A natural", "") -replace "^A fertilized", "") -replace "With enough care.*?[\.\!]", ""
+				$newDef.description = $descText.Trim()
+
+				# Modify MarketValue
+				Write-Verbose "Modifying MarketValue for $fertDefName to half"
+				$marketValueNode = $newDef.SelectSingleNode("statBases/MarketValue")
+				if ($marketValueNode) {
+					$marketValueNode.InnerText = [math]::Round([double]$marketValueNode.InnerText * 0.5, 2)
+				}
+
+				# Remove comps node
+				Write-Verbose "Removing comps node from $fertDefName"
+				$compsNode = $newDef.SelectSingleNode("comps")
+				if ($compsNode) {
+					$null = $newDef.RemoveChild($compsNode)
+				}
+
+				# Insert after original
+				$parent = $def.ParentNode
+				$null = $parent.InsertAfter($newDef, $def)
+			}
+
+			# Save the modified XML
+			$xml.Save($filePath.FullName)
+			WriteMessage -success "Updated egg definitions in $($filePath.FullName)"
+		} catch {
+			Write-Error "Error processing file '$($filePath.FullName)': $_"
+			throw
+		}
+
+	}
+}
+
+
 function Update-ModWildness {
 	param(
 		$folderPath
@@ -2290,13 +2421,13 @@ function Get-IdentifiersFromMod {
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
-			return
+			return $false
 		}
 	}
 
 	if (-not $modObject.AboutFilePath) {
 		WriteMessage -failure "Could not find About-file for mod. Name: $($modObject.Name) |Modid: $modId |ModFolderPath: $modFolderPath"
-		return @()
+		return $false
 	}
 	if (-not $gameVersion) {
 		$gameVersion = Get-CurrentRimworldVersion
@@ -2315,8 +2446,16 @@ function Get-IdentifiersFromMod {
 		if (-not (Test-ValidIdentifier -identifier $identifier)) {
 			continue
 		}
-		Get-ModIdentifierAvailable -modIdentifierItem $identifierItem
-		foreach ($subIdentifier in (Get-IdentifiersFromSubMod $identifierCache[$identifier])) {
+		if (-not (Get-ModIdentifierAvailable -modIdentifierItem $identifierItem)) {
+			WriteMessage -warning "Could not find mod named $($identifierItem.displayName) $($identifierItem.packageId), exiting"
+			return $false
+		}
+		$subIdentifiers = Get-IdentifiersFromSubMod $identifierCache[$identifier]
+		if ($subIdentifiers -eq -1) {
+			WriteMessage -warning "Could not find mod for $identifier, exiting"
+			return $false
+		}
+		foreach ($subIdentifier in $subIdentifiers) {
 			if ($identifiersToAdd -notcontains $subIdentifier.ToLower()) {
 				$identifiersToAdd += $subIdentifier.ToLower()
 			}
@@ -2331,8 +2470,16 @@ function Get-IdentifiersFromMod {
 			if (-not (Test-ValidIdentifier -identifier $identifier)) {
 				continue
 			}
-			Get-ModIdentifierAvailable -modIdentifierItem $identifierItem
-			foreach ($subIdentifier in (Get-IdentifiersFromSubMod $identifierCache[$identifier])) {
+			if (-not (Get-ModIdentifierAvailable -modIdentifierItem $identifierItem)) {
+				WriteMessage -warning "Could not find mod named $($identifierItem.displayName) $($identifierItem.packageId), exiting"
+				return $false
+			}
+			$subIdentifiers = Get-IdentifiersFromSubMod $identifierCache[$identifier]
+			if ($subIdentifiers -eq -1) {
+				WriteMessage -warning "Could not find valid sub-mods for $identifier, exiting"
+				return $false
+			}
+			foreach ($subIdentifier in $subIdentifiers) {
 				if ($identifiersToAdd -notcontains $subIdentifier.ToLower()) {
 					$identifiersToAdd += $subIdentifier.ToLower()
 				}
@@ -2361,28 +2508,47 @@ function Get-ModIdentifierAvailable {
 	param(
 		$modIdentifierItem
 	)
-	if (-not $modIdentifierItem.packageId) {
-		WriteMessage -warning "Empty packageId in mod-identifier"
-		return
+	if (-not $modIdentifierItem.packageId -and -not $modIdentifierItem.steamWorkshopUrl) {
+		WriteMessage -warning "Empty packageId in mod-identifier and no steam id, exiting"
+		return $false
 	}
 
-	if ($identifierCache[$modIdentifierItem.packageId]) {
-		return
+	if ($modIdentifierItem.packageId -and $identifierCache[$modIdentifierItem.packageId]) {
+		return $true
 	}
 
-	WriteMessage -progress "Could not find mod named $($modIdentifierItem.displayName) packageid $($modIdentifierItem.packageId), subscribing"
-	$url = Get-ModLink -modName $modIdentifierItem.displayName
+	if ($modIdentifierItem.steamWorkshopUrl) {
+		# Get the steam id from the url, fetch all 0-9 characters at the end of the url
+		$steamId = $modIdentifierItem.steamWorkshopUrl -replace ".*\/(\d+)$", '$1'
+		if (-not $steamId -or $steamId -eq "0") {
+			WriteMessage -warning "Could not find valid steam id from $($modIdentifierItem.steamWorkshopUrl), exiting"
+			return $false
+		}
+		$modInfo = Get-ModInfo -steamIds $steamId
+		if (-not $modInfo.Exists) {
+			WriteMessage -warning "Could not find mod with steam id $steamId, exiting"
+			return $false
+		}
+		WriteMessage -progress "Subscribing to mod with steam id $steamId named $($modInfo.Name)"
+		Set-ModSubscription -modId $steamId -subscribe $true | Out-Null
+		Update-IdentifierToFolderCache
+		return $true
+	}
+
+	WriteMessage -progress "Could not find mod named $($modIdentifierItem.displayName) packageid $($modIdentifierItem.packageId), searching for it on Steam"
+	$url = Get-ModLink -modName $modIdentifierItem.displayName -chooseIfNotFound
 	if (-not $url) {
 		WriteMessage -failure "Could not find mod-link for $($modIdentifierItem.displayName), searching for previous version"
-		$url = Get-ModLink -modName $modIdentifierItem.displayName -lastVersion
+		$url = Get-ModLink -modName $modIdentifierItem.displayName -lastVersion -chooseIfNotFound
 	}
 	if (-not $url) {
 		WriteMessage -failure "Could not find mod-link for $($modIdentifierItem.displayName), exiting"
-		return
+		return $false
 	}
 	$modId = $url.Split("=")[-1]
 	Set-ModSubscription -modId $modId -subscribe $true | Out-Null
 	Update-IdentifierToFolderCache
+	return $true
 }
 
 # Fetches identifiers from a mod-requirement mod
@@ -2397,7 +2563,7 @@ function Get-IdentifiersFromSubMod {
 	$aboutFile = "$modFolderPath\About\About.xml"
 	if (-not (Test-Path $aboutFile)) {
 		WriteMessage -warning "Could not find About-file for mod in $modFolderPath"
-		return @()
+		return -1
 	}
 	$aboutFileContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
 	
@@ -2407,7 +2573,10 @@ function Get-IdentifiersFromSubMod {
 		if (-not (Test-ValidIdentifier -identifier $identifier)) {
 			continue
 		}
-		Get-ModIdentifierAvailable -modIdentifierItem $identifierItem
+		if (-not (Get-ModIdentifierAvailable -modIdentifierItem $identifierItem)) {
+			WriteMessage -warning "Could not find mod named $($identifierItem.displayName) packageid $($identifierItem.packageId), exiting"
+			return -1
+		}
 		$identifiersToReturn += $identifier.ToLower()
 	}
 	if ($aboutFileContent.ModMetaData.modDependenciesByVersion) {
@@ -2416,7 +2585,10 @@ function Get-IdentifiersFromSubMod {
 			if (-not (Test-ValidIdentifier -identifier $identifier)) {
 				continue
 			}
-			Get-ModIdentifierAvailable -modIdentifierItem $identifierItem
+			if (-not (Get-ModIdentifierAvailable -modIdentifierItem $identifierItem)) {
+				WriteMessage -warning "Could not find mod named $($identifierItem.displayName) packageid $($identifierItem.packageId), exiting"
+				return -1
+			}
 			$identifiersToReturn += $identifier.ToLower()
 		}
 	}
@@ -2493,6 +2665,14 @@ function Get-ModDependencyMaxVersion {
 	}
 
 	$identifiers = Get-IdentifiersFromMod -modObject $modObject -gameVersion $gameVersion
+
+	if (-not $identifiers) {
+		WriteMessage -failure "Could not find identifiers for $($modObject.Name), exiting"
+		if ($supportsLatest) {
+			return $false
+		}
+		return
+	}
 
 	if ($identifiers.Count -le 1) {
 		if ($VerbosePreference) {
@@ -4430,21 +4610,33 @@ function Update-ModCopilotMetadata {
 		return
 	}
 
-	if (-not $modObject.MetadataFileJson.Assemblies) {
+	if (-not $modObject.HasAssemblies) {
 		WriteMessage -progress "Mod has no assemblies $($modObject.Name)"
 		return
 	}
 
 	# Define paths
 	$sourcePath = Join-Path $modObject.ModFolderPath "Source"
+	$xmlSourcePath = Join-Path $modObject.ModFolderPath "Defs"
+	if (-not (Test-Path $xmlSourcePath)) {
+		$xmlSourcePath = Join-Path $modObject.ModFolderPath $modObject.HighestSupportedVersion "Defs"
+	}
 	$githubPath = Join-Path $modObject.ModFolderPath ".github"
 	$instructionsPath = Join-Path $githubPath "copilot-instructions.md"
 
 	if (-not $force -and (Test-Path $instructionsPath)) {
-		WriteMessage -progress "copilot-instructions.md already exists, skipping update"
-		return
+		if (-not (Get-Content -Raw $instructionsPath).Contains($modObject.DisplayName)) {
+			WriteMessage -progress "copilot-instructions.md exists but does not contain the required content, updating"
+		} else {
+			WriteMessage -progress "copilot-instructions.md already exists, skipping update"
+			return
+		}
 	}
 
+	if (-not $modObject.Published -and $modObject.Continued) {
+		Update-ModDescriptionFromPreviousMod -noConfimation -localSearch -modObject $modObject -Force:$Force
+		$modObject = Get-Mod -originalModObject $modObject
+	}
 
 	WriteMessage -progress "Generating copilot-instructions.md for $($modObject.Name)"
 	# Summarize C# files
@@ -4455,42 +4647,9 @@ function Update-ModCopilotMetadata {
 		"File: $($_.Name)`nClasses:`n$($classes -join "`n")`nMethods:`n$($methods -join "`n")`n"
 	}
 
-	# Summarize XML files with tag and attribute analysis
-	$xmlSummary = Get-ChildItem -Path $sourcePath -Recurse -Include *.xml -ErrorAction SilentlyContinue |
-	Where-Object { $_.FullName -like "*Defs*" } |
-	ForEach-Object {
-		try {
-			[xml]$xml = Get-Content $_.FullName -Raw
-			$root = $xml.DocumentElement.Name
-			$tags = @{}
-			$attributes = @{}
-
-			$xml.SelectNodes("//*") | ForEach-Object {
-				$tagName = $_.Name
-				if ($tags.ContainsKey($tagName)) {
-					$tags[$tagName]++
-				} else {
-					$tags[$tagName] = 1
-				}
-
-				$_.Attributes | ForEach-Object {
-					$attrName = $_.Name
-					$attributes[$attrName] = $true
-				}
-			}
-
-			$tagSummary = $tags.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key): $($_.Value)" } -join ", "
-			$attrSummary = ($attributes.Keys | Sort-Object) -join ", "
-
-			"File: $($_.Name)`nRoot: $root`nTags: $tagSummary`nAttributes: $attrSummary`n"
-		} catch {
-			"File: $($_.Name)`nError parsing XML.`n"
-		}
-	}
-
 	# Construct prompt
 	$prompt = @"
-You are an assistant that generates GitHub Copilot instruction files for RimWorld modding projects in C#. 
+You are an assistant that generates GitHub Copilot instruction files for RimWorld modding projects in C#.
 Based on the following summarized content from a mod project, generate a detailed .github/copilot-instructions.md file that includes:
 
 - Mod overview and purpose
@@ -4500,11 +4659,11 @@ Based on the following summarized content from a mod project, generate a detaile
 - Harmony patching
 - Suggestions for Copilot
 
+Mod Name: $($modObject.DisplayName)
+Mod Description: $($modObject.DescriptionClean)
+
 C# Summary:
 $csSummary
-
-XML Summary:
-$xmlSummary
 "@
 
 	# Prepare request
@@ -4846,16 +5005,24 @@ function Publish-Mod {
 	}
 
 	Add-VersionTagOnImage -modObject $modObject -version $modObject.HighestSupportedVersion
+	$modName = $modObject.NameClean
 	if ($EndOfLife) {
 		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "CN9Rs5X")
 		if ($modObject.OriginalPublishedId) {
 			Remove-ModReplacement -steamId $modObject.OriginalPublishedId -reverse
 		}
+		$modObject.AboutFileXml.ModMetaData.name = "[Abandoned] $($modObject.AboutFileXml.ModMetaData.name)"
 	}
 	if ($Depricated) {
 		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "x5cRNO9")
+		$modObject.AboutFileXml.ModMetaData.name = "[Depricated] $($modObject.AboutFileXml.ModMetaData.name)"
 	}
 	if ($Abandoned -or $ReplacedBy) {
+		if ($Abandoned) {
+			$modObject.AboutFileXml.ModMetaData.name = "[Abandoned] $($modObject.AboutFileXml.ModMetaData.name)"
+		} else {			
+			$modObject.AboutFileXml.ModMetaData.name = "[Depricated] $($modObject.AboutFileXml.ModMetaData.name)"
+		}
 		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "3npT60J")
 		if ($ReplacedBy) {
 			$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("3npT60J.png[/img]", "3npT60J.png[/img]`n`nThis mod has been replaced by $replacedByLink")
@@ -5666,7 +5833,7 @@ function Update-Translations {
 		return
 	}
 
-	if (Get-DeeplRemainingCharacters -lt 1000) {
+	if ((Get-DeeplRemainingCharacters) -lt 1000) {
 		WriteMessage -failure "Not enough characters left for translation, skipping $($modObject.Name)"
 		return
 	}
