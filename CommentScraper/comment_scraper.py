@@ -62,6 +62,7 @@ settings = read_json(CONFIG_PATH)
 webhookUrl = settings["discord_channel"]
 infoWebhookUrl = settings["discord_test_channel"]
 logWebhookUrl = settings["discord_log_channel"]
+logWebhookUrl = settings["discord_log_channel"]
 displayname = settings["steam_displayname"]
 username = settings["steam_username"]
 password = settings["steam_password"]
@@ -182,6 +183,7 @@ def htmltodiscord(message):
     """Converts html-code to discord-friendly code"""
     linkfilter = r'<a.*(?:href=")(?P<link>[^"]*)[^>]*>(?P<text>[^<]*)<\/a>'
     imagefilter = r'<img.*src="(?P<link>.*)".*>'
+    imagefilter = r'<img.*src="(?P<link>.*)".*>'
     externallinkfilter = r'<span class="bb_link_host">.*<\/span>'
     message = message.replace('<br/><br/><br/>', '<br/><br/>')
     message = message.replace('<br/>', '\n').replace('\\n', '\n')
@@ -202,6 +204,8 @@ def htmltodiscord(message):
         '<blockquote class="bb_blockquote with_author">', '>>> ')
     message = message.replace('</blockquote>', '')
     message = message.replace('</div>', '').replace('</di', '')
+    message = re.sub(linkfilter, r' \g<link> ', message)
+    message = re.sub(imagefilter, r' \g<link> ', message)
     message = re.sub(linkfilter, r' \g<link> ', message)
     message = re.sub(imagefilter, r' \g<link> ', message)
     message = re.sub(externallinkfilter, '', message)
@@ -233,10 +237,20 @@ try:
     session_id = user.session.cookies._cookies["steamcommunity.com"]['/']['sessionid'].value
     login_secure = user.session.cookies._cookies["steamcommunity.com"]['/']["steamLoginSecure"].value
     cookies = {"sessionid": session_id, "steamLoginSecure": login_secure}
+    sendtestpost("Comment monitor", f"Fail: {e}")
+    sys.exit()
+if not loggedIn:
+    exit()
+
+try:
+    sendlogpost("Comment monitor", f"Login successful: {result}")
+
+    session_id = user.session.cookies._cookies["steamcommunity.com"]['/']['sessionid'].value
+    login_secure = user.session.cookies._cookies["steamcommunity.com"]['/']["steamLoginSecure"].value
+    cookies = {"sessionid": session_id, "steamLoginSecure": login_secure}
 
     while user.session.verify:
-        currentNotifications = user.session.get(
-            f'https://steamcommunity.com/id/{displayname}/commentnotifications/').text
+        currentNotifications = user.session.get(f'https://steamcommunity.com/id/{displayname}/commentnotifications/').text
         soup = BeautifulSoup(currentNotifications, 'html.parser')
 
         LASTHIGHESTTIMESTAMP = 0
@@ -262,7 +276,22 @@ try:
             user.session.post(commentUrl, data=data, cookies=cookies)
 
         if not notificationsDiv:
+
+        replies = read_json(REPLIES)
+        clear_json(REPLIES)
+        for reply in replies:
+            modid = reply
+            comment = replies[reply]
+            answerPage = user.session.get(
+                f"https://steamcommunity.com/sharedfiles/filedetails/?id={modid}").text
+            pageid = answerPage.split(f"_{modid}_area")[0].split("_")[-1]
+            commentUrl = f"https://steamcommunity.com/comment/PublishedFile_Public/post/{pageid}/{modid}"
+            data = {'comment': comment, 'sessionid': session_id, 'feature2': -1}
+            user.session.post(commentUrl, data=data, cookies=cookies)
+
+        if not notificationsDiv:
             print('No new notifications')
+            sleep(60)
             sleep(60)
             continue
 
@@ -280,8 +309,10 @@ try:
                 "div", {"class": "commentnotification"})[:5]
 
         somethingsent = False
+        somethingsent = False
         for notification in unreadNotifications:
             link = (notification.find("a")['href']).split('&')[0]
+            linkPage = user.session.get(link).text
             linkPage = user.session.get(link).text
             linkSoup = BeautifulSoup(linkPage, 'html.parser')
 
@@ -297,6 +328,7 @@ try:
                 "div", {"class": "commentthread_comment"})[::-1]
             if len(allComments) == 0:
                 link = f"https://steamcommunity.com/sharedfiles/filedetails/comments/{link.split('=')[1]}"
+                linkPage = user.session.get(link).text
                 linkPage = user.session.get(link).text
                 linkSoup = BeautifulSoup(linkPage, 'html.parser')
                 allComments = linkSoup.findAll(
@@ -326,6 +358,9 @@ try:
                     "a", {"class": "commentthread_author_link"}).text.replace(" (", "|").split("|")[0].strip()
                 if author == "Mlie":
                     continue
+                    "a", {"class": "commentthread_author_link"}).text.replace(" (", "|").split("|")[0].strip()
+                if author == "Mlie":
+                    continue
                 authorPage = comment.find("a").attrs['href']
                 imageUrl = comment.find("img")['src']
                 textDiv = comment.find(
@@ -348,10 +383,16 @@ try:
         if somethingsent:
             sendlogpost("New comments", "Check them")
         sleep(60)
+        if somethingsent:
+            sendlogpost("New comments", "Check them")
+        sleep(60)
 
     sendlogpost("Comment monitor down", "No longer authorized")
 except Exception as e:
     sendlogpost("Comment monitor failed", str(e))
+
+
+sendtestpost("Comment monitor", "Restarting")
 
 
 sendtestpost("Comment monitor", "Restarting")
