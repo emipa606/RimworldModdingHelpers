@@ -25,7 +25,7 @@ function WriteMessage {
 }
 
 function SetTerminalProgress {
-	[CmdletBinding()] 
+	[CmdletBinding()]
 	param (
 		[switch]$unknown,
 		$progressPercent
@@ -47,8 +47,8 @@ function SetTerminalProgress {
 
 
 # Write progress to the terminal as well as the progress bar
-function WriteProgress {   
-	[CmdletBinding()] 
+function WriteProgress {
+	[CmdletBinding()]
 	param (
 		$progressObject,
 		[switch]$initiate,
@@ -57,7 +57,7 @@ function WriteProgress {
 		$totalActions,
 		$updateFrequencySeconds = 1
 	)
-	
+
 	if ($initiate) {
 		if (-not $title) {
 			Write-Error "Need a title for the progress"
@@ -75,19 +75,19 @@ function WriteProgress {
 		$progressObject | Add-Member NoteProperty updatefrequency $updateFrequencySeconds
 		return $progressObject
 	}
-    
+
 	if (-not $progressObject) {
 		Write-Error "Need a progress object, run -initiate first"
 		return
-	}    
+	}
 
 	if ($finished) {
 		SetTerminalProgress
 		return
 	}
-    
+
 	$progressObject.current = $progressObject.current + 1
-	$elapsedSeconds = $progressObject.time.Elapsed.TotalSeconds    
+	$elapsedSeconds = $progressObject.time.Elapsed.TotalSeconds
 	if ($elapsedSeconds - $progressObject.lastsecond -lt $progressObject.updatefrequency) {
 		return
 	}
@@ -107,11 +107,11 @@ function WriteProgress {
 }
 
 # Shows the rimworld log progress
-function Get-RimworldLog {	
+function Get-RimworldLog {
 	param(
 		$initialRows = 10
 	)
-	
+
 	$Host.UI.RawUI.WindowTitle = "RimWorld Log"
 	$logFile = "$env:USERPROFILE\Appdata\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Player.log"
 	while ($true) {
@@ -218,6 +218,9 @@ if (Test-Path $translationCachePath) {
 	$Global:translationCache = @{}
 }
 $Global:globalRequestLog = @()
+if (-not $Global:ModInfoCache) {
+ $Global:ModInfoCache = @{}
+}
 
 Add-Type -TypeDefinition @"
 public enum ModCodeSize {
@@ -255,7 +258,7 @@ function Update-MSEdgeDriverIfNeeded {
 	}
 	try {
 		WriteMessage -progress "Updating msedgedriver"
-			
+
 		nuget install Selenium.WebDriver -ExcludeVersion -OutputDirectory $nugetPackagesPath -ForceEnglishOutput -NonInteractive | Out-Null
 		$edgeVersion = (Get-ItemProperty -Path "HKCU:\Software\Microsoft\Edge\BLBeacon").version
 		$driverUrl = "https://msedgedriver.azureedge.net/$edgeVersion/edgedriver_win64.zip"
@@ -300,14 +303,14 @@ function Convert-BBCodeToGithub {
 	$textToConvert = $textToConvert.Replace("[h1]", "# ").Replace("[/h1]", "`n")
 	$textToConvert = $textToConvert.Replace("[h2]", "## ").Replace("[/h2]", "`n")
 	$textToConvert = $textToConvert.Replace("[h3]", "### ").Replace("[/h3]", "`n")
-	$textToConvert = $textToConvert -replace '\[img\]([^\]]*)\[/img\]',"![Image]($('$1'))"	
+	$textToConvert = $textToConvert -replace '\[img\]([^\]]*)\[/img\]',"![Image]($('$1'))"
 	$textToConvert = $textToConvert -replace ".png\)\n([^\n])",".png)`n`n$('$1')"
 	$textToConvert = $textToConvert -replace '\[url=([^\]]*)\]([^\]]*)\[\/url\]','[$2]($1)'
 	$textToConvert = $textToConvert -replace '\[url=([^\]]*)\](.*)\[\/url\]','[$2]($1)'
 	$textToRemove = (($textToConvert -split "\[table\]")[1] -split "\[/table\]")[0]
 	$textToConvert = $textToConvert.Replace("`n[table]$textToRemove[/table]`n", "")
 	$textToConvert = $textToConvert.Replace("[list]", "`n").Replace("[/list]", "`n").Replace("[*]", "- ")
-	
+
 	return $textToConvert
 }
 
@@ -327,7 +330,7 @@ function Get-MultilineMessage {
 		$continueMessage = $true
 		$currentMessage = @()
 		$lastRow = ""
-		while ($continueMessage) {		
+		while ($continueMessage) {
 			$currentRow = Read-Host
 			if ($currentRow -eq "" -and $currentMessage.Count -eq 0) {
 				break
@@ -408,7 +411,7 @@ function Get-Mod {
 		if ($modName) {
 			$modObject.Name = $modName
 		}
-		return $modObject 
+		return $modObject
 	}
 
 	if ($modPath) {
@@ -458,10 +461,10 @@ function Get-Mod {
 		$modObject.HasAssemblies = $false
 	} else {
 		$modObject.HasXml = (Get-ChildItem $modObject.ModFolderPath -Directory -Recurse | ForEach-Object { if ($_.Name -eq "Defs" -or $_.Name -eq "Patches") {
-					return $true 
+					return $true
 				} } ) -eq $true
 		$modObject.HasAssemblies = (Get-ChildItem $modObject.ModFolderPath -Directory -Recurse | ForEach-Object { if ($_.Name -eq "Assemblies") {
-					return $true 
+					return $true
 				} } ) -eq $true
 	}
 
@@ -480,14 +483,14 @@ function Get-Mod {
 	$modObject.LoadFoldersPath = "$($modObject.ModFolderPath)\LoadFolders.xml"
 	if (-not (Test-Path $modObject.LoadFoldersPath)) {
 		$modObject.LoadFoldersPath = $null
-	} 
+	}
 
 	$modObject.PreviewFilePath = "$($modObject.ModFolderPath)\About\Preview.png"
 	if (-not (Test-Path $modObject.PreviewFilePath)) {
 		$modObject.PreviewFilePath = $null
-	} 
-	
-	if (-not $modObject.Mine -or $modObject.ModFolderPath.Contains("workshop")) {	
+	}
+
+	if (-not $modObject.Mine -or $modObject.ModFolderPath.Contains("workshop")) {
 		return $modObject
 	}
 
@@ -496,51 +499,51 @@ function Get-Mod {
 		$modObject.ManifestFileContent = Get-Content $modObject.ManifestFilePath -Raw -Encoding UTF8
 		$modObject.ManifestFileXml = [xml]$modObject.ManifestFileContent
 		$modObject.Version = $modObject.ManifestFileXml.Manifest.version
-	} else {		
+	} else {
 		$modObject.ManifestFilePath = $null
 	}
 	$modObject.ModSyncFilePath = "$($modObject.ModFolderPath)\About\ModSync.xml"
 	if (Test-Path $modObject.ModSyncFilePath) {
 		$modObject.ModSyncFileContent = Get-Content $modObject.ModSyncFilePath -Raw -Encoding UTF8
 		$modObject.ModSyncFileXml = [xml]$modObject.ModSyncFileContent
-	} else {		
+	} else {
 		$modObject.ModSyncFilePath = $null
 	}
 
 	$modObject.ModIconPath = "$($modObject.ModFolderPath)\Textures\ModIcon\$($modObject.NameClean).png"
 	if (-not (Test-Path $modObject.ModIconPath)) {
 		$modObject.ModIconPath = "$($modObject.ModFolderPath)\About\ModIcon.png"
-	} 
+	}
 
 	if (-not (Test-Path $modObject.ModIconPath)) {
 		$modObject.ModIconPath = $null
-	} 
+	}
 
 	$modObject.ChangelogPath = "$($modObject.ModFolderPath)\About\Changelog.txt"
 	if (-not (Test-Path $modObject.ChangelogPath)) {
 		$modObject.ChangelogPath = $null
-	} 
+	}
 	$modObject.ReadMePath = "$($modObject.ModFolderPath)\README.md"
 	if (-not (Test-Path $modObject.ReadMePath)) {
 		$modObject.ReadMePath = $null
-	} 
+	}
 
 	$modObject.LicensePath = "$($modObject.ModFolderPath)\LICENSE.md"
 	if (-not (Test-Path $modObject.LicensePath)) {
 		$modObject.LicensePath = $null
-	} 
+	}
 
 	$modObject.GitIgnorePath = "$($modObject.ModFolderPath)\.gitignore"
 	if (-not (Test-Path $modObject.GitIgnorePath)) {
 		$modObject.GitIgnorePath = $null
-	} 
+	}
 
 	$modObject.ModPublisherPath = "$($modObject.ModFolderPath)\_PublisherPlus.xml"
 	if (-not (Test-Path $modObject.ModPublisherPath)) {
 		$modObject.ModPublisherPath = $null
 	}
 	$modObject.Continued = $modObject.DisplayName.EndsWith(" (Continued)")
-	
+
 	if (Test-Path "$($modObject.ModFolderPath)\AssetBundles") {
 		$modObject.AssetBundlesPath = "$($modObject.ModFolderPath)\AssetBundles"
 		$modObject.AssetSourcePath = "$($modObject.ModFolderPath)\Source\Assets"
@@ -604,7 +607,7 @@ function Get-Mod {
 
 	$modObject.MetadataFileContent = Get-Content -Path $modObject.MetadataFilePath -raw -Encoding UTF8
 	$modObject.MetadataFileJson = $modObject.MetadataFileContent | ConvertFrom-Json
-	
+
 	return $modObject
 }
 
@@ -625,8 +628,8 @@ Function Get-RepositoryStatus {
 		# We then get the HTTP code as an integer.
 		$HTTP_Status = [int]$HTTP_Response.StatusCode
 
-		If ($null -ne $HTTP_Response) { 
-			$HTTP_Response.Close() 
+		If ($null -ne $HTTP_Response) {
+			$HTTP_Response.Close()
 		}
 
 		If ($HTTP_Status -eq 200) {
@@ -650,14 +653,14 @@ function Get-ModRepository {
 			return
 		}
 	}
-	
+
 	if (-not $modObject.Repository) {
 		$modObject.Repository = "https://github.com/$($settings.github_username)/$($modObject.NameClean)"
 	}
 
 	if ($getLink) {
 		return $modObject.Repository
-	}	
+	}
 
 	$applicationPath = $settings.browser_path
 	Start-Process -FilePath $applicationPath -ArgumentList $modObject.Repository
@@ -701,7 +704,7 @@ function Set-GitRepositoryToArchived {
 	param(
 		$repoName
 	)
-	
+
 	if (-not $repoName) {
 		$repoName = Get-CurrentModNameFromLocation
 	}
@@ -734,7 +737,7 @@ function Set-DefaultGitBranch {
 		$repoName,
 		$branchName
 	)
-	
+
 	if (-not $repoName) {
 		$repoName = Get-CurrentModNameFromLocation
 	}
@@ -768,7 +771,7 @@ function Set-IssuesActive {
 		$repoName,
 		$status = "true"
 	)
-	
+
 	if (-not $repoName) {
 		$repoName = Get-CurrentModNameFromLocation
 	}
@@ -800,7 +803,7 @@ function Get-GithubRepoInfo {
 	param(
 		$repoName
 	)
-	
+
 	if (-not $repoName) {
 		$repoName = Get-CurrentModNameFromLocation
 	}
@@ -817,7 +820,7 @@ function Get-GithubRepoInfo {
 		}
 		ContentType = 'application/json'
 	}
-	
+
 	try {
 		$repo = Invoke-RestMethod @repoParams
 	} catch {
@@ -831,7 +834,7 @@ function Get-GitSubscriptionStatus {
 	param(
 		$repoName
 	)
-	
+
 	if (-not $repoName) {
 		$repoName = Get-CurrentModNameFromLocation
 	}
@@ -862,7 +865,7 @@ function Set-GitSubscriptionStatus {
 		$repoName,
 		[bool]$enabled
 	)
-	
+
 	if (-not $repoName) {
 		$repoName = Get-CurrentModNameFromLocation
 	}
@@ -1011,7 +1014,7 @@ function Merge-ModPullRequests {
 
 	WriteMessage "Selected PR $answer with id $($selectedPullRequest.id)"
 
-	Merge-GitPullRequest -repoName $modName -pullRequestNumber $selectedPullRequest.number -silent:(-not $noPull) -openAfter:(-not $noOpenAfter)	
+	Merge-GitPullRequest -repoName $modName -pullRequestNumber $selectedPullRequest.number -silent:(-not $noPull) -openAfter:(-not $noOpenAfter)
 }
 
 function Sync-GitImgBotStatus {
@@ -1033,7 +1036,7 @@ function Sync-GitImgBotStatus {
 		if (-not $repoName) {
 			$repoName = Get-CurrentModNameFromLocation
 		}
-	
+
 		$repoNameClean = $repoName.Replace("+", "Plus")
 		if (-not (Get-RepositoryStatus -repositoryName $repoNameClean)) {
 			WriteMessage -failure "Repository $repoName does not exist"
@@ -1041,7 +1044,7 @@ function Sync-GitImgBotStatus {
 		}
 		$repoNames += $repoName
 	}
-	
+
 	$count = 1
 	foreach ($repo in $repoNames) {
 		SetTerminalProgress -progressPercent ($count / $repoNames.Count * 100)
@@ -1174,7 +1177,7 @@ function Get-LatestGitVersion {
 		WriteMessage -progress "Fetching latest github for mod $($modObject.Name)"
 		git pull origin main --allow-unrelated-histories
 		return
-	} 
+	}
 	WriteMessage -progress "Fetching latest github for mod $($modObject.Name)"
 	if ($modObject.Mine) {
 		$path = $modObject.Repository
@@ -1253,7 +1256,7 @@ function Merge-GitRepositories {
 			return
 		}
 	}
-	
+
 	if (-not $modObject.Mine) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting merge"
 		return
@@ -1263,7 +1266,7 @@ function Merge-GitRepositories {
 	Get-ModRepository -modObject $modObject
 	Read-Host "Rename the current repository to $modNameOld, continue when done (Press ENTER)"
 	Read-Host "Fork the repository to merge into, using the repository name $($modObject.Name), continue when done (Press ENTER)"
-	
+
 	$stagingDirectory = $settings.mod_staging_folder
 	$rootFolder = Split-Path $stagingDirectory
 	$version = [version]$modObject.ManifestFileXml.Manifest.version
@@ -1278,12 +1281,12 @@ function Merge-GitRepositories {
 	if (-not (Get-RepositoryStatus -repositoryName $modObject.NameClean)) {
 		WriteMessage -failure "No repository found for $($modObject.NameClean)"
 		Set-Location $modObject.ModFolderPath
-		return			
+		return
 	}
 	if (-not (Get-RepositoryStatus -repositoryName $modNameOld)) {
 		WriteMessage -failure "No repository found for $modNameOld"
 		Set-Location $modObject.ModFolderPath
-		return			
+		return
 	}
 
 	git clone https://github.com/$($settings.github_username)/$($modObject.NameClean)
@@ -1309,7 +1312,7 @@ function Merge-GitRepositories {
 	git merge master-holder --allow-unrelated-histories
 	git push origin $newBranch
 	git push --tags
-	
+
 	$applicationPath = $settings.browser_path
 	$arguments = "https://github.com/$($settings.github_username)/$($modObject.NameClean)/tags"
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
@@ -1390,7 +1393,7 @@ function Set-DefaultGithubRepoValues {
 		}
 		Invoke-RestMethod @repoParams | Out-Null
 	}
-	
+
 	$topics = @("gaming", "modding", "rimworld")
 	if ($modObject.HasXml) {
 		$topics += "xml"
@@ -1400,7 +1403,7 @@ function Set-DefaultGithubRepoValues {
 	}
 	if ($currentValues.topics.Count -ne $topics.Count) {
 		WriteMessage -message "Updating topics for repository $($modObject.NameClean)" -progress
-		
+
 		$repoData = @{
 			"names" = $topics
 		}
@@ -1438,7 +1441,7 @@ function New-ModSyncFile {
 		$modObject,
 		$version
 	)
-	
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
@@ -1465,7 +1468,7 @@ function Update-Textures {
 	param(
 		$modObject
 	)
-	
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
@@ -1475,7 +1478,7 @@ function Update-Textures {
 
 	if (-not $modObject.ModFolderPath) {
 		WriteMessage -failure "Folder for $($modObject.Name) can not be found, exiting"
-		return	
+		return
 	}
 	if (-not $modObject.Mine) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
@@ -1483,7 +1486,7 @@ function Update-Textures {
 	}
 	Set-Location $modObject.ModFolderPath
 	$files = Get-ChildItem . -Recurse
-	foreach ($file in $files) { 
+	foreach ($file in $files) {
 		if (-not $file.FullName.Contains("Textures")) {
 			continue
 		}
@@ -1508,7 +1511,7 @@ function Set-ModUpdateFeatures {
 		[string] $updateMessage,
 		[switch] $Force
 	)
-	
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
@@ -1537,7 +1540,7 @@ function Set-ModUpdateFeatures {
 	$updateinfoPath = "$($modObject.ModFolderPath)\$($modObject.HighestSupportedVersion)\Defs\$updateinfoFileName"
 	if (-not (Test-Path "$($modObject.ModFolderPath)\$($modObject.HighestSupportedVersion)")) {
 		$updateinfoPath = "$($modObject.ModFolderPath)\Defs\$updateinfoFileName"
-	} 
+	}
 	$updateinfoFolder = Split-Path $updateinfoPath
 
 	if (-not (Test-Path $updateFeaturesFolder)) {
@@ -1572,7 +1575,7 @@ function Set-ModUpdateFeatures {
 	</TabulaRasa.UpdateDef>
 </Defs>"
 	(Get-Content -Path $updateinfoPath -Raw -Encoding UTF8).Replace("</Defs>", $infoObject) | Out-File $updateinfoPath
-	
+
 	WriteMessage -success "Added update news for $($modObject.Name)"
 }
 
@@ -1583,7 +1586,7 @@ function Set-ModChangeNote {
 		$modObject,
 		[string] $changenote,
 		[switch] $Force
-	)	
+	)
 	if (-not $Force -and -not $modObject.Mine) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
 		return
@@ -1608,7 +1611,7 @@ function Set-CorrectFolderStructure {
 	param(
 		$modObject
 	)
-	
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
@@ -1620,7 +1623,7 @@ function Set-CorrectFolderStructure {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
 		return
 	}
-	
+
 	if (-not $modObject.AboutFilePath) {
 		WriteMessage -warning "No about-file for $($modObject.Name)"
 		return
@@ -1633,7 +1636,7 @@ function Set-CorrectFolderStructure {
 		WriteMessage -warning "$($modObject.Name) has a LoadFolder.xml, will not change folders"
 		return
 	}
-	
+
 	$missingVersionFolders = @()
 	$subfolderNames = @()
 	foreach	($version in $modObject.SupportedVersions) {
@@ -1645,7 +1648,7 @@ function Set-CorrectFolderStructure {
 				}
 				$subfolderNames += $folder.Name
 			}
-		} else {			
+		} else {
 			$missingVersionFolders += $version
 		}
 	}
@@ -1655,7 +1658,7 @@ function Set-CorrectFolderStructure {
 	}
 	if ($missingVersionFolders.Length -gt 1) {
 		WriteMessage -warning "$($modObject.Name) has $($missingVersionFolders.Length) missing version-folders, cannot fix automatically"
-		return	
+		return
 	}
 	WriteMessage -progress "$($modObject.Name) has missing version-folder: $($missingVersionFolders -join ",")"
 	WriteMessage -progress "Will move the following folders to missing version-folder: $($subfolderNames -join ",")"
@@ -1696,14 +1699,14 @@ function Get-LocalModFolder {
 # Main mod-updating function
 # Goes through all xml-files from current directory and replaces old strings/properties/valuenames.
 # Can be run with the -Test parameter to just return a report of stuff that need updating, this can
-# be useful to run first when starting with a mod update to see if there is a need for creating a 
+# be useful to run first when starting with a mod update to see if there is a need for creating a
 # separate 1.1-folder.
 function Update-Defs {
 	param(
 		$modObject,
 		[switch]$Test
 	)
-	
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
@@ -1762,7 +1765,7 @@ function Update-Defs {
 				if ($Test) {
 					continue
 				}
-				if ($replaceText.Length -gt 0) {					
+				if ($replaceText.Length -gt 0) {
 					$fileContent = $fileContent.Replace("<$searchText>", "<$replaceText>").Replace("</$searchText>", "</$replaceText>")
 				} else {
 					$xmlRemove += $searchText
@@ -1774,7 +1777,7 @@ function Update-Defs {
 				$exists = $fileContent | Select-String -Pattern ">$searchText<" -AllMatches -CaseSensitive
 				if ($exists.Matches.Count -eq 0) {
 					continue
-				}				
+				}
 				if ($type -eq "vi") {
 					$localInfo += "`n$($exists.Matches.Count): INFO VALUE $searchText - $replaceText"
 					continue
@@ -1791,7 +1794,7 @@ function Update-Defs {
 				$exists = $fileContent | Select-String -Pattern "$searchText" -AllMatches -CaseSensitive
 				if ($exists.Matches.Count -eq 0) {
 					continue
-				}			
+				}
 				if ($type -eq "si") {
 					$localInfo += "`n$($exists.Matches.Count): INFO STRING $searchText - $replaceText"
 					continue
@@ -1811,7 +1814,7 @@ function Update-Defs {
 			[xml]$xmlContent = $fileContent
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
-			WriteMessage -failure $_			
+			WriteMessage -failure $_
 			$applicationPath = $settings.text_editor_path
 			$arguments = """$($file.FullName)"""
 			Start-Process -FilePath $applicationPath -ArgumentList $arguments
@@ -1834,7 +1837,7 @@ function Update-Defs {
 			continue
 		}
 		foreach ($property in $xmlRemove) {
-			if ($fileContent -match "<$property>") {				
+			if ($fileContent -match "<$property>") {
 				$xmlContent.SelectNodes("//$property") | ForEach-Object { $_.ParentNode.RemoveChild($_) } | Out-Null
 			}
 		}
@@ -1856,14 +1859,14 @@ function Set-ModXml {
 		$modObject,
 		[switch]$allFiles,
 		[switch]$doBaseCheck)
-		
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
 			return $false
 		}
 	}
-	
+
 	if ($allFiles -or -not $modObject.MetadataFileJson.LastXmlCleaning) {
 		$fromDate = (Get-Date).AddDays(-1000)
 	} else {
@@ -1883,11 +1886,11 @@ function Set-ModXml {
 	$filesChanged = 0;
 
 	$progressObject = WriteProgress -initiate -title "Cleaning up XML-files" -totalActions $total
-	
+
 	foreach ($file in $files) {
 		WriteProgress -progressObject $progressObject
 		Write-Verbose "Checking $($file.FullName.Replace($modObject.ModFolderPath, ''))"
-		$fileContentRaw = Get-Content -path $file.FullName -Raw -Encoding UTF8		
+		$fileContentRaw = Get-Content -path $file.FullName -Raw -Encoding UTF8
 		if (-not $fileContentRaw.StartsWith("<?xml")) {
 			$fileContentRaw = "<?xml version=""1.0"" encoding=""utf-8""?>" + $fileContentRaw
 		}
@@ -1895,7 +1898,7 @@ function Set-ModXml {
 			[xml]$fileContent = $fileContentRaw
 		} catch {
 			"`n$($file.FullName) could not be read as xml."
-			WriteMessage -failure $_			
+			WriteMessage -failure $_
 			$applicationPath = $settings.text_editor_path
 			$arguments = """$($file.FullName)"""
 			Start-Process -FilePath $applicationPath -ArgumentList $arguments
@@ -1903,7 +1906,7 @@ function Set-ModXml {
 			return $false
 		}
 		if (-not $doBaseCheck) {
-			$fileContent.Save($tempFile) 
+			$fileContent.Save($tempFile)
 			(Get-Content -path $tempFile -Raw -Encoding UTF8).Replace('&gt;', '>') | Set-Content -Path $tempFile -Encoding UTF8
 			if ((Get-Content -path $tempFile -Raw -Encoding UTF8) -ne $fileContentRaw) {
 				Copy-Item -Path $tempFile -Destination $file.FullName -Force
@@ -1949,7 +1952,7 @@ function Get-ZipFile {
 		$modObject,
 		$fileName
 	)
-		
+
 	$exclusionsToAdd = " -xr!""_PublisherPlus.xml"""
 	if ($modObject.ModPublisherPath) {
 		foreach ($exclusion in ([xml](Get-Content $modObject.ModPublisherPath -Raw -Encoding UTF8)).Configuration.Excluded.exclude) {
@@ -1985,7 +1988,7 @@ function Get-SteamModContent {
 		WriteMessage -failure "$modId is not working"
 		return $false
 	}
-	
+
 	$modContentPath = "$localModFolder\..\..\..\workshop\content\294100\$modId"
 	$subscribed = Test-Path "$modContentPath\About\About.xml"
 	if (-not $subscribed) {
@@ -1999,7 +2002,7 @@ function Get-SteamModContent {
 	New-Item $tempPath -ItemType Directory | Out-Null
 
 	Copy-Item -Path "$modContentPath\*" -Destination $tempPath -Recurse
-	
+
 	New-Item "$tempPath\Steampage" -ItemType Directory | Out-Null
 
 	Get-ModDescription -modId $modId | Out-File "$tempPath\Steampage\PublishedDescription.txt" -Force -Encoding utf8
@@ -2014,7 +2017,7 @@ function Get-SteamModContent {
 			} else {
 				$fileName = Split-Path -Leaf $linkValue
 			}
-			$ProgressPreference = 'SilentlyContinue' 
+			$ProgressPreference = 'SilentlyContinue'
 			Invoke-WebRequest $linkValue -OutFile "$tempPath\Steampage\$fileName" | Out-Null
 			$ProgressPreference = 'Continue'
 			$i++
@@ -2032,7 +2035,7 @@ function Get-SteamModContent {
 	return $true
 }
 
-function Update-ModEggDefs {	
+function Update-ModEggDefs {
 	[CmdletBinding()]
 	param(
 		$folderPath
@@ -2047,9 +2050,9 @@ function Update-ModEggDefs {
 	foreach ($filePath in $files) {
 
 		try {
-		
+
 			[xml]$xml = Get-Content $filePath
-			
+
 			# Update egg layer definitions
 			$eggLayerNodes = $xml.SelectNodes("//li[@Class='CompProperties_EggLayer']")
 
@@ -2097,7 +2100,7 @@ function Update-ModEggDefs {
 			foreach ($def in $thingDefs) {
 				Write-Verbose "Starting processing for $($def.defName)"
 				$fertDefName = $def.defName
-				
+
 				if ( -not $fertDefName -or -not $fertDefName.EndsWith("EggFertilized")) {
 					Write-Verbose "Skipping $fertDefName as it does not end with 'EggFertilized'"
 					continue
@@ -2118,7 +2121,7 @@ function Update-ModEggDefs {
 
 				# Modify defName
 				$newDef.defName = $unfertDefName
-			
+
 				# Modify label
 				Write-Verbose "Modifying label for $fertDefName to $unfertDefName"
 				$labelNode = $newDef.SelectSingleNode("label")
@@ -2187,7 +2190,7 @@ function Update-ModWildness {
 			if (-not $wildnessNode) {
 				continue
 			}
-			
+
 			# Find or create the <statBases> node
 			if ($null -eq $thingDef.statBases) {
 				$thingDef.AppendChild($xml.CreateElement("statBases")) | Out-Null
@@ -2272,7 +2275,7 @@ function Get-ModSteamStatus {
 		$modObject,
 		$modLink
 	)
-	
+
 	if ($modLink) {
 		$modVersions = (Get-ModInfo -steamIds $modLink.Split("=")[1]).Tags
 	} else {
@@ -2286,7 +2289,7 @@ function Get-ModSteamStatus {
 	}
 
 	$currentVersionString = Get-CurrentRimworldVersion
-	
+
 	if (-not $modVersions) {
 		Write-Verbose "Can not find mod on Steam. Modname: $($modObject.Name), ModLink: $modLink, exiting"
 		return $false
@@ -2361,7 +2364,7 @@ function Get-AllNonPublishedMods {
 				}
 			}
 			$returnArray += $returnString
-		}		
+		}
 	}
 	WriteProgress -progressObject $progressObject -finished
 	return $returnArray
@@ -2390,18 +2393,18 @@ function Test-ValidIdentifier {
 }
 
 # Scans a mods About-file for mod-identifiers and returns an array of them, with the selected mods identifier last
-function Get-IdentifiersFromMod {	
+function Get-IdentifiersFromMod {
 	[CmdletBinding()]
 	param (
 		$modObject,
 		[string]$modId,
-		[switch]$oldmod, 
+		[switch]$oldmod,
 		[switch]$alsoLoadBefore,
 		[string]$modFolderPath,
 		$gameVersion,
 		[switch]$bare
 	)
-	
+
 	if ($modId) {
 		if ($modId.StartsWith("Mlie.")) {
 			$modObject = Get-Mod -modName $modId.Replace("Mlie.", "")
@@ -2414,7 +2417,7 @@ function Get-IdentifiersFromMod {
 			$modObject = Get-Mod -modPath "$localModFolder\..\..\..\workshop\content\294100\$modId"
 		}
 	}
-	if ($modFolderPath) {		
+	if ($modFolderPath) {
 		$modObject = Get-Mod -modPath $modFolderPath
 	}
 
@@ -2432,7 +2435,7 @@ function Get-IdentifiersFromMod {
 	if (-not $gameVersion) {
 		$gameVersion = Get-CurrentRimworldVersion
 	}
-	
+
 	$identifiersToAdd = @()
 	if ($oldmod) {
 		$identifiersToAdd += $modObject.Name
@@ -2519,7 +2522,7 @@ function Get-ModIdentifierAvailable {
 
 	if ($modIdentifierItem.steamWorkshopUrl) {
 		# Get the steam id from the url, fetch all 0-9 characters at the end of the url
-		$steamId = $modIdentifierItem.steamWorkshopUrl -replace ".*\/(\d+)$", '$1'
+		$steamId = $modIdentifierItem.steamWorkshopUrl -replace '.*?(\d+)$', '$1'
 		if (-not $steamId -or $steamId -eq "0") {
 			WriteMessage -warning "Could not find valid steam id from $($modIdentifierItem.steamWorkshopUrl), exiting"
 			return $false
@@ -2566,7 +2569,7 @@ function Get-IdentifiersFromSubMod {
 		return -1
 	}
 	$aboutFileContent = [xml](Get-Content $aboutFile -Raw -Encoding UTF8)
-	
+
 	$identifiersToReturn = @()
 	foreach ($identifierItem in $aboutFileContent.ModMetaData.modDependencies.li) {
 		$identifier = $identifierItem.packageId
@@ -2603,13 +2606,13 @@ function Get-TotalAmountOfMods {
 		[switch]$NoDependencies
 	)
 	$allMods = Get-ChildItem -Directory $localModFolder
-	
+
 	WriteMessage -progress "Fetching total amount of mods"
 	$progressObject = WriteProgress -initiate -title "Fetching total amount of mods from $folderName" -totalActions $allMods.Count
 	foreach ($folder in $allMods) {
 		WriteProgress -progressObject $progressObject
 		$modObject = Get-Mod -modPath $folder.FullName -noTypes:(-not $NoVs)
-		
+
 		if (-not $modObject.Published) {
 			continue
 		}
@@ -2648,7 +2651,7 @@ function Get-ModDependencyMaxVersion {
 			return
 		}
 	}
-	
+
 	if (-not $modObject.Mine) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
 		if ($supportsLatest) {
@@ -2705,14 +2708,14 @@ function Get-ModDependencyMaxVersion {
 		$referenceMod = Get-Mod -modPath $modPath
 		$currentMax = $referenceMod.HighestSupportedVersion
 		if ($referenceMod.Mine) {
-			if ([version]$referenceMod.Version -lt [version]$referenceMod.HighestSupportedVersion) {	
+			if ([version]$referenceMod.Version -lt [version]$referenceMod.HighestSupportedVersion) {
 				WriteMessage -warning "$identifier has unpublished updates, assumes not ready"
 				$currentMax = ($referenceMod.SupportedVersions | Sort-Object)[-2]
 			}
 		}
 		if ($returnBlockingDependencies -and $currentMax -ne (Get-CurrentRimworldVersion)) {
 			$returnIdentifiers += $referenceMod
-		} 
+		}
 		if (-not $silent -and -not $returnBlockingDependencies) {
 			if ($VerbosePreference) {
 				WriteMessage -progress "$identifier supports $currentMax"
@@ -2746,12 +2749,12 @@ function Get-StringFromModFiles {
 		[switch]$alsoCs,
 		[switch]$finalOutput,
 		[switch]$caseSensitive,
-		$fromSave) 
+		$fromSave)
 	$searchStringConverted = [regex]::escape($searchString)
 	if ($noEscape) {
 		$searchStringConverted = $searchString
 	}
-	if ($identifierCache.Lenght -eq 0) {		
+	if ($identifierCache.Lenght -eq 0) {
 		Update-IdentifierToFolderCache
 	}
 	if ($fromSave) {
@@ -2767,14 +2770,14 @@ function Get-StringFromModFiles {
 				$allMods += Get-Item $identifierCache["$identifier"]
 			}
 		}
-	} else {		
+	} else {
 		$allMods = Get-ChildItem -Directory $localModFolder
 	}
 	$allMatchingFiles = @()
-	
+
 	$total = $allMods.Count
 	$filterPart = "*.xml"
-	if ($alsoCs) {		
+	if ($alsoCs) {
 		$filterPart = ('*.xml', '*.cs')
 	}
 	foreach ($job in Get-Job) {
@@ -2795,18 +2798,18 @@ function Get-StringFromModFiles {
 			$searchString = $args[1]
 			$baseFolder = Split-Path $args[0]
 			Get-ChildItem -Path $args[0] -Recurse -File -Include $args[2] | ForEach-Object { if ((Get-Content -LiteralPath "$($_.FullName)" -Raw -Encoding utf8) -match $searchString) {
-					$foundFiles += $_.FullName.Replace("$baseFolder\", "") 
+					$foundFiles += $_.FullName.Replace("$baseFolder\", "")
 				} }
 			return $foundFiles
 		}
-		if ($caseSensitive) {			
+		if ($caseSensitive) {
 			$ScriptBlock = {
 				# 0: $folder.FullName 1: $searchStringConverted 2: $filterPart
 				$foundFiles = @()
 				$searchString = $args[1]
 				$baseFolder = Split-Path $args[0]
 				Get-ChildItem -Path $args[0] -Recurse -File -Include $args[2] | ForEach-Object { if ((Get-Content -LiteralPath "$($_.FullName)" -Raw -Encoding utf8) -cmatch $searchString) {
-						$foundFiles += $_.FullName.Replace("$baseFolder\", "") 
+						$foundFiles += $_.FullName.Replace("$baseFolder\", "")
 					} }
 				return $foundFiles
 			}
@@ -2816,7 +2819,7 @@ function Get-StringFromModFiles {
 		foreach ($job in Get-Job -State Completed) {
 			$result = Receive-Job $job
 			$allMatchingFiles += $result
-			if (-not $finalOutput -and -not $firstOnly) {		
+			if (-not $finalOutput -and -not $firstOnly) {
 				foreach ($file in $result) {
 					$fullPath = "$localModFolder\$file".Replace("\", "/")
 					Write-Host "file://$fullPath"
@@ -2837,7 +2840,7 @@ function Get-StringFromModFiles {
 	$timer.Stop()
 	foreach ($job in Get-Job -State Completed) {
 		$result = Receive-Job $job
-		$allMatchingFiles += $result		
+		$allMatchingFiles += $result
 		if (-not $finalOutput) {
 			foreach ($file in $result) {
 				$fullPath = "$localModFolder\$file".Replace("\", "/")
@@ -2889,7 +2892,7 @@ function Get-NotUpdatedMods {
 	if ($RandomOrder) {
 		$allMods = $allMods | Sort-Object { Get-Random }
 	}
-	
+
 	$betaProgressFile = "E:\ModPublishing\BetaProgress.json"
 	$betaProgress = Get-Content -Path $betaProgressFile -Raw -Encoding UTF8 | ConvertFrom-Json
 	if ($betaProgress -and -not $TotalOnly) {
@@ -2920,7 +2923,7 @@ function Get-NotUpdatedMods {
 	SetTerminalProgress -unknown
 	foreach ($folder in $allMods) {
 		if ($NextOnly -and (-not $foundStart)) {
-			if ($folder.FullName -eq $currentFolder) {				
+			if ($folder.FullName -eq $currentFolder) {
 				if ($VerbosePreference) {
 					WriteMessage -progress "Will search for next mod from $currentFolder"
 				}
@@ -3044,7 +3047,7 @@ function Get-NotUpdatedMods {
 # Looks for all files that is not supposed to be there
 function Get-NonValidFilesFromMod {
 	param($modObject)
-	
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
@@ -3068,14 +3071,14 @@ function Get-NonValidFilesFromMod {
 # Returns the oldest mod in the mod-directory, optional VS-only switch
 function Get-OldestMod {
 	param([switch]$OnlyVS)
-	$allMods = Get-ChildItem -Path "$localModFolder\*\About\About.xml" | Sort-Object -Property LastWriteTime 
+	$allMods = Get-ChildItem -Path "$localModFolder\*\About\About.xml" | Sort-Object -Property LastWriteTime
 	foreach ($aboutFile in $allMods) {
 		Set-Location $aboutFile.Directory.Parent
 		if (-not (Get-OwnerIsMeStatus)) {
 			continue
 		}
 		if ($OnlyVS) {
-			$cscprojFiles = Get-ChildItem -Recurse -Path $aboutFile.Directory.Parent -Include *.csproj	
+			$cscprojFiles = Get-ChildItem -Recurse -Path $aboutFile.Directory.Parent -Include *.csproj
 			if ($cscprojFiles.Count -eq 0) {
 				continue
 			}
@@ -3111,15 +3114,15 @@ function Get-LastRimworldVersion {
 function Get-SteamRateLimit {
 	[CmdletBinding()]
 	param (	)
-	
+
 	if (-not $globalRequestLog) {
 		$globalRequestLog = @()
 	}
-	
+
 	# Calculate the number of requests in the last 5 minutes
 	$timeWindow = [datetime]::UtcNow.AddMinutes(-5)
 	$recentRequests = $globalRequestLog | Where-Object { $_ -gt $timeWindow }
-	
+
 	if ($recentRequests.Count -ge 200) {
 		WriteMessage -progress "Steam API rate limit reached, waiting for requests to clear"
 		while ($recentRequests.Count -ge 200) {
@@ -3128,7 +3131,7 @@ function Get-SteamRateLimit {
 		}
 	}
 	$globalRequestLog += [datetime]::UtcNow
-	
+
 	return
 }
 
@@ -3161,7 +3164,7 @@ function Invoke-SteamApi {
 		}
 		Write-Verbose "Response: $($response | ConvertTo-Json -Depth 5)"
 		return $response
-	}	
+	}
 }
 
 function Get-LatestPackageVersion {
@@ -3203,9 +3206,9 @@ function Get-LatestPackageVersion {
 
 	$useWildcard = $latest -notlike "*-*"
 	$result = if ($useWildcard) {
-		"*" 
+		"*"
 	} else {
-		$latest 
+		$latest
 	}
 
 	$cache.$packageId = @{ Version = $result; Timestamp = $now }
@@ -3267,13 +3270,13 @@ function Get-SteamWorkshopModInfo {
 			$result.Visibility = "Friends"
 		}
 		$result.Visibility = "Public"
-	
+
 		$result.Name = $html.SelectNodes("//div[@class='workshopItemTitle']").InnerText
 
 		$result.Subscriptions = $html.SelectNodes("//table").SelectNodes("//td")[2].InnerText.Replace(",", "")
-	
+
 		$result.AuthorName = $html.SelectNodes("//div[@class='breadcrumbs']").Nodes().InnerText[-2].Replace("'s Workshop", "")
-	
+
 		$imgSrc = $html.SelectNodes("//img[contains(@id, 'previewImageMain')]")
 		if (-not $imgSrc) {
 			$imgSrc = $html.SelectNodes("//img[contains(@id, 'previewImage')]")
@@ -3281,7 +3284,7 @@ function Get-SteamWorkshopModInfo {
 		if ($imgSrc) {
 			$result.PreviewUrl = "$($imgSrc.GetAttributeValue('src', '').Split('?')[0])"
 		}
-	
+
 		$versionsHtml = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")[0].InnerText.Trim()
 		$result.Tags = $versionsHtml.Replace("Tags:", ",").Replace(" ", "").Split(",") | Where-Object { $_ -and $_ -match "^[0-9]+\.[0-9]+$" }
 	} catch {
@@ -3295,114 +3298,138 @@ function Get-ModInfo {
 	[CmdletBinding()]
 	param (
 		[string[]]$steamIds,
-		[switch]$expandAuthor
+		[switch]$expandAuthor,
+		[switch]$forceRefresh
 	)
 
-	# Calculate the number of items to fetch
-	$itemCount = $steamIds.Count	
+	$cacheDuration = [TimeSpan]::FromMinutes(10)
+	$now = Get-Date
 
-	# API endpoint for fetching published file details
-	$uri = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
-
-	# Build the POST parameters as a hashtable. Note that itemcount is sent as a string.
-	$postParams = @{
-		"itemcount" = "$itemCount"
-	}
-	# Add each mod ID in the proper key format expected by the API.
-	for ($i = 0; $i -lt $itemCount; $i++) {
-		$postParams["publishedfileids[$i]"] = $steamIds[$i]
-	}
-
-	# Convert the hashtable to URL-encoded form data
-	$encodedEntries = $postParams.GetEnumerator() | ForEach-Object {
-		[System.Net.WebUtility]::UrlEncode($_.Key) + "=" + [System.Net.WebUtility]::UrlEncode($_.Value)
-	}
-	$encodedBody = $encodedEntries -join "&"
-
-	# Make the POST request and parse the JSON response
-	Write-Verbose "Fetching mod details for IDs: $($steamIds -join ', ')"
-	Write-Debug "Calling url: $uri with body: $encodedBody, itemcount: $itemCount, expandAuthor: $expandAuthor"
-	$response = Invoke-SteamApi -uri $uri -method Post -body $encodedBody
+	$idsToFetch = @()
 	$returnArray = @()
 
-	# Loop over each mod's details in the response
-	foreach ($details in $response.response.publishedfiledetails) {
-		if ($null -eq $details) {
-			WriteMessage -warning "No details found for mod ID $($details.publishedfileid)"
-			$returnArray += @{
-				SteamId       = "$($details.publishedfileid)"
-				Exists        = $false
-				Name          = "Unknown"
-				Author        = "Unknown"
-				PreviewUrl    = ""
-				Subscriptions = 0
-				Visibility    = "Unknown"
-				Tags          = ""
-			}
-			continue
-		}
-
-		if ($details.result -eq 9) {
-			WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
-			$returnArray += Get-SteamWorkshopModInfo -modId $details.publishedfileid
-			continue
-		}
-
-		if ($details.result -eq 1) {
-			$modName = $details.title
-			$author = $details.creator
-			if ($expandAuthor) {
-				$author = Get-AuthorInformation -authorId $details.creator
-			}
-			$previewUrl = $details.preview_url
-			$subscriptions = $details.subscriptions
-			$visibility = $details.visibility 
-			$tags = $details.tags | ForEach-Object { $_.tag } | Where-Object { $_ -match "^[0-9]+\.[0-9]+$" } | Sort-Object
-			$visibility = switch ($visibility) {
-				0 {
-					"Public" 
+	if (-not $forceRefresh) {
+		foreach ($id in $steamIds) {
+			if ($Global:ModInfoCache.ContainsKey($id)) {
+				$cacheEntry = $Global:ModInfoCache[$id]
+				if ($now - $cacheEntry.Timestamp -lt $cacheDuration) {
+					$returnArray += $cacheEntry.ModInfo
+					WriteMessage -progress "Cache hit for mod ID $id"
+					continue
 				}
-				1 {
-					"Friends" 
-				}	   
-				2 {
-					"Private"     
-				}
-				3 {
-					"Unlisted" 
-				}
-				default {
-					"Unknown" 
-				}	
-			}					
-
-			$returnArray += @{
-				SteamId       = "$($details.publishedfileid)"
-				Exists        = $true
-				Name          = $modName
-				Author        = $author
-				PreviewUrl    = $previewUrl
-				Subscriptions = $subscriptions
-				Visibility    = $visibility
-				Tags          = $tags
 			}
-		} else {
-			$returnArray += @{
-				SteamId       = "$($details.publishedfileid)"
-				Exists        = $false
-				Name          = "Unknown"
-				Author        = "Unknown"
-				PreviewUrl    = ""
-				Subscriptions = 0
-				Visibility    = "Unknown"
-				Tags          = ""
-			}
-			WriteMessage -warning "Failed to fetch details for mod ID $($details.publishedfileid)"
-			Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
-			Write-Debug "Response body: $($response | ConvertTo-Json -Depth 5)"
+			$idsToFetch += $id
 		}
+	} else {
+		Write-Verbose "Force refresh enabled, fetching all mod details"
+		$idsToFetch = $steamIds
 	}
 
+	if ($idsToFetch.Count -gt 0) {
+		# Calculate the number of items to fetch
+		$itemCount = $idsToFetch.Count
+
+		# API endpoint for fetching published file details
+		$uri = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
+
+		# Build the POST parameters as a hashtable. Note that itemcount is sent as a string.
+		$postParams = @{
+			"itemcount" = "$itemCount"
+		}
+		# Add each mod ID in the proper key format expected by the API.
+		for ($i = 0; $i -lt $itemCount; $i++) {
+			$postParams["publishedfileids[$i]"] = $idsToFetch[$i]
+		}
+
+		# Convert the hashtable to URL-encoded form data
+		$encodedEntries = $postParams.GetEnumerator() | ForEach-Object {
+			[System.Net.WebUtility]::UrlEncode($_.Key) + "=" + [System.Net.WebUtility]::UrlEncode($_.Value)
+		}
+		$encodedBody = $encodedEntries -join "&"
+
+		# Make the POST request and parse the JSON response
+		Write-Verbose "Fetching mod details for IDs: $($idsToFetch -join ', ')"
+		Write-Debug "Calling url: $uri with body: $encodedBody, itemcount: $itemCount, expandAuthor: $expandAuthor"
+		$response = Invoke-SteamApi -uri $uri -method Post -body $encodedBody
+
+		# Loop over each mod's details in the response
+		foreach ($details in $response.response.publishedfiledetails) {
+			if ($null -eq $details) {
+				WriteMessage -warning "No details found for mod ID $($details.publishedfileid)"
+				$modInfo = @{
+					SteamId       = "$($details.publishedfileid)"
+					Exists        = $false
+					Name          = "Unknown"
+					Author        = "Unknown"
+					PreviewUrl    = ""
+					Subscriptions = 0
+					Visibility    = "Unknown"
+					Tags          = ""
+				}
+			} elseif ($details.result -eq 9) {
+				WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
+				$modInfo = Get-SteamWorkshopModInfo -modId $details.publishedfileid
+			} elseif ($details.result -eq 1) {
+				$modName = $details.title
+				$author = $details.creator
+				if ($expandAuthor) {
+					$author = Get-AuthorInformation -authorId $details.creator
+				}
+				$previewUrl = $details.preview_url
+				$subscriptions = $details.subscriptions
+				$visibility = $details.visibility
+				$tags = $details.tags | ForEach-Object { $_.tag } | Where-Object { $_ -match "^[0-9]+\.[0-9]+$" } | Sort-Object
+				$visibility = switch ($visibility) {
+					0 {
+						"Public"
+					}
+					1 {
+						"Friends"
+					}
+					2 {
+						"Private"
+					}
+					3 {
+						"Unlisted"
+					}
+					default {
+						"Unknown"
+					}
+				}
+
+				$modInfo = @{
+					SteamId       = "$($details.publishedfileid)"
+					Exists        = $true
+					Name          = $modName
+					Author        = $author
+					PreviewUrl    = $previewUrl
+					Subscriptions = $subscriptions
+					Visibility    = $visibility
+					Tags          = $tags
+				}
+			} else {
+				$modInfo = @{
+					SteamId       = "$($details.publishedfileid)"
+					Exists        = $false
+					Name          = "Unknown"
+					Author        = "Unknown"
+					PreviewUrl    = ""
+					Subscriptions = 0
+					Visibility    = "Unknown"
+					Tags          = ""
+				}
+				WriteMessage -warning "Failed to fetch details for mod ID $($details.publishedfileid)"
+				Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
+				Write-Debug "Response body: $($response | ConvertTo-Json -Depth 5)"
+
+			}
+			$Global:ModInfoCache[$modInfo.SteamId] = @{
+				Timestamp = $now
+				ModInfo   = $modInfo
+			}
+			$returnArray += $modInfo
+		}
+	}
 	return $returnArray
 }
 
@@ -3423,7 +3450,7 @@ function Get-AuthorInformation {
 		$player = $userResponse.response.players[0]
 		$steamPersonaName = $player.personaname
 		return $steamPersonaName
-	} 
+	}
 
 	return "Unknown Author"
 }
@@ -3476,7 +3503,7 @@ function Get-ModPreviewImages {
 		$total = $previewNodes.Count
 
 		$progressObject = WriteProgress -initiate -title "Downloading previews" -totalActions $total
-		for ($i = 1; $i -le $previewNodes.Count; $i++) {	
+		for ($i = 1; $i -le $previewNodes.Count; $i++) {
 			WriteProgress -progressObject $progressObject
 			$node = $previewNodes[$i - 1]
 			$image = $node.ChildNodes | Where-Object -Property Name -eq img
@@ -3484,7 +3511,7 @@ function Get-ModPreviewImages {
 				continue
 			}
 			$imageSource = $image.GetAttributeValue("src", "").Split("?")[0]
-			$ProgressPreference = 'SilentlyContinue' 
+			$ProgressPreference = 'SilentlyContinue'
 			$request = Invoke-WebRequest -Uri $imageSource -MaximumRedirection 0 -ErrorAction Ignore
 			$extension = $request.Headers['Content-Type'].Split('/')[1].Replace("jpeg", "jpg")
 			$outputPath = "$previewSavePath\$i.$extension"
@@ -3637,49 +3664,49 @@ function Update-IdentifierToFolderCache {
 	Get-ChildItem "$localModFolder\..\..\..\workshop\content\294100" -Directory | ForEach-Object {
 		WriteProgress -progressObject $progressObject
 		$continue = Test-Path "$($_.FullName)\About\About.xml"
-		if (-not $continue) {			
+		if (-not $continue) {
 			Write-Verbose "Ignoring $($_.Name) - No aboutfile"
 			return
 		}
-		
+
 		$continue = Test-Path "$($_.FullName)\About\PublishedFileId.txt"
-		if (-not $continue) {			
+		if (-not $continue) {
 			Write-Verbose "Ignoring $($_.Name) - Not published"
 			return
 		}
-			
+
 		$aboutContent = [xml](Get-Content -path "$($_.FullName)\About\About.xml" -Raw -Encoding UTF8)
 		if (-not ($aboutContent.ModMetaData.packageId)) {
 			Write-Verbose "Ignoring $($_.Name) - No identifier"
 		} else {
-			$identifierCache["$($aboutContent.ModMetaData.packageId.ToLower())"] = $_.FullName						
+			$identifierCache["$($aboutContent.ModMetaData.packageId.ToLower())"] = $_.FullName
 		}
 
-	}		
-	
+	}
+
 	WriteProgress -progressObject $progressObject -finished
 	# Then the local mods
 	$progressObject = WriteProgress -initiate -title "Iterating local mods"
 	Get-ChildItem $localModFolder -Directory | ForEach-Object {
 		WriteProgress -progressObject $progressObject
 		$continue = Test-Path "$($_.FullName)\About\About.xml"
-		if (-not $continue) {			
+		if (-not $continue) {
 			Write-Verbose "Ignoring $($_.Name) - No aboutfile"
 			return
 		}
-		
+
 		$continue = Test-Path "$($_.FullName)\About\PublishedFileId.txt"
-		if (-not $continue) {			
+		if (-not $continue) {
 			Write-Verbose "Ignoring $($_.Name) - Not published"
 			return
 		}
-			
+
 		$aboutContent = [xml](Get-Content -path "$($_.FullName)\About\About.xml" -Raw -Encoding UTF8)
 		if (-not ($aboutContent.ModMetaData.packageId)) {
 			Write-Verbose "Ignoring $($_.Name) - No identifier"
 		} else {
-			$identifierCache["$($aboutContent.ModMetaData.packageId.ToLower())"] = $_.FullName						
-		}			
+			$identifierCache["$($aboutContent.ModMetaData.packageId.ToLower())"] = $_.FullName
+		}
 	}
 	WriteProgress -progressObject $progressObject -finished
 	WriteMessage -success "Done, cached $($identifierCache.Count) mod identifiers"
@@ -3691,8 +3718,8 @@ function Update-IdentifierToFolderCache {
 
 # Starts rimworld with mods active from a save-game
 function Start-RimworldSave {
-	param() 
-	
+	param()
+
 	$saveFolder = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Saves"
 	$modFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\ModsConfig.xml"
 	$allSaves = Get-ChildItem $saveFolder | Sort-Object -Property LastWriteTime -Descending
@@ -3713,7 +3740,7 @@ function Start-RimworldSave {
 				foreach ($modId in $saveFileXml.savegame.meta.modIds.li) {
 					$counter++
 					if ($modId.StartsWith("ludeon.")) {
-						continue						
+						continue
 					}
 					WriteMessage -progress "Checking status for mod with id $modId"
 					if ($identifierCache.ContainsKey($modId)) {
@@ -3746,7 +3773,7 @@ function Start-RimworldBlob {
 	)
 
 	WriteMessage -progress "Starting rimworld with mods from blob"
-	Download-ModsInBlob -blob $blob -waitForDownload
+	Get-ModsInBlob -blob $blob -waitForDownload
 
 	# Uses regex to extract all mod-ids from the blob, from the format "packageId: {modIdentifier}"
 	$regex = [regex]::Matches($blob, 'packageId: (.+)[\)\}]')
@@ -3766,7 +3793,7 @@ function Start-RimworldBlob {
 }
 
 
-function Download-ModsInBlob {
+function Get-ModsInBlob {
 	param(
 		$blob,
 		[switch]$waitForDownload
@@ -3775,7 +3802,7 @@ function Download-ModsInBlob {
 	# Uses regex to extract all mod-ids from the blob, from the format "id={modId}"
 	$regex = [regex]::Matches($blob, 'id=(\d+)')
 	$modIds = $regex | ForEach-Object { $_.Groups[1].Value }
-	
+
 	Read-Host "Found $($modIds.Count) mods, continue?"
 
 	$total = $modIds.Count
@@ -3796,7 +3823,7 @@ function Download-ModsInBlob {
 		}
 
 		WriteMessage -progress "Downloading mod $modId"
-		Set-ModSubscription -modId $modId -subscribe $true -noVerify | Out-Null		
+		Set-ModSubscription -modId $modId -subscribe $true -noVerify | Out-Null
 		$downloaded++
 	}
 	WriteProgress -progressObject $progressObject -finished
@@ -3821,12 +3848,17 @@ function Download-ModsInBlob {
 function Set-RimworldRunMode {
 	param (
 		$prefsFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\Prefs.xml",
+		[Parameter()][ValidateSet('None', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
+		[string]$skipDLC,
 		[switch]$testing,
 		[switch]$autoTesting
 	)
 	if (-not (Test-Path $prefsFile)) {
 		WriteMessage -failure "Found no prefs-file at $prefsFile"
 		return
+	}
+	if (-not $skipDLC) {
+		$skipDLC = "None"
 	}
 	$prefsContent = Get-Content $prefsFile -Raw -Encoding UTF8
 
@@ -3854,6 +3886,25 @@ function Set-RimworldRunMode {
 		$prefsContent = $prefsContent.Replace("<testMapSizes>True</testMapSizes>", "<testMapSizes>False</testMapSizes>")
 	}
 	$prefsContent | Set-Content $prefsFile -Encoding utf8
+
+	$inactiveDlcFolder = "$($settings.rimworld_folder_path)\InactiveDLC"
+	$activeDlcFolder = "$($settings.rimworld_folder_path)\Data"
+	if ($skipDLC -eq "None") {
+		# Move any inactive DLC folders to the Data-folder in the RimWorld-folder
+		Get-ChildItem $inactiveDlcFolder -Directory | ForEach-Object {
+			$dlcName = $_.Name
+			WriteMessage -progress "Moving DLC $dlcName to active folder"
+			Move-Item $_.FullName "$activeDlcFolder\$dlcName" -Force
+		}
+	} else {
+		# Test if the DLC is in the active folder, if so, move it to inactive
+		if (Test-Path "$activeDlcFolder\$skipDLC") {
+			WriteMessage -progress "Moving DLC $skipDLC to inactive folder"
+			Move-Item "$activeDlcFolder\$skipDLC" $inactiveDlcFolder -Force
+		} else {
+			WriteMessage -warning "DLC $skipDLC not found in active folder, skipping"
+		}
+	}
 }
 
 # Stops rimworld and waits for steam to sync after
@@ -3871,9 +3922,9 @@ function Stop-RimWorld {
 	Start-Sleep -Milliseconds 250
 	$syncLogPath = "$(Split-Path $settings.steam_path)\logs\cloud_log.txt"
 	while ((Get-Item -Path $syncLogPath).LastWriteTime -gt (Get-Date).AddSeconds(-1)) {
-		Start-Sleep -Milliseconds 250		
+		Start-Sleep -Milliseconds 250
 	}
-	
+
 }
 
 # Start RimWorld two different ways
@@ -3896,6 +3947,8 @@ function Start-RimWorld {
 		[Parameter()][ValidateSet('1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6', 'beta', 'speed')]$version,
 		$otherModid,
 		$mlieMod,
+		[Parameter()][ValidateSet('None', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
+		[string]$skipDLC,
 		[switch]$autotest,
 		[switch]$force,
 		[switch]$bare
@@ -3907,18 +3960,19 @@ function Start-RimWorld {
 	}
 	if (-not $oldRimworldFolder -and $version -ne "beta") {
 		WriteMessage -failure "No old RimWorld-folder defined, cannot start old version."
-		return		
+		return
 	}
 	if ($version -and $version -ne "beta" -and -not ($play -or $testMod -or $modObject)) {
 		WriteMessage -failure "Only testing or playing is supported for old versions of RimWorld"
-		return		
+		return
 	}
 	if ($inBeta -and -not $version) {
 		$version = Get-CurrentRimworldVersion
 	}
-	# if (-not $inBeta -and $version -eq (Get-CurrentRimworldVersion)) {
-	# 	$version = $null
-	# }
+	if (-not $skipDLC) {
+		$skipDLC = "None"
+	}
+
 	Write-Verbose "Starting RimWorld with version $version"
 	$prefsFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\Prefs.xml"
 	$modFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\ModsConfig.xml"
@@ -3926,8 +3980,8 @@ function Start-RimWorld {
 		$oldVersions = Get-ChildItem $oldRimworldFolder -Directory | Select-Object -ExpandProperty Name
 		if (-not $oldVersions.Contains($version)) {
 			WriteMessage -failure "No RimWorld-folder matching version $version found in $oldRimworldFolder."
-			return		
-		}		
+			return
+		}
 		$prefsFile = "$oldRimworldFolder\$version\DataFolder\Config\Prefs.xml"
 		$modFile = "$oldRimworldFolder\$version\DataFolder\Config\ModsConfig.xml"
 		$testModFile = "$oldRimworldFolder\ModsConfig_$version.xml"
@@ -3938,8 +3992,8 @@ function Start-RimWorld {
 			$currentActiveMods | Set-Content -Path $playingModsConfig -Encoding UTF8
 		} else {
 			$currentActiveMods | Set-Content -Path $moddingModsConfig -Encoding UTF8
-		}		
-	}	
+		}
+	}
 
 	Stop-RimWorld
 
@@ -3947,7 +4001,7 @@ function Start-RimWorld {
 		Copy-Item $testingModsConfig $modFile -Confirm:$false
 		if ($autotest) {
 			Copy-Item $autoModsConfig $modFile -Confirm:$false
-		}	
+		}
 		if ($bare) {
 			Copy-Item $bareModsConfig $modFile -Confirm:$false
 		}
@@ -3959,7 +4013,7 @@ function Start-RimWorld {
 			if ($alsoLoadBefore) {
 				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject -alsoLoadBefore
 			} else {
-				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject		
+				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject
 			}
 			if ($identifiersToAdd.Length -eq 0) {
 				WriteMessage -failure "No mod identifiers found, exiting."
@@ -3991,17 +4045,17 @@ function Start-RimWorld {
 			$modIdentifiers += "<li>majorhoff.rimthreaded</li>"
 		}
 		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiersPrereq</activeMods>").Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
-		Set-RimworldRunMode -prefsFile $prefsFile -testing:(-not $autotest) -autoTesting:$autotest
+		Set-RimworldRunMode -prefsFile $prefsFile -testing:(-not $autotest) -autoTesting:$autotest -skipDLC $skipDLC
 	}
 	if ($testMod) {
 		$modObject = Get-Mod -modName $testMod
-	} 
-	if ($modObject) {		
+	}
+	if ($modObject) {
 		if ((-not $force) -and -not $modObject.Mine) {
 			WriteMessage -failure "Not my mod, exiting."
 			return
 		}
-		if ($version -and $version -ne "beta" -and $version -ne (Get-CurrentRimworldVersion)) {			
+		if ($version -and $version -ne "beta" -and $version -ne (Get-CurrentRimworldVersion)) {
 			Copy-Item $testModFile $modFile -Confirm:$false
 			$excludes = ".git","Source"
 			if ($version -eq "1.0") {
@@ -4022,7 +4076,7 @@ function Start-RimWorld {
 					if ($alsoLoadBefore) {
 						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid -alsoLoadBefore
 					} else {
-						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid			
+						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid
 					}
 					$combinedIdentifiers = @()
 					if ($identifiersToAdd.Count -gt 1) {
@@ -4063,23 +4117,23 @@ function Start-RimWorld {
 				$modObject.ManifestFileContent.Replace($localModFolder, $oldModFolder) | Set-Content "$oldModFolder\$modname\_PublisherPlus.xml" -Encoding UTF8
 			}
 		} else {
-			Copy-Item $testingModsConfig $modFile -Confirm:$false	
+			Copy-Item $testingModsConfig $modFile -Confirm:$false
 			if ($autotest ) {
 				Copy-Item $autoModsConfig $modFile -Confirm:$false
-			}	
+			}
 			if ($bare) {
 				Copy-Item $bareModsConfig $modFile -Confirm:$false
 			}
 			if ($alsoLoadBefore) {
 				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject -alsoLoadBefore
 			} else {
-				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject			
+				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject
 			}
 			if ($otherModid) {
 				if ($alsoLoadBefore) {
 					$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid -alsoLoadBefore
 				} else {
-					$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid			
+					$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid
 				}
 				$combinedIdentifiers = @()
 				if ($identifiersToAdd.Count -gt 1) {
@@ -4104,7 +4158,7 @@ function Start-RimWorld {
 		if ($identifiersToAdd.Count -eq 1) {
 			WriteMessage -progress "Adding $identifiersToAdd as mod to test"
 			$modIdentifiers += "<li>$identifiersToAdd</li>"
-		} else {			
+		} else {
 			foreach ($identifier in $identifiersToAdd) {
 				if ($identifier.Contains("ludeon")) {
 					continue
@@ -4115,30 +4169,30 @@ function Start-RimWorld {
 					WriteMessage -progress "Adding $identifier as prerequirement"
 				}
 				$modIdentifiers += "<li>$identifier</li>"
-			}	
+			}
 		}
 		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
-		Set-RimworldRunMode -prefsFile $prefsFile -testing:(-not $autotest) -autoTesting:$autotest
+		Set-RimworldRunMode -prefsFile $prefsFile -testing:(-not $autotest) -autoTesting:$autotest -skipDLC $skipDLC
 	}
 	if ($play) {
-		if (-not $version -or $version -eq "beta") {	
+		if (-not $version -or $version -eq "beta") {
 			Copy-Item $playingModsConfig $modFile -Confirm:$false
-		}		
-		Set-RimworldRunMode -prefsFile $prefsFile
-	}	
+		}
+		Set-RimworldRunMode -prefsFile $prefsFile -skipDLC $skipDLC
+	}
 	if ($bare) {
-		if (-not $modObject -and -not $testMod -and -not $testAuthor) {			
+		if (-not $modObject -and -not $testMod -and -not $testAuthor) {
 			Copy-Item $bareModsConfig $modFile -Confirm:$false
 		}
-		Set-RimworldRunMode -prefsFile $prefsFile
+		Set-RimworldRunMode -prefsFile $prefsFile -skipDLC $skipDLC
 	}
 	if (-not $testMod -and -not $modObject -and -not $play -and -not $bare -and -not $testAuthor ) {
 		Copy-Item $moddingModsConfig $modFile -Confirm:$false
-		Set-RimworldRunMode -prefsFile $prefsFile -testing:(-not $autotest) -autoTesting:$autotest
+		Set-RimworldRunMode -prefsFile $prefsFile -testing:(-not $autotest) -autoTesting:$autotest -skipDLC $skipDLC
 	}
 	Start-Sleep -Seconds 2
 	$currentLocation = Get-Location
-	if ($version -and $version -ne "beta" -and $version -ne (Get-CurrentRimworldVersion)) {	
+	if ($version -and $version -ne "beta" -and $version -ne (Get-CurrentRimworldVersion)) {
 		$applicationPath = "$oldRimworldFolder\$version\RimWorldWin64.exe"
 		$arguments = "-savedatafolder=DataFolder"
 		Set-Location "$oldRimworldFolder\$version"
@@ -4163,16 +4217,16 @@ function Start-RimWorld {
 			Start-Sleep -Seconds 1
 			continue
 		}
-		
+
 		if (-not (Get-Process -Name "RimWorldWin64" -ErrorAction SilentlyContinue)) {
 			break
 		}
 
 		if (-not ((Get-Item -Path $logPath).LastWriteTime -ge (Get-Date).AddSeconds(-60))) {
-			if (-not (Select-String -Path $logPath -Pattern "Initializing new game with mods")) {				
+			if (-not (Select-String -Path $logPath -Pattern "Initializing new game with mods")) {
 				Start-Sleep -Seconds 1
 				continue
-			}			
+			}
 			break
 		}
 
@@ -4184,7 +4238,7 @@ function Start-RimWorld {
 	if ($logContent.Contains("[[Autotest failed]]")) {
 		Copy-Item $logPath "$($modObject.ModFolderPath)\Source\lastrun.log" -Force | Out-Null
 		return $false
-	} 
+	}
 	if (Test-Path "$($modObject.ModFolderPath)\Source\lastrun.log") {
 		Remove-Item "$($modObject.ModFolderPath)\Source\lastrun.log" -Force -Confirm:$false
 	}
@@ -4198,6 +4252,8 @@ function Test-Mod {
 		[string] $version,
 		$otherModid,
 		$otherModName,
+		[string] [Parameter()][ValidateSet('None', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
+		$skipDLC,
 		[switch] $alsoLoadBefore,
 		[switch] $autotest,
 		[switch] $force,
@@ -4207,11 +4263,15 @@ function Test-Mod {
 	$modObject = Get-Mod
 
 	if (-not $modObject.ModFolderPath) {
-		return			
+		return
 	}
 
 	if (-not $version) {
 		$version = Get-CurrentRimworldVersion
+	}
+
+	if (-not $skipDLC) {
+		$skipDLC = "None"
 	}
 
 	if ($otherModName) {
@@ -4221,11 +4281,11 @@ function Test-Mod {
 			$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound -lastVersion:$lastVersion
 			if (-not $modLink -and -not $lastVersion) {
 				WriteMessage -progress "Could not find other mod named $otherModName, trying to find the last version"
-				$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound -lastVersion:$true	
+				$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound -lastVersion:$true
 			}
 			if (-not $modLink) {
 				WriteMessage -failure "Could not find other mod named $otherModName, exiting"
-				return			
+				return
 			}
 			$otherModid = $modLink.Split('=')[1]
 		}
@@ -4234,9 +4294,9 @@ function Test-Mod {
 	if ($autotest) {
 		WriteMessage -progress "Auto-testing $($modObject.DisplayName)"
 	} else {
-		WriteMessage -progress "Testing $($modObject.DisplayName)"		
+		WriteMessage -progress "Testing $($modObject.DisplayName)"
 	}
-	return Start-RimWorld -modObject $modObject -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -bare:$bare -otherModid $otherModid -mlieMod $mlieMod
+	return Start-RimWorld -modObject $modObject -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -bare:$bare -otherModid $otherModid -mlieMod $mlieMod -skipDLC $skipDLC
 }
 
 #endregion
@@ -4259,13 +4319,13 @@ function Set-CleanModDescription {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
 		return
 	}
-	
+
 	if (-not ($modObject.AboutFileContent -match "&apos;") -and `
 			-not ($modObject.AboutFileContent -match "&quot;") -and `
 			-not ($modObject.AboutFileContent -match "&lt;") -and `
 			-not ($modObject.AboutFileContent -match "&gt;")) {
 		WriteMessage -progress "Local description for $($modObject.Name) does not need cleaning"
-		return		
+		return
 	}
 	WriteMessage -success "Starting with $($modObject.Name)"
 	Sync-ModDescriptionFromSteam -modObject $modObject
@@ -4291,16 +4351,16 @@ function Get-ModDescription {
 	$stagingDirectory = $settings.mod_staging_folder
 	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
 	Remove-Item -Path $tempDescriptionFile -Force -ErrorAction SilentlyContinue
-	$arguments = @($modId, "SAVE", $tempDescriptionFile)  
+	$arguments = @($modId, "SAVE", $tempDescriptionFile)
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow | Out-Null
 	if (-not (Test-Path $tempDescriptionFile)) {
 		WriteMessage -warning "No description found on steam for $modId"
-		return			
+		return
 	}
 	$currentDescription = Get-Content -Path $tempDescriptionFile -Raw -Encoding UTF8
 	if ($currentDescription.Length -eq 0) {
 		WriteMessage -warning "Description found on steam for $modId was empty"
-		return		
+		return
 	}
 
 	return $currentDescription
@@ -4322,17 +4382,17 @@ function Update-ModDescription {
 
 	if (-not $searchStrings) {
 		WriteMessage -failure "Searchstrings must be defined"
-		return	
+		return
 	}
 	if (-not $replaceStrings) {
 		$result = Read-Host "Replacestring is not defined, continue? (y/n)"
 		if ($result -eq "y") {
 			return
-		}	
+		}
 	} else {
 		if ($searchStrings.Count -ne $replaceStrings.Count) {
 			WriteMessage -failure "If replacestrings are defined, they must be the same amount as searchstrings"
-			return	
+			return
 		}
 	}
 	$modFolders = @()
@@ -4346,32 +4406,32 @@ function Update-ModDescription {
 
 		if (-not $modObject.ModFolderPath) {
 			WriteMessage -failure "$($modObject.Name) folder can not be found, exiting"
-			return	
+			return
 		}
 		$modFolders += $modObject.ModFolderPath
 	} else {
 		(Get-ChildItem -Directory $localModFolder).FullName | ForEach-Object { $modFolders += $_ }
 	}
-	
-	WriteMessage -success "Will replace $($searchStrings -join ",") with $($replaceStrings -join ",") in $($modFolders.Count) mods" 
+
+	WriteMessage -success "Will replace $($searchStrings -join ",") with $($replaceStrings -join ",") in $($modFolders.Count) mods"
 	$total = $modFolders.Count
 	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	$progressObject = WriteProgress -initiate -title "Updating mod-descriptions" -totalActions $total
 
-	foreach ($folder in ($modFolders | Get-Random -Count $modFolders.Count)) {		
+	foreach ($folder in ($modFolders | Get-Random -Count $modFolders.Count)) {
 		WriteProgress -progressObject $progressObject
 
 		$modObject = Get-Mod $(Split-Path $folder -Leaf)
-		
+
 		if (-not $modObject.Published) {
 			WriteMessage -progress "$($modObject.Name) is not published, ignoring"
 			continue
-		}		
+		}
 		if (-not $modObject.Mine) {
 			WriteMessage -progress "$($modObject.Name) is not mine, ignoring"
 			continue
 		}
-				
+
 		if ($notMine -and -not $modObject.Continued) {
 			WriteMessage -progress "$($modObject.Name) is mine, ignoring"
 			continue
@@ -4380,15 +4440,15 @@ function Update-ModDescription {
 			WriteMessage -progress "$($modObject.Name) is not mine, ignoring"
 			continue
 		}
-		if ($syncBefore) {			
+		if ($syncBefore) {
 			Sync-ModDescriptionFromSteam -modObject $modObject
 			$modObject = Get-Mod -originalModObject $modObject
-		}	
-		
+		}
+
 		for ($i = 0; $i -lt $searchStrings.Count; $i++) {
 			$searchString = $searchStrings[$i]
 			$searchStringEscaped = [Regex]::Escape($searchString)
-			
+
 			if ($replaceStrings) {
 				$replaceString = $replaceStrings[$i]
 				$replaceStringEscaped = [Regex]::Escape($replaceString)
@@ -4399,7 +4459,7 @@ function Update-ModDescription {
 			}
 			if (Select-String -InputObject $modObject.AboutFileXml.ModMetaData.description -pattern $searchStringEscaped) {
 				Start-Sleep -Milliseconds $waittime
-				$arguments = @($modObject.PublishedId, "REPLACE", """$searchString""", """$replaceString""")   
+				$arguments = @($modObject.PublishedId, "REPLACE", """$searchString""", """$replaceString""")
 				Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
 				$modObject.AboutFileXml.ModMetaData.description = [regex]::Replace($modObject.AboutFileXml.ModMetaData.description, $searchStringEscaped, $replaceString)
 			} else {
@@ -4438,7 +4498,7 @@ function Sync-ModDescriptionFromSteam {
 	if (-not $modObject.Published) {
 		WriteMessage -failure "$($modObject.Name) not published, aborting sync"
 		return
-	}	
+	}
 
 	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	$stagingDirectory = $settings.mod_staging_folder
@@ -4455,7 +4515,7 @@ function Sync-ModDescriptionFromSteam {
 		WriteMessage -failure "Description found on steam for $($modObject.Name) was empty, aborting sync"
 		return
 	}
-	
+
 	$modObject.AboutFileXml.ModMetaData.description = $currentDescription.Replace(" & ", " &amp; ").Replace(">", "").Replace("<", "")
 	$modObject.AboutFileXml.Save($modObject.AboutFilePath)
 	$modObject.AboutFileContent = Get-Content $modObject.AboutFilePath -Raw -Encoding UTF8
@@ -4493,7 +4553,7 @@ function Sync-ModDescriptionToSteam {
 	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	$stagingDirectory = $settings.mod_staging_folder
 	$tempDescriptionFile = "$stagingDirectory\tempdesc.txt"
-	
+
 	$modObject.Description | Set-Content -Path $tempDescriptionFile -Encoding UTF8
 	$arguments = @($modObject.PublishedId, "SET", $tempDescriptionFile)
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
@@ -4558,8 +4618,8 @@ Tags:
 			return
 		}
 	}
-	
-	if ($tags.Length -eq 0) {		
+
+	if ($tags.Length -eq 0) {
 		$tags = Read-Host "No tags genererated, enter tags separated by comma"
 		$tags = $tags -split ","
 		$silent = $true
@@ -4707,7 +4767,7 @@ $csSummary
 # Pushes the updated source to github and generates a new release
 function Publish-Mod {
 	[CmdletBinding()]
-	param (		
+	param (
 		[switch]$SkipNotifications,
 		[switch]$GithubOnly,
 		[string]$ChangeNote,
@@ -4812,7 +4872,7 @@ function Publish-Mod {
 		WriteMessage "Updating gitignore file for $($modObject.Name)"
 		Copy-Item -Path $gitignoreTemplate $modObject.GitIgnorePath -Force | Out-Null
 		$reapplyGitignore = $true
-	} 
+	}
 	if ((Test-Path $modSyncTemplate) -and -not $modObject.ModSyncFilePath) {
 		$modObject.ModSyncFilePath = "$($modObject.ModFolderPath)\About\ModSync.xml"
 		New-ModSyncFile -modObject $modObject -version $version.ToString()
@@ -4831,7 +4891,7 @@ function Publish-Mod {
 		if ($ChangeNote) {
 			$message = $ChangeNote
 		} elseif ($skipInteraction) {
-			$message = "Last update, added end-of-life message"		
+			$message = "Last update, added end-of-life message"
 		} else {
 			$message = Get-MultilineMessage -query "Changenote" -mustFill
 		}
@@ -4839,7 +4899,7 @@ function Publish-Mod {
 		$newVersion = (Get-NextVersionNumber -currentVersion $version -referenceVersion $modObject.HighestSupportedVersion).ToString()
 		((Get-Content -path $modObject.ManifestFilePath -Raw -Encoding UTF8).Replace($oldVersion, $newVersion)) | Set-Content -Path $modObject.ManifestFilePath
 		((Get-Content -path $modObject.ModSyncFilePath -Raw -Encoding UTF8).Replace($oldVersion, $newVersion)) | Set-Content -Path $modObject.ModSyncFilePath
-		if ($EndOfLife) {			
+		if ($EndOfLife) {
 			Set-ModUpdateFeatures -modObject $modObject -updateMessage "The original version of this mod has been updated, please use it instead. This version will remain, but unlisted and will not be updated further."
 		} elseif ($Depricated) {
 			Set-ModUpdateFeatures -modObject $modObject -updateMessage "The features of this mod has now been included in the game. This mod will not be further updated but will stay up to support the previous versions of the game."
@@ -4870,7 +4930,7 @@ function Publish-Mod {
 
 	$version = [version]$newVersion
 	Set-ModChangeNote -modObject $modObject -changenote "$version - $message" -Force:$Force
-	
+
 	$modObject = Get-Mod -originalModObject $modObject
 	if (-not $Replacement) {
 		if (-not $modObject.Published) {
@@ -4892,7 +4952,7 @@ function Publish-Mod {
 		}
 	}
 	$modObject = Get-Mod -originalModObject $modObject
-	if ($modObject.Published -or $Replacement) {		
+	if ($modObject.Published -or $Replacement) {
 		$description = $modObject.Description
 		$indexOfIt = $description.IndexOf("[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/")
 		if ($indexOfIt -ne -1) {
@@ -4902,8 +4962,8 @@ function Publish-Mod {
 
 		if ($description -notmatch " or the standalone ") {
 			$description = $description.Replace(" and command Ctrl", " or the standalone [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2873415404]Uploader[/url] and command Ctrl")
-		}		
-		
+		}
+
 		if ($description -notmatch " to sort your mods") {
 			$description = $description.Replace("please post it to the GitHub repository.`n", "please post it to the GitHub repository.`n[*] Use [url=https://github.com/RimSort/RimSort/releases/latest]RimSort[/url] to sort your mods`n")
 		}
@@ -4914,7 +4974,7 @@ function Publish-Mod {
 
 		if (-not $modObject.Continued -and -not $description.Contains("5xwDG6H")) {
 			$description += $faqTextPrivate
-		}	
+		}
 		$versionLogo = ""
 		if ($modObject.PublishedId) {
 			if ($modObject.Continued) {
@@ -4931,8 +4991,8 @@ function Publish-Mod {
 		}
 
 		$modObject.AboutFileXml.ModMetaData.description = "$description $versionLogo $tags"
-	} 
-	
+	}
+
 	if ($modObject.MetadataFileJson.FundingSet) {
 		$githubPath = "$($modObject.ModFolderPath)\.github"
 		$fundingPath = "$githubPath\FUNDING.yml"
@@ -4977,7 +5037,7 @@ function Publish-Mod {
 			WriteMessage -progress "Removing modIconPath from about-file"
 			$modObject.aboutFileXml.ModMetaData.RemoveChild($modObject.aboutFileXml.ModMetaData.modIconPath) | Out-Null
 		}
-		
+
 		WriteMessage -success "Reverted mod-icon from Textures to About-folder"
 	}
 
@@ -4999,7 +5059,7 @@ function Publish-Mod {
 		$newNode = $modObject.AboutFileXml.CreateElement("modVersion")
 		$newNode.SetAttribute("IgnoreIfNoMatchingField", "True");
 		$newNode.InnerText = "$newVersion"
-		$modObject.AboutFileXml.ModMetaData.AppendChild($newNode) | Out-Null		
+		$modObject.AboutFileXml.ModMetaData.AppendChild($newNode) | Out-Null
 	} else {
 		$modObject.AboutFileXml.ModMetaData.modVersion.'#text' = $newVersion
 	}
@@ -5020,7 +5080,7 @@ function Publish-Mod {
 	if ($Abandoned -or $ReplacedBy) {
 		if ($Abandoned) {
 			$modObject.AboutFileXml.ModMetaData.name = "[Abandoned] $($modObject.AboutFileXml.ModMetaData.name)"
-		} else {			
+		} else {
 			$modObject.AboutFileXml.ModMetaData.name = "[Depricated] $($modObject.AboutFileXml.ModMetaData.name)"
 		}
 		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "3npT60J")
@@ -5029,7 +5089,7 @@ function Publish-Mod {
 			New-ModReplacement -localName $modObject.Name -replacementSteamId $ReplacedBy -silent
 		}
 	}
-	
+
 	$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Trim()
 	$modObject.AboutFileXml.Save($modObject.AboutFilePath)
 	$modObject.Description = $modObject.AboutFileXml.ModMetaData.description
@@ -5079,7 +5139,7 @@ function Publish-Mod {
 			Body        = (ConvertTo-Json $releaseData -Compress)
 		}
 		$createdRelease = Invoke-RestMethod @releaseParams
-	
+
 		WriteMessage -progress "Creating zip-file"
 		Get-ZipFile -modObject $modObject -filename "$($modObject.NameClean)_$newVersion.zip"
 		$zipFile = Get-Item "$($modObject.ModFolderPath)\$($modObject.NameClean)_$newVersion.zip"
@@ -5124,8 +5184,8 @@ function Publish-Mod {
 					Move-TrelloCardToDone -cardId $trelloCard.id
 				}
 				$link = Get-ModPage -getLink
-				Push-ModComment -modId $previousModId -Comment "Made an update of this:`n$link`nHope it helps anyone!"			
-				
+				Push-ModComment -modId $previousModId -Comment "Made an update of this:`n$link`nHope it helps anyone!"
+
 				New-ModReplacement -steamId $previousModId -replacementLocalName $modObject.Name -silent
 				$originalIds = Read-Host "Insert one or more extra ids (separated by ,) for $modName or leave empty if no more replacements"
 				if ($originalIds) {
@@ -5150,7 +5210,7 @@ function Publish-Mod {
 				}
 			}
 		}
-			
+
 		if ($ExtraInfo) {
 			$message = "$message`r`n$ExtraInfo"
 		}
@@ -5189,7 +5249,7 @@ function Publish-Mod {
 		WriteMessage -success "Archived $($modObject.Name)"
 		return
 	}
-	if ($ReRelease) {		
+	if ($ReRelease) {
 		Push-ModComment -modObject $modObject -Comment "Mod re-relased for $(Get-CurrentRimworldVersion), see info in the description"
 	}
 	WriteMessage -progress "Running Git Cleanup"
@@ -5244,7 +5304,7 @@ function Start-SteamPublish {
 		Copy-Item -Path "$($modObject.ModFolderPath)\Source\*" -Destination $previewDirectory -Include $inclusions
 	}
 	if (Test-Path "$($modObject.ModFolderPath)\Source\Preview.gif") {
-		Copy-Item -Path "$($modObject.ModFolderPath)\Source\Preview.gif" -Destination $previewDirectory		
+		Copy-Item -Path "$($modObject.ModFolderPath)\Source\Preview.gif" -Destination $previewDirectory
 	}
 
 	WriteMessage -progress "Starting steam-publish"
@@ -5272,8 +5332,8 @@ function Start-SteamPublish {
 function Push-UpdateNotification {
 	param(
 		$modObject,
-		[switch]$Test, 
-		[string]$Changenote, 
+		[switch]$Test,
+		[string]$Changenote,
 		[switch]$EndOfLife
 	)
 	if (-not $modObject) {
@@ -5298,14 +5358,14 @@ function Push-UpdateNotification {
 		} else {
 			$discordHookUrl = $discordPublishHookUrl
 			$content = (Get-Content $discordPublishMessage -Raw -Encoding UTF8).Replace("[modname]", $($modObject.DisplayName)).Replace("[modurl]", $modObject.ModUrl)
-		}		
+		}
 	}
-	
+
 	if ($Test) {
 		$discordHookUrl = $discordTestHookUrl
 		WriteMessage -progress "Posting the message to test-channel"
 	}
-	
+
 	$payload = [PSCustomObject]@{
 		content  = $content
 		username = "Update Bot"
@@ -5484,7 +5544,7 @@ function Set-ImageMaxSize {
 	$graph = [System.Drawing.Graphics]::FromImage($canvas)
 	$graph.DrawImage($img, 0, 0, $newWidth, $newHeight)
 	$img.Dispose()
-	if ($fullImagePath -eq $outPath) {			
+	if ($fullImagePath -eq $outPath) {
 		Remove-Item $outPath -Confirm:$false -Force | Out-Null
 	}
 	$canvas.Save($outPath)
@@ -5529,7 +5589,7 @@ function Update-InfoBanner {
 	Set-ImageMaxSize -imagePath $updatebannerTempPath -pixels 200 -outName (Split-Path $updatebannerTempPath -Leaf) -overwrite -silent
 	$tempImageObject = [System.Drawing.Image]::FromFile($updatebannerTempPath)
 	$height = $tempImageObject.Height
-	$tempImageObject.Dispose() 
+	$tempImageObject.Dispose()
 
 	& magick "$updatebannerTempPath" -background transparent -gravity West -extent "$(500)x$($height)" "$updatebannerPath"
 	Start-Sleep -Seconds 1
@@ -5607,7 +5667,7 @@ function New-AssetBundle {
 	WriteMessage -progress "Cleaning up $outputPath"
 	Remove-Item -Path $outputPath -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 	New-Item -Path $outputPath -ItemType Directory -Force | Out-Null
-	
+
 	$inputPath = "$($unityBundleProjectPath)\Assets\Data\$prefix"
 	WriteMessage -progress "Creating $inputPath"
 	New-Item -Path $inputPath -ItemType Directory -Force | Out-Null
@@ -5617,12 +5677,12 @@ function New-AssetBundle {
 
 	WriteMessage "Generating AssetBundle for $($targetPath)"
 	Start-Process -FilePath $unityPath -ArgumentList "-batchmode","-quit","-projectPath ""$unityBundleProjectPath""","-executeMethod ModAssetBundleBuilder.BuildBundles","--assetBundleName=$assetFileName" -NoNewWindow -Wait
-	
+
 	if (-not (Test-Path "$($unityBundleProjectPath)\Assets\AssetBundles\$assetFileName")) {
 		WriteMessage -failure "Failed to create AssetBundle, exiting"
 		return
 	}
-	
+
 	WriteMessage -progress "Cleaning up $targetPath"
 	Remove-Item -Path $targetPath -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 	New-Item -Path $targetPath -ItemType Directory -Force | Out-Null
@@ -5671,7 +5731,7 @@ function Set-ModAssetBundle {
 			$modObject.aboutFileXml.ModMetaData.RemoveChild($modObject.aboutFileXml.ModMetaData.modIconPath) | Out-Null
 			$modObject.aboutFileXml.Save($modObject.AboutFilePath)
 		}
-		
+
 		WriteMessage -success "Reverted mod-icon from Textures to About-folder"
 	}
 
@@ -5703,7 +5763,7 @@ function Set-ModAssetBundle {
 			return $true
 		}
 
-		$assetFiles = $assetFolders | ForEach-Object { Get-ChildItem -Path $_.FullName -Recurse -File }	
+		$assetFiles = $assetFolders | ForEach-Object { Get-ChildItem -Path $_.FullName -Recurse -File }
 
 		if ($assetFiles.Count -lt $assetCountLimit -and -not $force) {
 			WriteMessage -success "Asset files found in $($modObject.ModFolderPath) was $($assetFiles.Count), below limit of $assetCountLimit, skipping AssetBundle creation"
@@ -5754,7 +5814,7 @@ function Set-ModAssetBundle {
 		New-AssetBundle -modObject $modObject
 		$modObject = Get-Mod -originalModObject $modObject
 	}
-	
+
 	if (-not $modObject.UsesRegularAssets) {
 		return $true
 	}
@@ -5778,8 +5838,8 @@ function Set-ModAssetBundle {
 				$versionNode.AppendChild($versionLi) | Out-Null
 			}
 			$loadFoldersXml.DocumentElement.AppendChild($versionNode) | Out-Null
-		} 
-		$versionNode = $loadFoldersXml.DocumentElement."v$version"		
+		}
+		$versionNode = $loadFoldersXml.DocumentElement."v$version"
 		$assetsFolderName = "LegacyAssets"
 		if (([version]$version) -gt [version]"1.5") {
 			$assetsFolderName = "Assets"
@@ -5795,7 +5855,7 @@ function Set-ModAssetBundle {
 		if ($hasAssetsLi) {
 			continue
 		}
-		
+
 		$assetsLi = $loadFoldersXml.CreateElement("li")
 		$assetsLi.InnerText = $assetsFolderName
 		$versionNode.AppendChild($assetsLi) | Out-Null
@@ -5827,7 +5887,7 @@ function Update-Translations {
 			return
 		}
 	}
-	
+
 	if (-not $modObject.Mine -and -not $force) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
 		return
@@ -5857,7 +5917,7 @@ function Update-Translations {
 				$languagesToTranslate += $_.Name
 			}
 		}
-		foreach ($language in $languagesToTranslate) {			
+		foreach ($language in $languagesToTranslate) {
 			if ($modObject.MetadataFileJson.SkipLanguages -contains $language) {
 				WriteMessage -progress "Mod is set to skip autotranslation to $language"
 				continue
@@ -6004,7 +6064,7 @@ function Update-TranslationFile {
 		$targetContent.AppendChild($languageData) | Out-Null
 	}
 
-	if (-not $test) {					
+	if (-not $test) {
 		$remainingChars = Get-DeeplRemainingCharacters
 		if ($remainingChars -lt 250) {
 			WriteMessage -failure "There are not enough credits left to translate, $remainingChars left."
@@ -6019,7 +6079,7 @@ function Update-TranslationFile {
 		$nodeCount++
 		if ($targetContent.LanguageData."$($childNode.Name)") {
 			if ($childNode.NodeType -ne "Comment") {
-				Write-Debug "Node $nodeCount with name $($childNode.Name) already exists in $targetFilePath, skipping"				
+				Write-Debug "Node $nodeCount with name $($childNode.Name) already exists in $targetFilePath, skipping"
 				continue
 			}
 			if ($targetContent.LanguageData.ChildNodes | Where-Object { $_.Name -eq "#comment" -and $_.Value -eq $childNode.Value }) {
@@ -6132,7 +6192,7 @@ function Update-TranslationFile {
 
 
 # Generates the DeepL header for requests
-function Get-DeeplAuthorizationHeader { 
+function Get-DeeplAuthorizationHeader {
 	$header = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 	$header.Add('Authorization', "DeepL-Auth-Key $deeplApiKey")
 	return $header
@@ -6140,7 +6200,7 @@ function Get-DeeplAuthorizationHeader {
 
 # Gets remaining characters to use from the DeepL service
 function Get-DeeplRemainingCharacters {
-	while ($true) {		
+	while ($true) {
 		try {
 			$result = Invoke-RestMethod -Method "POST" -Headers (Get-DeeplAuthorizationHeader) -Uri "$deeplApiUrl/v2/usage"
 			break
@@ -6167,7 +6227,7 @@ function Get-DeeplTranslation {
 		[switch]$chooseLanguage,
 		[switch]$silent
 	)
-	
+
 	if (-not $text) {
 		WriteMessage -failure "No text defined, skipping"
 		return
@@ -6211,7 +6271,7 @@ function Get-DeeplTranslation {
 	}
 
 	$urlSuffix = "?target_lang=$selectedTo"
-	if ($selectedFrom -ne "AUTO") { 
+	if ($selectedFrom -ne "AUTO") {
 		if ($selectedFrom -eq "EN-US") {
 			$selectedFrom = "EN"
 		}
@@ -6244,7 +6304,7 @@ function Get-DeeplTranslation {
 	WriteMessage -progress "Translating '$text' from $selectedFrom to $selectedTo"
 
 	Start-Sleep -Milliseconds 250
-	while ($true) {		
+	while ($true) {
 		try {
 			$result = Invoke-RestMethod -Method "POST" -Headers (Get-DeeplAuthorizationHeader) -Uri "$deeplApiUrl/v2/translate$urlSuffix"
 			break
@@ -6278,7 +6338,7 @@ function Set-Translation {
 			return
 		}
 	}
-	
+
 	if (-not $modObject.Mine -and -not $force) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
 		return
@@ -6297,20 +6357,20 @@ function Set-Translation {
 		Copy-Item "E:\ModPublishing\Binaries\*.dll" (Split-Path $rimTransExe) -Force
 		return
 	}
-	
+
 	WriteMessage -progress "Generating default language-data"
 
 	(Get-Content $rimTransTemplate -Raw -Encoding UTF8).Replace("[modpath]", $modObject.ModFolderPath) | Out-File $currentFile -Encoding utf8
-	
-	$process = Start-Process -FilePath $rimTransExe -ArgumentList $command -PassThru 
+
+	$process = Start-Process -FilePath $rimTransExe -ArgumentList $command -PassThru
 	Start-Sleep -Seconds 1
 	$wshell = New-Object -ComObject wscript.shell;
 	$wshell.AppActivate('RimTrans')
 	$wshell.SendKeys('{ ENTER }')
 	while (-not $process.HasExited) {
-		Start-Sleep -Milliseconds 200 
+		Start-Sleep -Milliseconds 200
 	}
-	WriteMessage -success "Generation done"	
+	WriteMessage -success "Generation done"
 	Remove-Item -Path $currentFile -Force -ProgressAction SilentlyContinue
 }
 
@@ -6376,7 +6436,7 @@ function Add-TrelloCardComment {
 
 function Add-TrelloCardLabel {
 	param($cardId, $labelId)
-	
+
 	$body = @"
 {
     "value": "$labelId"
@@ -6387,7 +6447,7 @@ function Add-TrelloCardLabel {
 
 function Set-TrelloCardToArchived {
 	param($cardId)
-	
+
 	$body = @"
 {
     "closed": "true"
@@ -6400,7 +6460,7 @@ function Find-TrelloCardByName {
 	param ($text)
 	$cards = Get-TrelloCards -boardId $trelloBoardId
 	$cards | ForEach-Object { if ($_.name.contains($text)) {
-			return $_ 		
+			return $_
 		} }
 }
 
@@ -6409,15 +6469,15 @@ function Find-TrelloCardByCustomField {
 	$cards = Get-TrelloCards -boardId $trelloBoardId
 	$cards | ForEach-Object { if ($_.customFieldItems -and $_.customFieldItems.idCustomField.contains($fieldId)) {
 			if ($text -eq ($_.customFieldItems | Where-Object { $_.idCustomField -eq $fieldId }).value.text) {
-				return $_ 
-			} 
-		} 
+				return $_
+			}
+		}
 	}
 }
 
 function Get-TrelloCardsForMod {
 	param($modObject)
-	
+
 	if (-not $modObject) {
 		$modObject = Get-Mod
 		if (-not $modObject) {
@@ -6452,7 +6512,7 @@ function Close-TrelloCardsForMod {
 	if ($justMajorVersion) {
 		foreach ($card in $foundCards) {
 			if ($card.idList -ne $trelloMajorVersionList) {
-				WriteMessage -progress "Ignoring card with url $($card.shortUrl) since its on the wrong list" 
+				WriteMessage -progress "Ignoring card with url $($card.shortUrl) since its on the wrong list"
 				continue
 			}
 
@@ -6493,7 +6553,7 @@ function Close-TrelloCardsForMod {
 			$discordLink = $discordLinkData.value.text
 			cmd.exe /c "start $discordLink"
 		}
-		
+
 	}
 	Start-Sleep -Seconds 1
 	Remove-Item "$($modObject.ModFolderPath)\debug.log" -Force -ErrorAction SilentlyContinue
@@ -6516,7 +6576,7 @@ function Update-TrelloCardWithFile {
 		filename = $fileName
 		file     = Get-Item $filePath
 	}
-	
+
 	return Invoke-RestMethod -Method Post -Uri "https://api.trello.com/1/cards/$cardId/attachments?key=$trelloKey&token=$trelloToken" -Form $form
 }
 #endregion
