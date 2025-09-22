@@ -200,6 +200,10 @@ $Global:trelloBoardId = $settings.trello_board_id
 $Global:steamApiKey = $settings.steam_api_key
 $Global:deeplApiKey = $settings.deepl_api_key
 $Global:deeplApiUrl = $settings.deepl_api_url
+$Global:kofiUrl = $settings.kofi_url
+$Global:rimWorldBaseApiKey = $settings.rimworldbase_api_key
+$Global:rimWorldBaseApiUrl = $settings.rimworldbase_api_url
+$Global:rimWorldBaseApiUser = $settings.rimworldbase_api_user
 $Global:nugetPackagesPath = $settings.nuget_packages_path
 $Global:autoTranslateLanguages = $settings.auto_translate_languages
 if (-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
@@ -4755,6 +4759,100 @@ $csSummary
 	WriteMessage -success "copilot-instructions.md created at $instructionsPath"
 }
 
+function Update-MissingItemDescriptions {
+	[CmdletBinding()]
+	param (
+		[string]$filePath,
+		[string]$folderPath,
+		[string]$itemType
+	)
+
+	if (-not $filePath -and -not $folderPath) {
+		WriteMessage -failure "A path must be provided"
+		return
+	}
+	if ($filePath -and $folderPath) {
+		WriteMessage -failure "Only one path must be provided"
+		return
+	}
+	if ($filePath) {
+		if (-not (Test-Path $filePath)) {
+			WriteMessage -failure "File $filePath does not exist"
+			return
+		}
+		$xmlFiles = @((Get-Item -Path $filePath) )
+	} elseif ($folderPath) {
+		if (-not (Test-Path $folderPath)) {
+			WriteMessage -failure "Folder $folderPath does not exist"
+			return
+		}
+		$xmlFiles = Get-ChildItem -Path $folderPath -Recurse -Include *.xml
+	}
+
+	foreach ($xmlFile in $xmlFiles) {
+		[xml]$xmlContent = Get-Content -Path $xmlFile.FullName -Raw
+		# Select ThingDef with a description node that is less than 5 characters long or empty
+		$items = $xmlContent.SelectNodes("//ThingDef[description and (string-length(description) < 5 or description = '')]")
+		foreach ($item in $items) {
+			$itemName = $item.label
+			if (-not $itemName) {
+				continue
+			}
+			WriteMessage -progress "Generating description for $itemName in $($xmlFile.Name)"
+			if (-not $itemType) {
+				$currentItemType = Read-Host "Item type not provided, enter item type for $itemName or empty for default (item)"
+			} else {
+				$currentItemType = $itemType
+			}
+			$description = Get-ItemDescription -itemName $itemName -itemType $currentItemType
+			if ($description) {
+				$item.description = $description
+				WriteMessage -success "Updated description for $itemName"
+			} else {
+				WriteMessage -warning "Failed to generate description for $itemName"
+			}
+		}
+		$xmlContent.Save($xmlFile.FullName)
+	}
+}
+
+function Get-ItemDescription {
+	param(
+		[string]$itemName,
+		[string]$itemType = "item" # item, weapon, apparel, building, furniture, etc.
+	)
+
+	if (-not $itemName) {
+		WriteMessage -failure "Item name must be provided"
+		return
+	}
+
+	$prompt = @"
+You are an assistant that provides detailed descriptions for items in the game RimWorld.
+Given the item name, provide a concise yet informative description suitable for a the info card in the game.
+Item Name: $itemName
+Item Type: $itemType
+
+Please only provide the description text without any additional commentary.
+"@
+	# Prepare request
+	$headers = @{ "Authorization" = "Bearer $openAIApiKey" }
+	$body = @{
+		model    = $openAIChatModel
+		messages = @(
+			@{ role = "system"; content = "You are a helpful assistant for game mod developers." },
+			@{ role = "user"; content = $prompt }
+		)
+	}
+	$jsonBody = $body | ConvertTo-Json -Depth 10
+
+	# Send request
+	$response = Invoke-RestMethod -Uri "https://api.openai.com/v1/chat/completions" -Method Post -Headers $headers -Body $jsonBody -ContentType "application/json"
+
+	# Save result
+	return $response.choices[0].message.content
+}
+
 #endregion
 
 #region Publishing functions
@@ -4883,7 +4981,7 @@ function Publish-Mod {
 		((Get-Content -path $modObject.ModPublisherPath -Raw -Encoding UTF8).Replace("[modpath]", $modObject.ModFolderPath)) | Set-Content -Path $modObject.ModPublisherPath
 	}
 	if ($modObject.UsesAssetBundle) {
-		Set-ModAssetBundle -modObject $modObject -update
+		Update-ModAssetBundle -modObject $modObject -update
 	}
 
 	# Create repo if does not exists
@@ -4959,14 +5057,6 @@ function Publish-Mod {
 			$description = $description.SubString(0, $indexOfIt)
 		}
 		$description = $description.Trim()
-
-		if ($description -notmatch " or the standalone ") {
-			$description = $description.Replace(" and command Ctrl", " or the standalone [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2873415404]Uploader[/url] and command Ctrl")
-		}
-
-		if ($description -notmatch " to sort your mods") {
-			$description = $description.Replace("please post it to the GitHub repository.`n", "please post it to the GitHub repository.`n[*] Use [url=https://github.com/RimSort/RimSort/releases/latest]RimSort[/url] to sort your mods`n")
-		}
 
 		if ($modObject.Continued -and -not $description.Contains("PwoNOj4")) {
 			$description += $faqText
@@ -5251,6 +5341,8 @@ function Publish-Mod {
 	}
 	if ($ReRelease) {
 		Push-ModComment -modObject $modObject -Comment "Mod re-relased for $(Get-CurrentRimworldVersion), see info in the description"
+	} else {
+		Publish-ModToRimWorldBase -modObject $modObject
 	}
 	WriteMessage -progress "Running Git Cleanup"
 	git gc --auto
@@ -5376,6 +5468,215 @@ function Push-UpdateNotification {
 	} catch {
 		WriteMessage -failure "Failed to post message to Discord"
 	}
+}
+
+function Publish-ModToRimWorldBase {
+	[CmdletBinding()]
+	param(
+		$modObject
+	)
+
+	if (-not $rimworldBaseApiKey) {
+		WriteMessage -failure "No RimWorldBase API key defined, cannot publish"
+		return
+	}
+
+	if (-not $modObject) {
+		$modObject = Get-Mod
+		if (-not $modObject) {
+			return
+		}
+	}
+
+	$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($rimWorldBaseApiUser):$($rimworldBaseApiKey)"))
+	$updateHeader = @{
+		"Authorization" = "Basic $base64AuthInfo"
+		"Content-Type"  = "application/json"
+	}
+
+	if (-not $modObject.MetadataFileJson.RimWorldBaseId) {
+		WriteMessage "$($modObject.Name) is not listed on RimWorldBase, creating a new entry"
+		$body = @{
+			title  = "$($modObject.DisplayName) Mod"
+			status = "draft"
+		} | ConvertTo-Json
+
+		$postUrl = $rimWorldBaseApiUrl.Replace("acf/v3/posts/", "wp/v2/posts")
+		$response = Invoke-RestMethod -Uri $postUrl -Method Post -Headers $updateHeader -Body $body
+		$rimworldBaseId = $response.id
+		$postUrl = "$postUrl/$rimworldBaseId"
+		$modObject.MetadataFileJson = $modObject.MetadataFileJson | Add-Member -MemberType NoteProperty -Name RimWorldBaseId -Value $rimworldBaseId -Force -PassThru
+		$modObject.MetadataFileJson | ConvertTo-Json -Depth 5 | Set-Content -Path $modObject.MetadataFilePath -Encoding UTF8
+
+		WriteMessage -progress "Uploading preview image"
+		$imageBytes = [System.IO.File]::ReadAllBytes($modObject.PreviewFilePath)
+		$mediaUrl = $rimWorldBaseApiUrl.Replace("acf/v3/posts/", "wp/v2/media")
+		$mediaHeader = @{
+			"Authorization"       = "Basic $base64AuthInfo"
+			"Content-Disposition" = "attachment; filename=`"$($modObject.NameClean).png`""
+			"Content-Type"        = "image/png"
+		}
+		$response = Invoke-RestMethod -Uri $mediaUrl -Method Post -Headers $mediaHeader -Body $imageBytes
+		$mediaId = $response.id
+		$body = @{ featured_media = $mediaId } | ConvertTo-Json
+		$response = Invoke-RestMethod -Uri $postUrl -Method Post -Headers $updateHeader -Body $body
+	}
+
+	WriteMessage -progress "Updating properties for $($modObject.Name) to RimWorldBase"
+	# Fetch all existing field data
+	$rimworldBaseId = $modObject.MetadataFileJson.RimWorldBaseId
+	$url = "$($rimWorldBaseApiUrl)$rimworldBaseId"
+	$response = Invoke-RestMethod -Uri $url -Method Get -Headers @{
+		"Authorization" = "Basic $base64AuthInfo"
+	}
+	$fields = $response.acf
+	$anythingChanged = $false
+
+	# Parse all fields and update if necessary
+	if (-not $fields.is_a_downloadable) {
+		WriteMessage -progress "Setting mod to downloadable"
+		$body = @{ fields = @{ is_a_downloadable = $true } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	if (-not $fields.is_content_author) {
+		WriteMessage -progress "Setting content author"
+		$body = @{ fields = @{ is_content_author = $true } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	if (-not $fields.is_updated) {
+		WriteMessage -progress "Setting is_updated to true"
+		$body = @{ fields = @{ is_updated = $true } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	$wantsDonations = $(-not $modObject.Continued)
+	if ($fields.wants_donations -ne $wantsDonations) {
+		WriteMessage -progress "Setting wants_donations to $wantsDonations"
+		$body = @{ fields = @{ wants_donations = $wantsDonations } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	if ($wantsDonations -and $fields.kofi_url_list.kofi_url -ne $kofiUrl) {
+		WriteMessage -progress "Setting kofi_url to $kofiUrl"
+		$body = @{ fields = @{ kofi_url_list = @( @{ kofi_url = $kofiUrl } ) } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	$steamUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$($modObject.PublishedId)"
+	if ($fields.steam_download -ne $steamUrl) {
+		WriteMessage -progress "Setting steam_download to $steamUrl"
+		$body = @{ fields = @{ steam_download = $steamUrl } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	$directDownloadUrl = "$($modObject.Repository)/releases/download/$($modObject.Version)/$($modObject.NameClean)_$($modObject.Version).zip"
+	if ($fields.direct_download -ne $directDownloadUrl) {
+		WriteMessage -progress "Setting direct_download to $directDownloadUrl"
+		$body = @{ fields = @{ direct_download = $directDownloadUrl } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	$requiresNewGame = $modObject.MetadataFileJson.CanAdd -eq "2"
+	if ($fields.requires_new_game -ne $requiresNewGame) {
+		WriteMessage -progress "Setting requires_new_game to $requiresNewGame"
+		$body = @{ fields = @{ requires_new_game = $requiresNewGame } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	$hasRequirements = $modObject.AboutFileXml.ModMetaData.modDependencies.Length -gt 0
+	if ($fields.requires_libraries -ne $hasRequirements) {
+		WriteMessage -progress "Setting requires_libraries to $hasRequirements"
+		$body = @{ fields = @{ requires_libraries = $hasRequirements } } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+		$fields = $response.acf
+		$anythingChanged = $true
+	}
+
+	if ($hasRequirements) {
+		# Check for harmony
+		$requiresHarmony = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId.Contains("brrainz.harmony")
+		if ($requiresHarmony -and -not $fields.libraries_list -contains 8517) {
+			WriteMessage -progress "Adding harmony to libraries_list"
+			$body = @{ fields = @{ libraries_list = @(8517) } } | ConvertTo-Json -Depth 5
+			$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+			$fields = $response.acf
+			$anythingChanged = $true
+		}
+
+		# Check for DLCs
+		$requiredDLCs = @()
+		foreach ($packageId in $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId) {
+			if ($packageId.StartsWith("Ludeon.Rimworld.")) {
+				$requiredDLCs += $packageId.Replace("Ludeon.Rimworld.","")
+			}
+		}
+		if ($fields.required_dlc -ne $requiredDLCs) {
+			WriteMessage -progress "Setting required_dlc to $requiredDLCs"
+			if ($requiredDLCs.Count -eq 1) {
+				$body = @{ fields = @{ required_dlc = @($requiredDLCs) } } | ConvertTo-Json -Depth 5
+			} else {
+				$body = @{ fields = @{ required_dlc = $requiredDLCs } } | ConvertTo-Json -Depth 5
+			}
+			$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+			$fields = $response.acf
+			$anythingChanged = $true
+		}
+	}
+
+	$url = $url.Replace("acf", "wp").Replace("v3", "v2")
+	$response = Invoke-RestMethod -Uri $url -Method Get -Headers @{
+		"Authorization" = "Basic $base64AuthInfo"
+	}
+
+	$modDescription = $modObject.DescriptionClean.Trim()
+	$modDescription = $modDescription.Replace("[b]", "<strong>").Replace("[/b]", "</strong>")
+	$modDescription = $modDescription.Replace("[i]", "<em>").Replace("[/i]", "</em>")
+	$modDescription = $modDescription.Replace("[u]", "<u>").Replace("[/u]", "</u>")
+	$modDescription = $modDescription.Replace("[img]", "<img src=`"").Replace("[/img]", "`" />")
+	$modDescription = $modDescription.Replace("[url=", "<a href=`"").Replace("]", "`">").Replace("[/url]", "</a>")
+	$modDescription = $modDescription.Replace("[list]", "<ul>").Replace("[/list]", "</ul>")
+	$modDescription = $modDescription.Replace("[*]", "<li>").Replace("[/li]", "</li>")
+	$modDescription = $modDescription.Replace("&#39;", "'").Replace("`r`n", "<br />").Replace("`n", "<br />")
+
+	if ($response.content.rendered -ne $modDescription) {
+		WriteMessage -progress "Updating mod description"
+		$body = @{ content = $modDescription } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+	}
+
+	if ($response.status -eq "draft") {
+		WriteMessage -progress "Setting mod to pending"
+		$body = @{ status = "pending" } | ConvertTo-Json -Depth 5
+		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+	}
+
+	if (-not $anythingChanged) {
+		WriteMessage -progress "No changes necessary"
+		return
+	}
+	$now = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss")
+	$body = @{ date = $now } | ConvertTo-Json -Depth 5
+	$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
+
+	WriteMessage -success "Updated $($modObject.Name) to RimWorldBase"
 }
 
 #endregion
@@ -5691,7 +5992,7 @@ function New-AssetBundle {
 	WriteMessage -success "Created AssetBundle for $($modObject.Name) at $targetPath"
 }
 
-function Set-ModAssetBundle {
+function Update-ModAssetBundle {
 	param(
 		$modObject,
 		[switch]$check,
@@ -5714,6 +6015,11 @@ function Set-ModAssetBundle {
 	if (-not (Test-Path $modObject.ModFolderPath)) {
 		WriteMessage -failure "Mod folder does not exist: $($modObject.ModFolderPath)"
 		return $false
+	}
+
+	if ($modObject.MetadataFileJson.OnDemandBundleUpdate -and -not $force) {
+		WriteMessage -message "$($modObject.Name) is set to OnDemandBundleUpdate, skipping AssetBundle creation"
+		return $true
 	}
 
 	if ($modObject.ModIconPath -and $modObject.ModIconPath.StartsWith("$($modObject.ModFolderPath)\Textures")) {
@@ -5876,6 +6182,7 @@ function Update-Translations {
 	[CmdletBinding()]
 	param (
 		$modObject,
+		[switch]$skipDefInject,
 		[switch]$test,
 		[switch]$silent,
 		[switch]$force
@@ -5898,59 +6205,66 @@ function Update-Translations {
 		return
 	}
 
-	$translationTemplateFolderPath = "$($modObject.ModFolderPath)\Source\TranslationTemplate"
-	$defInjectBaseFolderPath = "$($modObject.ModFolderPath)\Languages"
+	if (-not $skipDefInject) {
+		$translationTemplateFolderPath = "$($modObject.ModFolderPath)\Source\TranslationTemplate"
+		$defInjectBaseFolderPath = "$($modObject.ModFolderPath)\Languages"
 
-	if (Test-Path $translationTemplateFolderPath) {
-		$translationTemplateFiles = Get-ChildItem -Path $translationTemplateFolderPath -Recurse -File
-	}
-	if ($translationTemplateFiles) {
-		WriteMessage -progress "Updating defInject translations for $($modObject.Name)"
-		if (-not (Test-Path $defInjectBaseFolderPath)) {
-			New-Item -Path $defInjectBaseFolderPath -ItemType Directory -Force | Out-Null
+		if (Test-Path $translationTemplateFolderPath) {
+			$translationTemplateFiles = Get-ChildItem -Path $translationTemplateFolderPath -Recurse -File
 		}
-
-		$languagesToTranslate = $autoTranslateLanguages
-		Get-ChildItem -Path $defInjectBaseFolderPath -Directory | ForEach-Object {
-			if ($languagesToTranslate -notcontains $_.Name) {
-				WriteMessage -progress "Adding existing language $($_.Name) to the list of languages to translate"
-				$languagesToTranslate += $_.Name
-			}
-		}
-		foreach ($language in $languagesToTranslate) {
-			if ($modObject.MetadataFileJson.SkipLanguages -contains $language) {
-				WriteMessage -progress "Mod is set to skip autotranslation to $language"
-				continue
-			}
-			if ($language -eq "English") {
-				WriteMessage -progress "Skipping English, no point in translating it"
-				continue
-			}
-			$languageUpdated = $false
-			$currentPath = "$($defInjectBaseFolderPath)\$language\DefInjected"
-			if (-not (Test-Path $currentPath)) {
-				WriteMessage -progress "No DefInjected folder found for $language, creating"
-				New-Item $currentPath -ItemType Directory -Force | Out-Null
+		if ($translationTemplateFiles -and -not $modObject.MetadataFileJson.SkipDefInjectTranslations) {
+			WriteMessage -progress "Updating defInject translations for $($modObject.Name)"
+			if (-not (Test-Path $defInjectBaseFolderPath)) {
+				New-Item -Path $defInjectBaseFolderPath -ItemType Directory -Force | Out-Null
 			}
 
-			foreach ($file in $translationTemplateFiles) {
-				$targetFilePath = $file.FullName.Replace($translationTemplateFolderPath, $currentPath)
-				$targetFolder = Split-Path $targetFilePath
-				if (-not (Test-Path $targetFolder)) {
-					WriteMessage -progress "Creating $targetFolder"
-					New-Item -Path $targetFolder -ItemType Directory -Force | Out-Null
-				}
-				if (Update-TranslationFile -sourceFilePath $file.FullName -targetFilePath $targetFilePath -language $language -modObject $modObject -test:$test) {
-					$languageUpdated = $true
+			$languagesToTranslate = $autoTranslateLanguages
+			Get-ChildItem -Path $defInjectBaseFolderPath -Directory | ForEach-Object {
+				if ($languagesToTranslate -notcontains $_.Name) {
+					WriteMessage -progress "Adding existing language $($_.Name) to the list of languages to translate"
+					$languagesToTranslate += $_.Name
 				}
 			}
+			$progressObject = WriteProgress -initiate -title "Updating DefInject translations" -totalActions ($languagesToTranslate.Count * $translationTemplateFiles.Count)
+			foreach ($language in $languagesToTranslate) {
+				if ($modObject.MetadataFileJson.SkipLanguages -contains $language) {
+					WriteMessage -progress "Mod is set to skip autotranslation to $language"
+					$progressObject.current += $translationTemplateFiles.Count
+					continue
+				}
+				if ($language -eq "English") {
+					WriteMessage -progress "Skipping English, no point in translating it"
+					$progressObject.current += $translationTemplateFiles.Count
+					continue
+				}
+				$languageUpdated = $false
+				$currentPath = "$($defInjectBaseFolderPath)\$language\DefInjected"
+				if (-not (Test-Path $currentPath)) {
+					WriteMessage -progress "No DefInjected folder found for $language, creating"
+					New-Item $currentPath -ItemType Directory -Force | Out-Null
+				}
 
-			if ($languageUpdated -and $language -notin $updatedLanguages) {
-				$updatedLanguages += $language
+				foreach ($file in $translationTemplateFiles) {
+					WriteProgress -progressObject $progressObject
+					$targetFilePath = $file.FullName.Replace($translationTemplateFolderPath, $currentPath)
+					$targetFolder = Split-Path $targetFilePath
+					if (-not (Test-Path $targetFolder)) {
+						WriteMessage -progress "Creating $targetFolder"
+						New-Item -Path $targetFolder -ItemType Directory -Force | Out-Null
+					}
+					WriteMessage -progress "Updating $($file.Name) for $language"
+					if (Update-TranslationFile -sourceFilePath $file.FullName -targetFilePath $targetFilePath -language $language -modObject $modObject -test:$test) {
+						$languageUpdated = $true
+					}
+				}
+
+				if ($languageUpdated -and $language -notin $updatedLanguages) {
+					$updatedLanguages += $language
+				}
 			}
+			WriteProgress -progressObject $progressObject -finished
 		}
 	}
-
 	$allLanguagesFolders = Get-ChildItem -Path $modObject.ModFolderPath -Recurse -Include "Languages" -Directory
 	if (-not $allLanguagesFolders) {
 		if (-not $silent) {
@@ -5961,9 +6275,7 @@ function Update-Translations {
 
 	$updatedLanguages = @()
 
-	$progressObject = WriteProgress -initiate -title "Updating translations" -totalActions $allLanguagesFolders.Count
 	foreach ($folder in $allLanguagesFolders) {
-		WriteProgress -progressObject $progressObject
 		if (-not (Test-Path "$($folder.FullName)\English\Keyed")) {
 			continue
 		}
@@ -5989,9 +6301,12 @@ function Update-Translations {
 		if (-not $allNonEnglishFolders) {
 			continue
 		}
+
+		$progressObject = WriteProgress -initiate -title "Updating translations" -totalActions ($allNonEnglishFolders.Count * $keyedSourceFiles.Count)
 		foreach ($languageFolder in $allNonEnglishFolders) {
 			if ($languages -notcontains $languageFolder.Name) {
 				WriteMessage -warning "$($languageFolder.Name) can not be translated by DeepL"
+				$progressObject.current += $keyedSourceFiles.Count
 				continue
 			}
 			$keyedFolder = "$($languageFolder.FullName)\Keyed"
@@ -6001,7 +6316,9 @@ function Update-Translations {
 			}
 			$languageUpdated = $false
 			foreach ($file in $keyedSourceFiles) {
+				WriteProgress -progressObject $progressObject
 				$targetFilePath = "$keyedFolder\$($file.Name)"
+				WriteMessage -progress "Updating $($file.Name) for $($languageFolder.Name)"
 				if (Update-TranslationFile -sourceFilePath $file.FullName -targetFilePath $targetFilePath -language $languageFolder.Name -modObject $modObject -test:$test) {
 					$languageUpdated = $true
 				}
@@ -6010,8 +6327,8 @@ function Update-Translations {
 				$updatedLanguages += $languageFolder.Name
 			}
 		}
+		WriteProgress -progressObject $progressObject -finished
 	}
-	WriteProgress -progressObject $progressObject -finished
 	if ($updatedLanguages.Length -gt 0) {
 		$updatedLanguages = $updatedLanguages | Get-Unique
 		$charsLeft = Get-DeeplRemainingCharacters
@@ -6465,10 +6782,13 @@ function Find-TrelloCardByName {
 }
 
 function Find-TrelloCardByCustomField {
-	param ($text, $fieldId)
+	param (
+		$text,
+		$fieldId
+	)
 	$cards = Get-TrelloCards -boardId $trelloBoardId
 	$cards | ForEach-Object { if ($_.customFieldItems -and $_.customFieldItems.idCustomField.contains($fieldId)) {
-			if ($text -eq ($_.customFieldItems | Where-Object { $_.idCustomField -eq $fieldId }).value.text) {
+			if (($_.customFieldItems | Where-Object { $_.idCustomField -eq $fieldId }).value.text.StartsWith($text) ) {
 				return $_
 			}
 		}
@@ -6485,7 +6805,44 @@ function Get-TrelloCardsForMod {
 		}
 	}
 
-	return (Find-TrelloCardByCustomField -text $modObject.ModUrl -fieldId $trelloLinkId)
+	WriteMessage -progress "Searching for Trello cards for mod $($modObject.Name) using Steam link"
+	$cardsFromSteamUrl = Find-TrelloCardByCustomField -text $modObject.ModUrl -fieldId $trelloLinkId
+	WriteMessage -progress "Searching for Trello cards for mod $($modObject.Name) using Github link"
+	$cardsFromGithubUrl = Find-TrelloCardByCustomField -text $modObject.Repository -fieldId $trelloLinkId
+	WriteMessage -progress "Found $($cardsFromGithubUrl.Count + $cardsFromSteamUrl.Count) Trello cards for mod $($modObject.Name)"
+
+	$returnArray = @()
+	if ($cardsFromSteamUrl) {
+		$returnArray += $cardsFromSteamUrl
+	}
+	if ($cardsFromGithubUrl) {
+		$returnArray += $cardsFromGithubUrl
+	}
+	return $returnArray
+}
+
+function Get-ModIssues {
+	param($modObject)
+
+	if (-not $modObject) {
+		$modObject = Get-Mod
+		if (-not $modObject) {
+			return
+		}
+	}
+
+	$issues = Get-TrelloCardsForMod -modObject $modObject
+	if (-not $issues) {
+		WriteMessage -progress "No issues found for mod $($modObject.Name)"
+		return
+	}
+
+	WriteMessage -progress "Found $($issues.Count) issues for mod $($modObject.Name)"
+	$issues | ForEach-Object {
+		$lastUpdated = $(Get-Date $_.dateLastActivity)
+		Write-Host "`n$($lastUpdated.ToString("yyyy-MM-dd HH:mm:ss")) ( $($_.shortUrl) )"
+		Write-Host -ForegroundColor DarkGray "$($_.desc)`n"
+	}
 }
 
 function Close-TrelloCardsForMod {
