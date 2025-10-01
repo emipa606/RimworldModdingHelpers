@@ -478,10 +478,17 @@ function Get-Mod {
 		$modObject.PublishedId = Get-Content $modObject.PublishedIdFilePath -Raw
 		$modObject.ModUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$($modObject.PublishedId)"
 	} else {
-		$modObject.Published = $false
-		$modObject.PublishedId = $null
-		$modObject.ModUrl = $null
-		$modObject.PublishedIdFilePath = $null
+		if ($modObject.ModFolderPath -like "*workshop*") {
+			WriteMessage -warning "Mod seems to be a workshop mod, but has no PublishedFileId.txt, assuming id from foldername"
+			$modObject.PublishedId = Split-Path -Leaf -Path $modObject.ModFolderPath
+			$modObject.ModUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$($modObject.PublishedId)"
+			$modObject.Published = $true
+		} else {
+			$modObject.Published = $false
+			$modObject.PublishedId = $null
+			$modObject.ModUrl = $null
+			$modObject.PublishedIdFilePath = $null
+		}
 	}
 
 	$modObject.LoadFoldersPath = "$($modObject.ModFolderPath)\LoadFolders.xml"
@@ -567,19 +574,19 @@ function Get-Mod {
 
 	$modObject.DescriptionClean = $modObject.Description
 	if (-not $modObject.Continued) {
-		if ($modObject.DescriptionClean.Contains("[img]https://i.imgur.com/iCj5o7O.png[/img]")) {
-			$start = "[img]https://i.imgur.com/iCj5o7O.png[/img]"
+		if ($modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/PJc4kLbg/Self-Info.png[/img]")) {
+			$start = "[img]https://i.postimg.cc/PJc4kLbg/Self-Info.png[/img]"
 			$stop = "[table]"
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
 		}
 	} else {
-		if ($modObject.DescriptionClean.Contains("[img]https://i.imgur.com/pufA0kM.png[/img]") -and
-			$modObject.DescriptionClean.Contains("[img]https://i.imgur.com/Z4GOv8H.png[/img]") -and
-			$modObject.DescriptionClean.Contains("[img]https://i.imgur.com/PwoNOj4.png[/img]")) {
-			$middlestop = "[img]https://i.imgur.com/pufA0kM.png[/img]"
-			$start = "[img]https://i.imgur.com/Z4GOv8H.png[/img]"
-			$stop = "[img]https://i.imgur.com/PwoNOj4.png[/img]"
+		if ($modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/8csH3dWV/Notice.png[/img]") -and
+			$modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/hvhrw8xB/Original-Description.png[/img]") -and
+			$modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/x8qR7GH9/Reporting-Issues.png[/img]")) {
+			$middlestop = "[img]https://i.postimg.cc/8csH3dWV/Notice.png[/img]"
+			$start = "[img]https://i.postimg.cc/hvhrw8xB/Original-Description.png[/img]"
+			$stop = "[img]https://i.postimg.cc/x8qR7GH9/Reporting-Issues.png[/img]"
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
 			$modObject.DescriptionClean = "$($modObject.Description.Substring(0, $modObject.Description.IndexOf($middlestop) - 1))`n$($modObject.DescriptionClean)"
@@ -5058,11 +5065,11 @@ function Publish-Mod {
 		}
 		$description = $description.Trim()
 
-		if ($modObject.Continued -and -not $description.Contains("PwoNOj4")) {
+		if ($modObject.Continued -and -not $description.Contains("Reporting-Issues.png")) {
 			$description += $faqText
 		}
 
-		if (-not $modObject.Continued -and -not $description.Contains("5xwDG6H")) {
+		if (-not $modObject.Continued -and -not $description.Contains("Self-Reporting-Issues.png")) {
 			$description += $faqTextPrivate
 		}
 		$versionLogo = ""
@@ -5157,14 +5164,14 @@ function Publish-Mod {
 	Add-VersionTagOnImage -modObject $modObject -version $modObject.HighestSupportedVersion
 	$modName = $modObject.NameClean
 	if ($EndOfLife) {
-		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "CN9Rs5X")
+		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("8csH3dWV/Notice.png", "L5hT7kfR/Removed.png")
 		if ($modObject.OriginalPublishedId) {
 			Remove-ModReplacement -steamId $modObject.OriginalPublishedId -reverse
 		}
 		$modObject.AboutFileXml.ModMetaData.name = "[Abandoned] $($modObject.AboutFileXml.ModMetaData.name)"
 	}
 	if ($Depricated) {
-		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "x5cRNO9")
+		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("8csH3dWV/Notice.png", "QCVbPg72/Deprication.png")
 		$modObject.AboutFileXml.ModMetaData.name = "[Depricated] $($modObject.AboutFileXml.ModMetaData.name)"
 	}
 	if ($Abandoned -or $ReplacedBy) {
@@ -5173,9 +5180,9 @@ function Publish-Mod {
 		} else {
 			$modObject.AboutFileXml.ModMetaData.name = "[Depricated] $($modObject.AboutFileXml.ModMetaData.name)"
 		}
-		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pufA0kM", "3npT60J")
+		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("8csH3dWV/Notice.png", "pryZ7Qjg/Abandoned.png")
 		if ($ReplacedBy) {
-			$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("3npT60J.png[/img]", "3npT60J.png[/img]`n`nThis mod has been replaced by $replacedByLink")
+			$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pryZ7Qjg/Abandoned.png[/img]", "pryZ7Qjg/Abandoned.png[/img]`n`nThis mod has been replaced by $replacedByLink")
 			New-ModReplacement -localName $modObject.Name -replacementSteamId $ReplacedBy -silent
 		}
 	}
@@ -5339,13 +5346,13 @@ function Publish-Mod {
 		WriteMessage -success "Archived $($modObject.Name)"
 		return
 	}
+	WriteMessage -progress "Running Git Cleanup"
+	git gc --auto
 	if ($ReRelease) {
 		Push-ModComment -modObject $modObject -Comment "Mod re-relased for $(Get-CurrentRimworldVersion), see info in the description"
 	} else {
 		Publish-ModToRimWorldBase -modObject $modObject
 	}
-	WriteMessage -progress "Running Git Cleanup"
-	git gc --auto
 	WriteMessage -success "Published $($modObject.Name) - $($modObject.ModUrl)"
 }
 
@@ -5493,12 +5500,66 @@ function Publish-ModToRimWorldBase {
 		"Authorization" = "Basic $base64AuthInfo"
 		"Content-Type"  = "application/json"
 	}
-
+	$new = $false
 	if (-not $modObject.MetadataFileJson.RimWorldBaseId) {
+		$new = $true
 		WriteMessage "$($modObject.Name) is not listed on RimWorldBase, creating a new entry"
+		$modDescription = $modObject.DescriptionClean.Trim()
+		$modDescription = $modDescription.Replace("[b]", "<strong>").Replace("[/b]", "</strong>")
+		$modDescription = $modDescription.Replace("[i]", "<em>").Replace("[/i]", "</em>")
+		$modDescription = $modDescription.Replace("[u]", "<u>").Replace("[/u]", "</u>")
+		$modDescription = $modDescription.Replace("[img]", "<img src=`"").Replace("[/img]", "`" />")
+		$modDescription = $modDescription.Replace("[url=", "<a href=`"").Replace("]", "`">").Replace("[/url]", "</a>")
+		$modDescription = $modDescription.Replace("[list]", "<ul>").Replace("[/list]", "</ul>")
+		$modDescription = $modDescription.Replace("[*]", "<li>").Replace("[/li]", "</li>")
+		$modDescription = $modDescription.Replace("&#39;", "'").Replace("`r`n", "<br />").Replace("`n", "<br />")
+
+		# Check if there are any preview images on steam and add them to the description
+		$failed = $false
+		try {
+			$steamPage = Invoke-WebRequest -Uri $modObject.ModUrl -UseBasicParsing
+		} catch {
+			WriteMessage -failure "Failed to fetch steam page, waiting 10 seconds and trying again"
+			$failed = $true
+		}
+
+		# We just updated the steam-page so it may not be available right away, check for the text of Steam Community :: Error
+		if ($failed -or $steamPage.Content -match "Steam Community :: Error") {
+			for ($i = 0; $i -lt 5; $i++) {
+				WriteMessage -progress "Steam page not available yet, waiting 10 seconds and trying again"
+				Start-Sleep -Seconds 10
+				$failed = $false
+				try {
+					$steamPage = Invoke-WebRequest -Uri $modObject.ModUrl -UseBasicParsing
+				} catch {
+					WriteMessage -failure "Failed to fetch steam page, waiting 10 seconds and trying again"
+					$failed = $true
+				}
+				if (-not $failed -and $steamPage.Content -notmatch "Steam Community :: Error") {
+					break
+				}
+			}
+		}
+		if ($failed -or $steamPage.Content -match "Steam Community :: Error") {
+			WriteMessage -failure "Steam page still not available, skipping adding preview images"
+		} else {
+			$html = $steamPage.Content
+			$regex = '<img\s+src="([^"]+steamusercontent[^"]+)"'
+			$imageUrls = [regex]::Matches($html, $regex) | ForEach-Object {
+				($_.Groups[1].Value -replace '&amp;', '&').Split('?')[0]
+			}
+
+			if ($imageUrls.Count -gt 0) {
+				WriteMessage -progress "Adding $($imageUrls.Count) preview images from steam to the description"
+				$modDescription += "<br />" + ($imageUrls | ForEach-Object { "<img src=`"$($_)?imw=800&ima=fit&impolicy=Letterbox`" />" }) -join "<br />"
+			}
+		}
+
+		WriteMessage -progress "Creating new mod entry on RimWorldBase"
 		$body = @{
-			title  = "$($modObject.DisplayName) Mod"
-			status = "draft"
+			title   = "$($modObject.DisplayName) Mod"
+			status  = "draft"
+			content = $modDescription
 		} | ConvertTo-Json
 
 		$postUrl = $rimWorldBaseApiUrl.Replace("acf/v3/posts/", "wp/v2/posts")
@@ -5519,10 +5580,10 @@ function Publish-ModToRimWorldBase {
 		$response = Invoke-RestMethod -Uri $mediaUrl -Method Post -Headers $mediaHeader -Body $imageBytes
 		$mediaId = $response.id
 		$body = @{ featured_media = $mediaId } | ConvertTo-Json
+		WriteMessage -progress "Setting preview image as featured media"
 		$response = Invoke-RestMethod -Uri $postUrl -Method Post -Headers $updateHeader -Body $body
 	}
 
-	WriteMessage -progress "Updating properties for $($modObject.Name) to RimWorldBase"
 	# Fetch all existing field data
 	$rimworldBaseId = $modObject.MetadataFileJson.RimWorldBaseId
 	$url = "$($rimWorldBaseApiUrl)$rimworldBaseId"
@@ -5574,10 +5635,9 @@ function Publish-ModToRimWorldBase {
 		$anythingChanged = $true
 	}
 
-	$steamUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$($modObject.PublishedId)"
-	if ($fields.steam_download -ne $steamUrl) {
-		WriteMessage -progress "Setting steam_download to $steamUrl"
-		$body = @{ fields = @{ steam_download = $steamUrl } } | ConvertTo-Json -Depth 5
+	if ($fields.steam_download -ne $modObject.ModUrl) {
+		WriteMessage -progress "Setting steam_download to $($modObject.ModUrl)"
+		$body = @{ fields = @{ steam_download = $modObject.ModUrl } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
 		$fields = $response.acf
 		$anythingChanged = $true
@@ -5646,22 +5706,6 @@ function Publish-ModToRimWorldBase {
 		"Authorization" = "Basic $base64AuthInfo"
 	}
 
-	$modDescription = $modObject.DescriptionClean.Trim()
-	$modDescription = $modDescription.Replace("[b]", "<strong>").Replace("[/b]", "</strong>")
-	$modDescription = $modDescription.Replace("[i]", "<em>").Replace("[/i]", "</em>")
-	$modDescription = $modDescription.Replace("[u]", "<u>").Replace("[/u]", "</u>")
-	$modDescription = $modDescription.Replace("[img]", "<img src=`"").Replace("[/img]", "`" />")
-	$modDescription = $modDescription.Replace("[url=", "<a href=`"").Replace("]", "`">").Replace("[/url]", "</a>")
-	$modDescription = $modDescription.Replace("[list]", "<ul>").Replace("[/list]", "</ul>")
-	$modDescription = $modDescription.Replace("[*]", "<li>").Replace("[/li]", "</li>")
-	$modDescription = $modDescription.Replace("&#39;", "'").Replace("`r`n", "<br />").Replace("`n", "<br />")
-
-	if ($response.content.rendered -ne $modDescription) {
-		WriteMessage -progress "Updating mod description"
-		$body = @{ content = $modDescription } | ConvertTo-Json -Depth 5
-		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-	}
-
 	if ($response.status -eq "draft") {
 		WriteMessage -progress "Setting mod to pending"
 		$body = @{ status = "pending" } | ConvertTo-Json -Depth 5
@@ -5676,7 +5720,11 @@ function Publish-ModToRimWorldBase {
 	$body = @{ date = $now } | ConvertTo-Json -Depth 5
 	$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
 
-	WriteMessage -success "Updated $($modObject.Name) to RimWorldBase"
+	if ($new) {
+		WriteMessage -success "Created new entry for $($modObject.Name) on RimWorldBase: $($response.link)"
+	} else {
+		WriteMessage -progress "Updated $($modObject.Name) on RimWorldBase: $($response.link)"
+	}
 }
 
 #endregion
