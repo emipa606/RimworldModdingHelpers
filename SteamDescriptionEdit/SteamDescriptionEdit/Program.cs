@@ -217,7 +217,7 @@ namespace SteamUpdateTool
 
         private static async Task LoadModInfoAsync()
         {
-            workshopItem = (Item)await Item.GetAsync(workshopId);
+            workshopItem = (Item)await Item.GetAsync(workshopId, 0);
         }
 
         private static async Task SetModDescriptionAsync(string description)
@@ -232,7 +232,8 @@ namespace SteamUpdateTool
             else
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine($"Failed to update description of {workshopItem.Title}");
+                Console.WriteLine(
+                    $"Failed to update description of {workshopItem.Title} and description \n{description}\n{result.Result}");
             }
 
             Console.ForegroundColor = ConsoleColor.White;
@@ -250,7 +251,7 @@ namespace SteamUpdateTool
             else
             {
                 Console.ForegroundColor = ConsoleColor.DarkRed;
-                Console.WriteLine($"Failed to update preview of {workshopItem.Title}");
+                Console.WriteLine($"Failed to update preview of {workshopItem.Title}: {result.Result}");
             }
 
             Console.ForegroundColor = ConsoleColor.White;

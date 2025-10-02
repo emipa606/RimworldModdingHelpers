@@ -453,6 +453,8 @@ function Get-Mod {
 		$modObject.SupportedVersions = @( $modObject.SupportedVersions )
 	}
 	$modObject.Description = $modObject.AboutFileXml.ModMetaData.description
+	# In markdown, & is escaped as &amp;, so we need to convert it here, also windows new line is two characters
+	$modObject.DescriptionLength = $modObject.AboutFileXml.ModMetaData.description.Replace('&', '&amp;').Replace("`n", ".`n").Length
 	$modObject.ModId = $modObject.AboutFileXml.ModMetaData.packageId
 	if ($modObject.ModId) {
 		$modObject.Mine = $modObject.ModId.StartsWith("Mlie.")
@@ -4016,6 +4018,7 @@ function Start-RimWorld {
 		if ($bare) {
 			Copy-Item $bareModsConfig $modFile -Confirm:$false
 		}
+		$modsList = Get-Content $modFile -Raw -Encoding UTF8
 		$modsToTest = Get-AllModsFromAuthor -author $testAuthor -onlyPublished
 		$modIdentifiersPrereq = ""
 		$modIdentifiers = ""
@@ -4028,14 +4031,18 @@ function Start-RimWorld {
 			}
 			if ($identifiersToAdd.Length -eq 0) {
 				WriteMessage -failure "No mod identifiers found, exiting."
-				return
+				continue
 			}
 			if ($identifiersToAdd.Count -eq 1) {
+				if ($modIdentifiersPrereq.Contains($identifiersToAdd) -or $modIdentifiers.Contains($identifiersToAdd) -or $modsList -match "<li>$identifiersToAdd</li>") {
+					WriteMessage -progress "$identifiersToAdd already in modlist, skipping"
+					continue
+				}
 				WriteMessage -progress "Adding $identifiersToAdd as mod to test"
 				$modIdentifiers += "<li>$identifiersToAdd</li>"
 			} else {
 				foreach ($identifier in $identifiersToAdd) {
-					if ($modIdentifiersPrereq.Contains($identifier) -or $modIdentifiers.Contains($identifier) ) {
+					if ($modIdentifiersPrereq.Contains($identifier) -or $modIdentifiers.Contains($identifier) -or $modsList -match "<li>$identifier</li>") {
 						continue
 					}
 					if ($identifier.Contains("ludeon")) {
@@ -4055,7 +4062,7 @@ function Start-RimWorld {
 			WriteMessage -progress "Adding RimThreaded last"
 			$modIdentifiers += "<li>majorhoff.rimthreaded</li>"
 		}
-		(Get-Content $modFile -Raw -Encoding UTF8).Replace("</activeMods>", "$modIdentifiersPrereq</activeMods>").Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
+		$modsList.Replace("</activeMods>", "$modIdentifiersPrereq</activeMods>").Replace("</activeMods>", "$modIdentifiers</activeMods>") | Set-Content $modFile
 		Set-RimworldRunMode -prefsFile $prefsFile -testing:(-not $autotest) -autoTesting:$autotest -skipDLC $skipDLC
 	}
 	if ($testMod) {
@@ -4135,6 +4142,7 @@ function Start-RimWorld {
 			if ($bare) {
 				Copy-Item $bareModsConfig $modFile -Confirm:$false
 			}
+			$modsList = Get-Content $modFile -Raw -Encoding UTF8
 			if ($alsoLoadBefore) {
 				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject -alsoLoadBefore
 			} else {
@@ -4167,11 +4175,16 @@ function Start-RimWorld {
 		}
 		$modIdentifiers = ""
 		if ($identifiersToAdd.Count -eq 1) {
-			WriteMessage -progress "Adding $identifiersToAdd as mod to test"
-			$modIdentifiers += "<li>$identifiersToAdd</li>"
+			if ($modsList -notmatch "<li>$identifiersToAdd</li>") {
+				WriteMessage -progress "Adding $identifiersToAdd as mod to test"
+				$modIdentifiers += "<li>$identifiersToAdd</li>"
+			} else {
+				WriteMessage -progress "$identifiersToAdd already in modlist, skipping"
+			}
 		} else {
 			foreach ($identifier in $identifiersToAdd) {
-				if ($identifier.Contains("ludeon")) {
+				if ($identifier.Contains("ludeon") -or $modsList -match "<li>$identifier</li>") {
+					WriteMessage -progress "$identifier already in modlist, skipping"
 					continue
 				}
 				if ($identifier -eq $identifiersToAdd[$identifiersToAdd.Length - 1]) {
@@ -4403,6 +4416,8 @@ function Update-ModDescription {
 	} else {
 		if ($searchStrings.Count -ne $replaceStrings.Count) {
 			WriteMessage -failure "If replacestrings are defined, they must be the same amount as searchstrings"
+			WriteMessage -progress "Searchstrings: $($searchStrings.Count): $($searchStrings -join ",")"
+			WriteMessage -progress "Replacestrings: $($replaceStrings.Count): $($replaceStrings -join ",")"
 			return
 		}
 	}
@@ -4428,6 +4443,11 @@ function Update-ModDescription {
 	$total = $modFolders.Count
 	$applicationPath = "$($settings.script_root)\SteamDescriptionEdit\Compiled\SteamDescriptionEdit.exe"
 	$progressObject = WriteProgress -initiate -title "Updating mod-descriptions" -totalActions $total
+	$totalsearchCharacters = $searchStrings | ForEach-Object { $_.Length } | Measure-Object -Sum | Select-Object -ExpandProperty Sum
+	$totalreplaceCharacters = $replaceStrings | ForEach-Object { $_.Length } | Measure-Object -Sum | Select-Object -ExpandProperty Sum
+	$difference = $totalreplaceCharacters - $totalsearchCharacters
+	$limit = 8000
+	WriteMessage -progress "Descriptions are limited to $limit characters on steam, changes will add $difference characters"
 
 	foreach ($folder in ($modFolders | Get-Random -Count $modFolders.Count)) {
 		WriteProgress -progressObject $progressObject
@@ -4453,9 +4473,24 @@ function Update-ModDescription {
 		}
 		if ($syncBefore) {
 			Sync-ModDescriptionFromSteam -modObject $modObject
-			$modObject = Get-Mod -originalModObject $modObject
+			$modObject = Get-Mod $(Split-Path $folder -Leaf)
 		}
 
+		if (($modObject.DescriptionLength + $difference) -gt $limit) {
+			WriteMessage -failure "Description for $($modObject.Name) would exceed $limit characters, you need to shorten it by $($modObject.DescriptionLength + $difference - $limit) characters, then press enter"
+			Get-ModPage -modObject $modObject
+			Read-Host
+			Sync-ModDescriptionFromSteam -modObject $modObject
+			$modObject = Get-Mod $(Split-Path $folder -Leaf)
+			while (($modObject.DescriptionLength + $difference) -gt $limit) {
+				WriteMessage -failure "Description for $($modObject.Name) still exceeds $limit characters, you need to shorten it by $($modObject.DescriptionLength + $difference - $limit) characters, then press enter"
+				Read-Host
+				Sync-ModDescriptionFromSteam -modObject $modObject
+				$modObject = Get-Mod $(Split-Path $folder -Leaf)
+			}
+		}
+
+		$anythingChanged = $false
 		for ($i = 0; $i -lt $searchStrings.Count; $i++) {
 			$searchString = $searchStrings[$i]
 			$searchStringEscaped = [Regex]::Escape($searchString)
@@ -4472,13 +4507,18 @@ function Update-ModDescription {
 				Start-Sleep -Milliseconds $waittime
 				$arguments = @($modObject.PublishedId, "REPLACE", """$searchString""", """$replaceString""")
 				Start-Process -FilePath $applicationPath -ArgumentList $arguments -Wait -NoNewWindow
-				$modObject.AboutFileXml.ModMetaData.description = [regex]::Replace($modObject.AboutFileXml.ModMetaData.description, $searchStringEscaped, $replaceString)
+				$anythingChanged = $true
 			} else {
 				WriteMessage -progress "Description for $($modObject.Name) does not contain $searchString"
 			}
 		}
-		$modObject.AboutFileXml.Save($modObject.AboutFilePath)
-		WriteMessage -success "Updated description for $($modObject.Name)"
+
+		if ($anythingChanged) {
+			Sync-ModDescriptionFromSteam -modObject $modObject
+			WriteMessage -success "Updated description for $($modObject.Name)"
+		} else {
+			WriteMessage -progress "No changes made to description for $($modObject.Name)"
+		}
 	}
 	WriteProgress -progressObject $progressObject -finished
 }
