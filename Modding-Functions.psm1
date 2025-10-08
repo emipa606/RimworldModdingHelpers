@@ -446,6 +446,9 @@ function Get-Mod {
 	$modObject.DisplayName = $modObject.AboutFileXml.ModMetaData.name
 	$modObject.Author = $modObject.AboutFileXml.ModMetaData.author
 	$modObject.SupportedVersions = $modObject.AboutFileXml.ModMetaData.supportedVersions.li
+	# Check if any of the supported version has not been released yet, if so, remove it
+	$currentRimworldVersion = Get-CurrentRimworldVersion -versionObject
+	$modObject.SupportedVersions = $modObject.SupportedVersions | Where-Object { [version]$_ -le $currentRimworldVersion }
 	if ($modObject.SupportedVersions.Count -gt 1) {
 		$modObject.HighestSupportedVersion = ($modObject.SupportedVersions | Sort-Object)[-1]
 	} else {
@@ -453,8 +456,15 @@ function Get-Mod {
 		$modObject.SupportedVersions = @( $modObject.SupportedVersions )
 	}
 	$modObject.Description = $modObject.AboutFileXml.ModMetaData.description
+	if ($modObject.Description.GetType().Name -eq "XmlElement") {
+		$modObject.Description = $modObject.Description.'#cdata-section'
+	}
 	# In markdown, & is escaped as &amp;, so we need to convert it here, also windows new line is two characters
-	$modObject.DescriptionLength = $modObject.AboutFileXml.ModMetaData.description.Replace('&', '&amp;').Replace("`n", ".`n").Length
+	if ($modObject.AboutFileXml.ModMetaData.description) {
+		$modObject.DescriptionLength = $modObject.Description.Replace('&', '&amp;').Replace("`n", ".`n").Length
+	} else {
+		$modObject.DescriptionLength = 0
+	}
 	$modObject.ModId = $modObject.AboutFileXml.ModMetaData.packageId
 	if ($modObject.ModId) {
 		$modObject.Mine = $modObject.ModId.StartsWith("Mlie.")
