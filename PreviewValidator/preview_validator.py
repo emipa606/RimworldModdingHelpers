@@ -26,8 +26,8 @@ def read_json(file_path):
         return json.load(file)
 
 
-modsfolder = pathlib.Path("E:\SteamLibrary\steamapps\common\RimWorld\Mods")
-previewExecutable = "E:\ModPublishing\PowershellFunctions\SteamPreviewUploader\Compiled\SteamPreviewUploader.exe"
+modsfolder = pathlib.Path(r"E:\SteamLibrary\steamapps\common\RimWorld\Mods")
+previewExecutable = r"E:\ModPublishing\PowershellFunctions\SteamPreviewUploader\Compiled\SteamPreviewUploader.exe"
 allpublishedfiles = list(modsfolder.glob("*/About/PublishedFileId.txt"))
 settings = read_json(CONFIG_PATH)
 prefix = settings["modid_prefix"]
@@ -35,7 +35,13 @@ username = settings["steam_username"]
 password = settings["steam_password"]
 
 user = wa.WebAuth2(username)
-twoFactorCode = input("Logging in, paste two-factor code and press enter: ")
+
+# If there is no two-factor code supplied as argument, prompt for it
+if len(sys.argv) < 2:
+    twoFactorCode = input(
+        "Logging in, paste two-factor code and press enter: ")
+else:
+    twoFactorCode = sys.argv[1]
 
 tryagain = False
 try:
