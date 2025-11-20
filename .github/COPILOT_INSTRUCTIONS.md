@@ -19,7 +19,6 @@ These instructions describe coding conventions, architecture expectations, and h
 - Enum ModCodeSize: None,Tiny,Small,Medium,Large,Huge (defined via Add-Type). Compare by casting to [int].
 
 ## Caching Patterns
-- Translation cache: global hashtable `$Global:translationCache` persisted to JSON; check before calling external translation.
 - ModInfo cache: `$Global:ModInfoCache[steamId] = @{ Timestamp = <DateTime>; ModInfo = <object> }` with 10 minute TTL.
 - When adding new external calls, add optional `-ForceRefresh` switch to bypass cache.
 

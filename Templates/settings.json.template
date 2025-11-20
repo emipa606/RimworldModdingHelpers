@@ -34,7 +34,7 @@
 	"playing_screen_witdh": "2560",
 	"modding_music_volume": "0",
 	"playing_music_volume": "0.4",
-	"visual_studio_path": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\devenv.exe",
+	"visual_studio_path": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\devenv.exe",
 	"deepai_api_key": "",
 	"deepl_api_key": "",
 	"deepl_api_url": "https://api-free.deepl.com",
@@ -51,7 +51,6 @@
 	"gimp_folder": "C:\\Program Files\\GIMP 3\\bin",
 	"old_rimworld_folders": "C:\\ModPublishing\\OldRimworld"
 	"mod_identifier_prefix": "Author",
-	"translation_cache_path": "",
 	"auto_translate_languages": ["LanguageA", "LanguageB"],
 	"faq_text": "FAQ",
 	"faq_text_private": "FAQ",

@@ -194,6 +194,10 @@ $Global:updateinfoTemplate = "$PSScriptRoot\$($settings.updateinfo_template)"
 $Global:modSyncTemplate = "$PSScriptRoot\$($settings.modsync_template)"
 $Global:licenseFile = "$PSScriptRoot\$($settings.license_file)"
 $Global:unityPath = $settings.unity_path
+if ($unityPath.Contains("*")) {
+	$possiblePaths = Get-Item -Path $unityPath
+	$unityPath = $possiblePaths | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+}
 $Global:unityBundleProjectPath = $($settings.unity_bundle_project_path)
 $Global:discordUpdateMessage = "$PSScriptRoot\$($settings.discord_update_message)"
 $Global:discordPublishMessage = "$PSScriptRoot\$($settings.discord_publish_message)"
@@ -224,12 +228,6 @@ $Global:languages = @("Bulgarian", "Czech", "Danish", "German", "Greek", "Englis
 $Global:shorts = @("BG","CS","DA","DE","EL","EN-GB","EN-US","ES","ET","FI","FR","HU","ID","IT","JA","LT","LV","NL","PL","PT-PT","PT-BR","RO","RU","SK","SL","SV","TR","ZH")
 $Global:faqText = $settings.faq_text
 $Global:faqTextPrivate = $settings.faq_text_private
-$Global:translationCachePath = $settings.translation_cache_path
-if (Test-Path $translationCachePath) {
-	$Global:translationCache = Get-Content $translationCachePath | ConvertFrom-Json -AsHashtable
-} else {
-	$Global:translationCache = @{}
-}
 $Global:globalRequestLog = @()
 if (-not $Global:ModInfoCache) {
  $Global:ModInfoCache = @{}
@@ -339,6 +337,22 @@ function Update-ModSkillFormat {
 	WriteMessage -message "Replaced the skill format in $filePath" -success
 }
 
+
+function Get-UriExists {
+	param(
+		[string]$uriToCheck
+	)
+
+	try {
+		$req = [System.Net.WebRequest]::Create($uriToCheck)
+		$req.Method = "HEAD"
+		$resp = $req.GetResponse()
+		$resp.Close()
+		return $true
+	} catch {
+		return $false
+	}
+}
 
 function Get-Mod {
 	param(
@@ -535,19 +549,19 @@ function Get-Mod {
 
 	$modObject.DescriptionClean = $modObject.Description
 	if (-not $modObject.Continued) {
-		if ($modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/PJc4kLbg/Self-Info.png[/img]")) {
-			$start = "[img]https://i.postimg.cc/PJc4kLbg/Self-Info.png[/img]"
+		if ($modObject.DescriptionClean.Contains("[img]https://img.litet.net/logos/Self-Info.png[/img]")) {
+			$start = "[img]https://img.litet.net/logos/Self-Info.png[/img]"
 			$stop = "[table]"
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
 		}
 	} else {
-		if ($modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/8csH3dWV/Notice.png[/img]") -and
-			$modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/hvhrw8xB/Original-Description.png[/img]") -and
-			$modObject.DescriptionClean.Contains("[img]https://i.postimg.cc/x8qR7GH9/Reporting-Issues.png[/img]")) {
-			$middlestop = "[img]https://i.postimg.cc/8csH3dWV/Notice.png[/img]"
-			$start = "[img]https://i.postimg.cc/hvhrw8xB/Original-Description.png[/img]"
-			$stop = "[img]https://i.postimg.cc/x8qR7GH9/Reporting-Issues.png[/img]"
+		if ($modObject.DescriptionClean.Contains("[img]https://img.litet.net/logos//Notice.png[/img]") -and
+			$modObject.DescriptionClean.Contains("[img]https://img.litet.net/logos/OriginalDescription.png[/img]") -and
+			$modObject.DescriptionClean.Contains("[img]https://img.litet.net/logos/ReportingIssues.png[/img]")) {
+			$middlestop = "[img]https://img.litet.net/logos/Notice.png[/img]"
+			$start = "[img]https://img.litet.net/logos/OriginalDescription.png[/img]"
+			$stop = "[img]https://img.litet.net/logos/ReportingIssues.png[/img]"
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring($modObject.DescriptionClean.IndexOf($start) + $start.Length)
 			$modObject.DescriptionClean = $modObject.DescriptionClean.Substring(0, $modObject.DescriptionClean.IndexOf($stop) - 1)
 			$modObject.DescriptionClean = "$($modObject.Description.Substring(0, $modObject.Description.IndexOf($middlestop) - 1))`n$($modObject.DescriptionClean)"
@@ -4990,11 +5004,11 @@ function Publish-Mod {
 		}
 		$description = $description.Trim()
 
-		if ($modObject.Continued -and -not $description.Contains("Reporting-Issues.png")) {
+		if ($modObject.Continued -and -not $description.Contains("ReportingIssues.png")) {
 			$description += $faqText
 		}
 
-		if (-not $modObject.Continued -and -not $description.Contains("Self-Reporting-Issues.png")) {
+		if (-not $modObject.Continued -and -not $description.Contains("Self-ReportingIssues.png")) {
 			$description += $faqTextPrivate
 		}
 		$versionLogo = ""
@@ -5089,14 +5103,14 @@ function Publish-Mod {
 	Add-VersionTagOnImage -modObject $modObject -version $modObject.HighestSupportedVersion
 	$modName = $modObject.NameClean
 	if ($EndOfLife) {
-		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("8csH3dWV/Notice.png", "L5hT7kfR/Removed.png")
+		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("logos/Notice.png", "logos/Removed.png")
 		if ($modObject.OriginalPublishedId) {
 			Remove-ModReplacement -steamId $modObject.OriginalPublishedId -reverse
 		}
 		$modObject.AboutFileXml.ModMetaData.name = "[Abandoned] $($modObject.AboutFileXml.ModMetaData.name)"
 	}
 	if ($Deprecated) {
-		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("8csH3dWV/Notice.png", "QCVbPg72/Deprication.png")
+		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("logos/Notice.png", "logos/Deprication.png")
 		$modObject.AboutFileXml.ModMetaData.name = "[Deprecated] $($modObject.AboutFileXml.ModMetaData.name)"
 	}
 	if ($Abandoned -or $ReplacedBy) {
@@ -5105,9 +5119,10 @@ function Publish-Mod {
 		} else {
 			$modObject.AboutFileXml.ModMetaData.name = "[Deprecated] $($modObject.AboutFileXml.ModMetaData.name)"
 		}
-		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("8csH3dWV/Notice.png", "pryZ7Qjg/Abandoned.png")
+		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("logos/Notice.png", "logos/Abandoned.png")
 		if ($ReplacedBy) {
-			$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("pryZ7Qjg/Abandoned.png[/img]", "pryZ7Qjg/Abandoned.png[/img]`n`nThis mod has been replaced by $replacedByLink")
+			logos
+			$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("logos/Abandoned.png[/img]", "logos/Abandoned.png[/img]`n`nThis mod has been replaced by $replacedByLink")
 			New-ModReplacement -localName $modObject.Name -replacementSteamId $ReplacedBy -silent
 		}
 	}
@@ -5590,7 +5605,7 @@ function Publish-ModToRimWorldBase {
 		$anythingChanged = $true
 	}
 
-	$hasRequirements = $modObject.AboutFileXml.ModMetaData.modDependencies.Length -gt 0
+	$hasRequirements = $modObject.AboutFileXml.ModMetaData.modDependencies?.Length -gt 0 -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion?.Length -gt 0
 	if ($fields.requires_libraries -ne $hasRequirements) {
 		WriteMessage -progress "Setting requires_libraries to $hasRequirements"
 		$body = @{ fields = @{ requires_libraries = $hasRequirements } } | ConvertTo-Json -Depth 5
@@ -5600,11 +5615,27 @@ function Publish-ModToRimWorldBase {
 	}
 
 	if ($hasRequirements) {
-		# Check for harmony
-		$requiresHarmony = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId.Contains("brrainz.harmony")
-		if ($requiresHarmony -and -not $fields.libraries_list -contains 8517) {
+		$gameVersion = Get-CurrentRimworldVersion
+		$requiresHarmony = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId?.Contains("brrainz.harmony") -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId?.Contains("brrainz.harmony")
+		if ($requiresHarmony -and (-not $fields.libraries_list -or $fields.libraries_list -notcontains 8517)) {
 			WriteMessage -progress "Adding harmony to libraries_list"
-			$body = @{ fields = @{ libraries_list = @(8517) } } | ConvertTo-Json -Depth 5
+			if (-not $fields.libraries_list) {
+				$fields | Add-Member -MemberType NoteProperty -Name libraries_list -Value @()
+			}
+			$fields.libraries_list += 8517
+			$somethingChanged = $true
+		}
+		$requiresVanillaExpanded = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId?.Contains("OskarPotocki.VanillaFactionsExpanded.Core") -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId?.Contains("OskarPotocki.VanillaFactionsExpanded.Core")
+		if ($requiresVanillaExpanded -and (-not $fields.libraries_list -or $fields.libraries_list -notcontains 9172)) {
+			WriteMessage -progress "Adding vanilla expanded to libraries_list"
+			if (-not $fields.libraries_list) {
+				$fields | Add-Member -MemberType NoteProperty -Name libraries_list -Value @()
+			}
+			$fields.libraries_list += 9172
+			$somethingChanged = $true
+		}
+		if ($somethingChanged) {
+			$body = @{ fields = @{ libraries_list = $fields.libraries_list } } | ConvertTo-Json -Depth 5
 			$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
 			$fields = $response.acf
 			$anythingChanged = $true
@@ -6519,10 +6550,6 @@ function Get-DeeplRemainingCharacters {
 	return $result.character_limit - $result.character_count
 }
 
-function Save-TranslationCache {
-	$translationCache | ConvertTo-Json | Set-Content $translationCachePath -Encoding UTF8
-}
-
 # Translation using https://www.deepl.com/
 function Get-DeeplTranslation {
 	param (
@@ -6594,10 +6621,10 @@ function Get-DeeplTranslation {
 		$urlSuffix += "&source_lang=$selectedFrom"
 	}
 
-	$cacheKey = "$selectedTo|$text"
-	if ($translationCache.ContainsKey($cacheKey)) {
-		WriteMessage -progress "Cache hit for '$text' to $language"
-		return $translationCache[$cacheKey]
+	$translatedText = Get-TranslationFromCacheDb -Text $text -TargetLang $selectedTo
+	if ($translatedText) {
+		WriteMessage -progress "Cache hit for '$text' to $selectedTo"
+		return $translatedText
 	}
 
 	$urlSuffix += "&text=$text"
@@ -6621,8 +6648,7 @@ function Get-DeeplTranslation {
 	}
 
 	$result = $result.translations.text
-	$translationCache[$cacheKey] = $result
-	Save-TranslationCache
+	Set-TranslationInCacheDb -Text $text -Translation $result -TargetLang $selectedTo | Out-Null
 	return $result
 }
 

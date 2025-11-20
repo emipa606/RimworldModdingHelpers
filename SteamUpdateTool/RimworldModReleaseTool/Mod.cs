@@ -113,8 +113,45 @@ namespace RimworldModReleaseTool
                 }
             }
 
+            var modDependenciesByVersion = XElement.Parse(aboutXml.InnerXml).Element("modDependenciesByVersion");
+            if (modDependenciesByVersion != null && modDependenciesByVersion.HasElements)
+            {
+                var latestVersion = modDependenciesByVersion.Elements().ElementAt(modDependenciesByVersion.Elements().Count() - 1);
+
+                foreach (var xElement in latestVersion.Elements())
+                {
+                    if (xElement.Element("downloadUrl")?.Value.Contains("store.steampowered.com/app") == true)
+                    {
+                        var stringAppDependency =
+                            xElement.Element("downloadUrl")?.Value.Replace("https://store.steampowered.com/app/", "")
+                                .Split('/').First();
+                        try
+                        {
+                            AppDependencies.Add(Convert.ToUInt32(stringAppDependency));
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"Could not convert {stringAppDependency} to uint {e}");
+                        }
+
+                        continue;
+                    }
+
+                    var stringDependency =
+                        xElement.Element("steamWorkshopUrl")?.Value.Replace("=", "/").Split('/').Last();
+                    try
+                    {
+                        Dependencies.Add(Convert.ToUInt64(stringDependency));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not convert {stringDependency} to ulong {e}");
+                    }
+                }
+            }
+
             Console.WriteLine($"Found {Dependencies.Count} dependencies to add. {string.Join(", ", Dependencies)}");
-            Archived = Description?.Contains("CN9Rs5X.png") == true;
+            Archived = Description?.Contains("Removed.png") == true;
 
             // get preview images
             var preview = PathCombine(path, "About", "Preview.png");
