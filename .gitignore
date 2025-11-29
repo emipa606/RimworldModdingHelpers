@@ -14,3 +14,4 @@ MigrationBackup
 .fake
 .ionide
 *.nupkg
+replacements.json.gz

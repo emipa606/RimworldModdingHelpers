@@ -4921,7 +4921,7 @@ function Publish-Mod {
 		$modObject.ModSyncFilePath = "$($modObject.ModFolderPath)\About\ModSync.xml"
 		New-ModSyncFile -modObject $modObject -version $version.ToString()
 	}
-	if (Test-Path $publisherPlusTemplate) {
+	if ((Test-Path $publisherPlusTemplate) -and (-not $modObject.ModPublisherPath -or (Get-Item $publisherPlusTemplate).LastWriteTime -gt (Get-Item $modObject.ModPublisherPath).LastWriteTime)) {
 		$modObject.ModPublisherPath = "$($modObject.ModFolderPath)\_PublisherPlus.xml"
 		Copy-Item -Path $publisherPlusTemplate $modObject.ModPublisherPath -Force | Out-Null
 		((Get-Content -path $modObject.ModPublisherPath -Raw -Encoding UTF8).Replace("[modpath]", $modObject.ModFolderPath)) | Set-Content -Path $modObject.ModPublisherPath
