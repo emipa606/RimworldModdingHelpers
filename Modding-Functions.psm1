@@ -218,6 +218,99 @@ $Global:kofiUrl = $settings.kofi_url
 $Global:rimWorldBaseApiKey = $settings.rimworldbase_api_key
 $Global:rimWorldBaseApiUrl = $settings.rimworldbase_api_url
 $Global:rimWorldBaseApiUser = $settings.rimworldbase_api_user
+
+if (-not $Global:SteamThrottleState) {
+	$Global:SteamThrottleState = [ordered]@{
+		WaitSeconds = 0.0
+		LastAttempt = [datetime]::MinValue
+		LastSuccess = [datetime]::MinValue
+	}
+}
+
+function Get-SteamThrottleWaitSeconds {
+	if (-not $Global:SteamThrottleState) {
+		$Global:SteamThrottleState = [ordered]@{
+			WaitSeconds = 0.0
+			LastAttempt = [datetime]::MinValue
+			LastSuccess = [datetime]::MinValue
+		}
+	}
+	$state = $Global:SteamThrottleState
+	if ($state.LastAttempt -eq [datetime]::MinValue) {
+		return 0.0
+	}
+	$elapsed = (Get-Date) - $state.LastAttempt
+	$remaining = $state.WaitSeconds - $elapsed.TotalSeconds
+	if ($remaining -lt 0) {
+		return 0.0
+	}
+	return $remaining
+}
+
+function Set-SteamThrottleAttempt {
+	if (-not $Global:SteamThrottleState) {
+		$Global:SteamThrottleState = [ordered]@{
+			WaitSeconds = 0.0
+			LastAttempt = [datetime]::MinValue
+			LastSuccess = [datetime]::MinValue
+		}
+	}
+	$Global:SteamThrottleState.LastAttempt = Get-Date
+}
+
+function Update-SteamThrottleState {
+	[CmdletBinding()]
+	param(
+		[switch]$Success,
+		[switch]$Failure
+	)
+
+	if (-not $Global:SteamThrottleState) {
+		$Global:SteamThrottleState = [ordered]@{
+			WaitSeconds = 0.0
+			LastAttempt = [datetime]::MinValue
+			LastSuccess = [datetime]::MinValue
+		}
+	}
+	$state = $Global:SteamThrottleState
+	$minWait = 5.0
+	$maxWait = 300.0
+	if ($Failure) {
+		if ($state.WaitSeconds -lt $minWait) {
+			$state.WaitSeconds = $minWait
+		} else {
+			$state.WaitSeconds = [math]::Min($maxWait, $state.WaitSeconds * 2.0)
+		}
+	}
+	if ($Success -and $state.WaitSeconds -gt 0) {
+		if ($state.WaitSeconds -lt 1.0) {
+			$state.WaitSeconds = 0.0
+		} else {
+			$state.WaitSeconds = $state.WaitSeconds / 2.0
+		}
+		$state.LastSuccess = Get-Date
+	}
+	$Global:SteamThrottleState = $state
+}
+
+function Invoke-SteamThrottleWait {
+	[CmdletBinding()]
+	param(
+		[string]$Reason
+	)
+
+	$waitSeconds = Get-SteamThrottleWaitSeconds
+	if ($waitSeconds -le 0) {
+		return
+	}
+	$sleepSeconds = [math]::Ceiling($waitSeconds)
+	if ($Reason) {
+		WriteMessage -progress "Waiting $sleepSeconds seconds before $Reason due to Steam throttle"
+	} else {
+		WriteMessage -progress "Waiting $sleepSeconds seconds due to Steam throttle"
+	}
+	Start-Sleep -Seconds $sleepSeconds
+}
 $Global:nugetPackagesPath = $settings.nuget_packages_path
 $Global:autoTranslateLanguages = $settings.auto_translate_languages
 if (-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
@@ -2435,7 +2528,12 @@ function Get-IdentifiersFromMod {
 			WriteMessage -warning "Could not find mod named $($identifierItem.displayName) $($identifierItem.packageId), exiting"
 			return $false
 		}
-		$subIdentifiers = Get-IdentifiersFromSubMod -modFolderPath (Get-ModPathFromDatabase -identifier $identifier)
+		$modPath = Get-ModPathFromDatabase -identifier $identifier
+		if (-not $modPath) {
+			WriteMessage -warning "Could not find mod for $identifier, exiting"
+			return $false
+		}
+		$subIdentifiers = Get-IdentifiersFromSubMod -modFolderPath $modPath
 		if ($subIdentifiers -eq -1) {
 			WriteMessage -warning "Could not find mod for $identifier, exiting"
 			return $false
@@ -2459,7 +2557,12 @@ function Get-IdentifiersFromMod {
 				WriteMessage -warning "Could not find mod named $($identifierItem.displayName) $($identifierItem.packageId), exiting"
 				return $false
 			}
-			$subIdentifiers = Get-IdentifiersFromSubMod (Get-ModPathFromDatabase -identifier $identifier)
+			$modPath = Get-ModPathFromDatabase -identifier $identifier
+			if (-not $modPath) {
+				WriteMessage -warning "Could not find mod for $identifier, exiting"
+				return $false
+			}
+			$subIdentifiers = Get-IdentifiersFromSubMod $modPath
 			if ($subIdentifiers -eq -1) {
 				WriteMessage -warning "Could not find valid sub-mods for $identifier, exiting"
 				return $false
@@ -3205,25 +3308,152 @@ function Get-SteamWorkshopModInfo {
 		Tags          = @()
 		Visibility    = $null
 		PreviewUrl    = $null
+		Description   = $null
 	}
 	$url = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
 	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
 	$fileName = $url.Split("=")[1].Trim()
 	$filePath = "$($env:TEMP)\$fileName.html"
-	if (Test-Path $filePath) {
-		$counter = 0
-		while ((Get-Content -Path $filePath) -match "Please try again later") {
-			(ConvertFrom-Html -URI $url).InnerHtml | Out-File $filePath
-			$counter++
-			if ($counter -gt 5) {
-				break
-			}
+	$metaPath = "$env:TEMP\$fileName.headers.json"
+	$prevMeta = $null
+	if (Test-Path $metaPath) {
+		try {
+			$prevMeta = Get-Content -Raw $metaPath | ConvertFrom-Json
+		} catch {
+			$prevMeta = $null
 		}
 	}
-	if (-not (Test-Path $filePath) -or (Get-Item $filePath).LastWriteTime -lt ((get-date).AddMinutes(-5))) {
-		(ConvertFrom-Html -URI $url).InnerHtml | Out-File $filePath
+	# Build conditional headers
+	$reqHeaders = @{ 'User-Agent' = 'Mozilla/5.0' }  # helps avoid some blocks
+	$cacheTTL = [TimeSpan]::FromHours(12)
+	if ($prevMeta) {
+		if ($prevMeta.ETag) {
+			$reqHeaders['If-None-Match'] = $prevMeta.ETag
+		} elseif ($prevMeta.'Last-Modified') {
+			# RFC1123 format
+			$reqHeaders['If-Modified-Since'] = ([datetime]$prevMeta.'Last-Modified').ToUniversalTime().ToString('r')
+		} elseif ($prevMeta.Downloaded) {
+			# Fallback: use our last download time
+			$reqHeaders['If-Modified-Since'] = ([datetime]$prevMeta.Downloaded).ToUniversalTime().ToString('r')
+		}
 	}
-	$html = ConvertFrom-Html -Path $filePath
+
+	if ((Test-Path $filePath) -and (-not (Get-Content -Path $filePath -Raw).StartsWith("<!DOCTYPE html>") -or ((Get-Content -Path $filePath) -match "Please try again later"))) {
+		Remove-Item $filePath -Force
+	}
+	$useCache = $false
+	if ($prevMeta -and (Test-Path $filePath)) {
+		$age = (Get-Date) - [datetime]$prevMeta.Downloaded
+		$useCache = ($age -lt $cacheTTL) -and ((Get-Content -Path $filePath -Raw).StartsWith("<!DOCTYPE html>")) -and (-not ((Get-Content -Path $filePath) -match "Please try again later"))
+	}
+	$pendingSuccessUpdate = $false
+	$responseHeaders = $null
+	$downloadedAt = $null
+	if (-not $useCache) {
+		WriteMessage -progress "Fetching data from $url"
+		$downloaded = $false
+		for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+			Invoke-SteamThrottleWait -Reason "Steam fetch attempt $attempt for $modId"
+			Set-SteamThrottleAttempt
+			try {
+				$resp = Invoke-WebRequest -Uri $url -Headers $reqHeaders -ErrorAction Stop
+				Set-Content -Path $filePath -Value $resp.Content -Encoding UTF8
+				$responseHeaders = $resp.Headers
+				$downloadedAt = Get-Date
+				$pendingSuccessUpdate = $true
+				$downloaded = $true
+				break
+			} catch {
+				$webResp = $_.Exception.Response
+				if ($webResp -and ($webResp.StatusCode.value__ -eq 304)) {
+					Update-SteamThrottleState -Success
+					$downloaded = $true
+					$timestamp = Get-Date
+					if ($prevMeta) {
+						$prevMeta.Downloaded = $timestamp
+						$prevMeta | ConvertTo-Json | Set-Content -Path $metaPath -Encoding UTF8
+					} else {
+						@{
+							Downloaded = $timestamp
+						} | ConvertTo-Json | Set-Content -Path $metaPath -Encoding UTF8
+					}
+					WriteMessage -progress "Cache valid (304 Not Modified), using $filePath"
+					break
+				}
+				Update-SteamThrottleState -Failure
+				WriteMessage -warning "Attempt $attempt : Failed to fetch data from $url"
+			}
+		}
+		if ($pendingSuccessUpdate -and $downloaded) {
+			@{
+				ETag            = $responseHeaders.ETag
+				'Last-Modified' = $responseHeaders['Last-Modified']
+				Downloaded      = $downloadedAt
+			} | ConvertTo-Json | Set-Content -Path $metaPath -Encoding UTF8
+		}
+	} else {
+		WriteMessage -progress "Using cached page for $modId"
+	}
+	if (-not (Test-Path $filePath)) {
+		WriteMessage -warning "Could not fetch data from $url"
+		return $result
+	}
+	if ((Test-Path $filePath) -and (Get-Content -Path $filePath) -match "Please wait and try your request again later") {
+		Update-SteamThrottleState -Failure
+		$pendingSuccessUpdate = $false
+		WriteMessage -progress "Steam rate limit hit, subscribing instead of fetching data"
+		Set-ModSubscription -modId $modId -subscribe $true -noCheck
+		$modData = Get-Mod -modPath "E:\SteamLibrary\steamapps\workshop\content\294100\$modId"
+		if ($modData.PublishedId) {
+			$result.Name = $modData.DisplayName
+			$result.AuthorName = $modData.Author
+			$result.Visibility = "Unlisted"
+			$result.Exists = $true
+			$result.Tags = $modData.SupportedVersions
+			$result.Description = $modData.Description
+		} else {
+			WriteMessage -warning "Could not fetch data for $url due to the item not existing"
+		}
+		return $result
+	}
+	if ((Get-Content -Path $filePath) -match "Please try again later" -or -not (Get-Content -Path $filePath).StartsWith("<!DOCTYPE html>")) {
+		Update-SteamThrottleState -Failure
+		$pendingSuccessUpdate = $false
+		WriteMessage -progress "Failed to fetch data from $url, may be removed. Trying a few more times."
+		$fallbackSuccess = $false
+		for ($i = 0; $i -lt 3; $i++) {
+			Invoke-SteamThrottleWait -Reason "Steam fallback attempt $($i + 1) for $modId"
+			Set-SteamThrottleAttempt
+			$fallbackHtml = ConvertFrom-Html -URI $url -ErrorAction SilentlyContinue
+			if ($fallbackHtml) {
+				$fallbackContent = $fallbackHtml.InnerHtml
+				if ($fallbackContent) {
+					Set-Content -Path $filePath -Value $fallbackContent -Encoding UTF8
+					if ($fallbackContent -notmatch "Please try again later") {
+						Update-SteamThrottleState -Success
+						$fallbackSuccess = $true
+						$timestamp = Get-Date
+						@{
+							ETag            = $null
+							'Last-Modified' = $null
+							Downloaded      = $timestamp
+						} | ConvertTo-Json | Set-Content -Path $metaPath -Encoding UTF8
+						break
+					}
+				}
+			}
+			Update-SteamThrottleState -Failure
+		}
+		if (-not $fallbackSuccess -or (Get-Content -Path $filePath) -match "Please try again later" -or -not (Get-Content -Path $filePath).StartsWith("<!DOCTYPE html>")) {
+			WriteMessage -warning "Could not fetch data from $url after multiple attempts"
+			return $result
+		}
+	}
+	if ($pendingSuccessUpdate) {
+		Update-SteamThrottleState -Success
+		$pendingSuccessUpdate = $false
+	}
+	$html = ConvertFrom-Html -Path $filePath -ErrorAction SilentlyContinue
 
 	try {
 		if ($html.InnerText -match "You must be logged in to view this item.") {
@@ -3259,6 +3489,7 @@ function Get-SteamWorkshopModInfo {
 		if ($imgSrc) {
 			$result.PreviewUrl = "$($imgSrc.GetAttributeValue('src', '').Split('?')[0])"
 		}
+		$result.Description = $html.SelectNodes("//div[@class='workshopItemDescription']").InnerText.Trim()
 
 		$versionsHtml = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")[0].InnerText.Trim()
 		$result.Tags = $versionsHtml.Replace("Tags:", ",").Replace(" ", "").Split(",") | Where-Object { $_ -and $_ -match "^[0-9]+\.[0-9]+$" }
@@ -3274,7 +3505,8 @@ function Get-ModInfo {
 	param (
 		[string[]]$steamIds,
 		[switch]$expandAuthor,
-		[switch]$forceRefresh
+		[switch]$forceRefresh,
+		[switch]$apiOnly
 	)
 
 	$cacheDuration = [TimeSpan]::FromMinutes(10)
@@ -3340,11 +3572,30 @@ function Get-ModInfo {
 					Subscriptions = 0
 					Visibility    = "Unknown"
 					Tags          = ""
+					Description   = ""
 				}
 			} elseif ($details.result -eq 9) {
+				if ($apiOnly) {
+					WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, skipping manual fetch"
+					$modInfo = @{
+						SteamId       = "$($details.publishedfileid)"
+						Exists        = $true
+						Name          = "Unknown"
+						Author        = "Unknown"
+						PreviewUrl    = ""
+						Subscriptions = 0
+						Visibility    = "Unlisted"
+						Tags          = ""
+						Description   = ""
+					}
+					$returnArray += $modInfo
+					continue
+				}
+
 				WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
 				$modInfo = Get-SteamWorkshopModInfo -modId $details.publishedfileid
 			} elseif ($details.result -eq 1) {
+				Write-Debug "Found details for mod ID $($details.publishedfileid): $($details | ConvertTo-Json -Depth 5)"
 				$modName = $details.title
 				$author = $details.creator
 				if ($expandAuthor) {
@@ -3381,6 +3632,7 @@ function Get-ModInfo {
 					Subscriptions = $subscriptions
 					Visibility    = $visibility
 					Tags          = $tags
+					Description   = $details.description
 				}
 			} else {
 				$modInfo = @{
@@ -3392,6 +3644,7 @@ function Get-ModInfo {
 					Subscriptions = 0
 					Visibility    = "Unknown"
 					Tags          = ""
+					Description   = ""
 				}
 				WriteMessage -warning "Failed to fetch details for mod ID $($details.publishedfileid)"
 				Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
