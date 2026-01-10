@@ -1,4 +1,5 @@
 {
+  "version": "2026-01-10T21:37:47Z",
   "rules": [
     {
       "oldWorkshopId": "1076950211",
@@ -39,25 +40,6 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "1082915328",
-      "oldName": "Expanded Woodworking",
-      "oldAuthor": "Adventurer",
-      "oldPackageId": "Adventurer.ExpandWoodwork",
-      "newWorkshopId": "3205377029",
-      "newName": "Expanded Woodworking (Continued)",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.expandwoodwork",
-      "oldVersions": [
-        "1.0",
-        "1.1",
-        "1.2"
-      ],
-      "newVersions": [
         "1.5",
         "1.6"
       ]
@@ -689,7 +671,6 @@
         "1.4"
       ],
       "newVersions": [
-        "1.0",
         "1.1",
         "1.2",
         "1.3",
@@ -5807,23 +5788,6 @@
       ]
     },
     {
-      "oldWorkshopId": "1507423712",
-      "oldName": "Lost Joy Objects - Books",
-      "oldAuthor": "dracoix 🐉",
-      "oldPackageId": "",
-      "newWorkshopId": "2657878164",
-      "newName": "Lost Joy Objects - Books (Continued)",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.books",
-      "oldVersions": [
-        "0.19"
-      ],
-      "newVersions": [
-        "1.3",
-        "1.4"
-      ]
-    },
-    {
       "oldWorkshopId": "1507748539",
       "oldName": "Mod Manager",
       "oldAuthor": "Fluffy",
@@ -10327,30 +10291,6 @@
       ]
     },
     {
-      "oldWorkshopId": "1676969930",
-      "oldName": "High quality textures",
-      "oldAuthor": "AUTOMATIC",
-      "oldPackageId": "automatic.highqualitytextures",
-      "newWorkshopId": "3158892620",
-      "newName": "High Quality Textures 1.5",
-      "newAuthor": "piercedupmetalhead",
-      "newPackageId": "Chad.highqualitytextures1.5",
-      "oldVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3"
-      ],
-      "newVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5"
-      ]
-    },
-    {
       "oldWorkshopId": "1677752791",
       "oldName": "Advanced Parka",
       "oldAuthor": "Kikohi, Trunken",
@@ -10391,31 +10331,6 @@
         "1.2"
       ],
       "newVersions": [
-        "1.3",
-        "1.4",
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "1684944322",
-      "oldName": "Startup impact",
-      "oldAuthor": "76561197980142533",
-      "oldPackageId": "automatic.startupimpact",
-      "newWorkshopId": "3544131315",
-      "newName": "Startup impact continued",
-      "newAuthor": "AUTOMATIC, AssassinsBro",
-      "newPackageId": "assassinsbro.startupimpactcontinued",
-      "oldVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3"
-      ],
-      "newVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
         "1.3",
         "1.4",
         "1.5",
@@ -11487,7 +11402,7 @@
       "oldAuthor": "hubba368",
       "oldPackageId": "hubba368.ImmersiveishResearch",
       "newWorkshopId": "2590854684",
-      "newName": "Immersive-ish Research (Continued)",
+      "newName": "[Abandoned] Immersive-ish Research (Continued)",
       "newAuthor": "Mlie",
       "newPackageId": "Mlie.ImmersiveIshResearch",
       "oldVersions": [
@@ -12661,29 +12576,6 @@
       ],
       "newVersions": [
         "1.0",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "1823276856",
-      "oldName": "[JPT] Burn It for Fuel (obsolete)",
-      "oldAuthor": "jptrrs",
-      "oldPackageId": "JPT.BurnItForFuel",
-      "newWorkshopId": "3004932466",
-      "newName": "[Depricated] [JPT] Burn It for Fuel (Continued)",
-      "newAuthor": "Mlie",
-      "newPackageId": "Mlie.JPTBurnItForFuel",
-      "oldVersions": [
-        "1.1",
-        "1.2",
-        "1.3"
-      ],
-      "newVersions": [
         "1.1",
         "1.2",
         "1.3",
@@ -16636,25 +16528,6 @@
       ],
       "newVersions": [
         "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "2019053285",
-      "oldName": "ColdCrystal",
-      "oldAuthor": "Rikiki",
-      "oldPackageId": "Rikiki.ColdCrystal",
-      "newWorkshopId": "3291971971",
-      "newName": "ColdCrystal 1.5 update",
-      "newAuthor": "_Nik_",
-      "newPackageId": "Rikiki.ColdCrystal",
-      "oldVersions": [
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4"
-      ],
-      "newVersions": [
-        "1.5"
       ]
     },
     {
@@ -20829,25 +20702,6 @@
       ]
     },
     {
-      "oldWorkshopId": "2200500202",
-      "oldName": "Rechargeable Low-shield Pack",
-      "oldAuthor": "xrushha",
-      "oldPackageId": "xrushha.RechargeableBroadshieldPack",
-      "newWorkshopId": "3532695457",
-      "newName": "Rechargeable Low-shield Pack(Continued)",
-      "newAuthor": "Belinko",
-      "newPackageId": "belinko.ReloadShields",
-      "oldVersions": [
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5"
-      ],
-      "newVersions": [
-        "1.6"
-      ]
-    },
-    {
       "oldWorkshopId": "2201064941",
       "oldName": "[NEW LINK IN DESC] [XND] Turret Extensions - Continuum",
       "oldAuthor": "XeoNovaDan, Netrve",
@@ -20908,24 +20762,6 @@
       "newVersions": [
         "1.5",
         "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "2201933633",
-      "oldName": "Royalty Empire Rework",
-      "oldAuthor": "MadeThrone11206",
-      "oldPackageId": "MadeThrone11206.Royalty.Empire.Rework",
-      "newWorkshopId": "2806440089",
-      "newName": "Royalty Empire Rework (Continued)",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.RoyaltyEmpireRework",
-      "oldVersions": [
-        "1.2"
-      ],
-      "newVersions": [
-        "1.3",
-        "1.4",
-        "1.5"
       ]
     },
     {
@@ -21183,7 +21019,7 @@
       "oldAuthor": "LingLuo",
       "oldPackageId": "LingLuo.ZeroTechFaction",
       "newWorkshopId": "2609651459",
-      "newName": "ZeroTech-Faction (Continued)",
+      "newName": "[Abandoned] ZeroTech-Faction (Continued)",
       "newAuthor": "Mlie",
       "newPackageId": "Mlie.ZeroTechFaction",
       "oldVersions": [
@@ -21195,7 +21031,8 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -21330,42 +21167,6 @@
       ]
     },
     {
-      "oldWorkshopId": "2209574979",
-      "oldName": "Royalty Empire Rework Civil War Submod: The Rimarian Empire",
-      "oldAuthor": "MadeThrone11206",
-      "oldPackageId": "MadeThrone11206.Submod.Rimaria",
-      "newWorkshopId": "2806444358",
-      "newName": "The Rimarian Empire",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.Rimaria",
-      "oldVersions": [
-        "1.2"
-      ],
-      "newVersions": [
-        "1.3",
-        "1.4",
-        "1.5"
-      ]
-    },
-    {
-      "oldWorkshopId": "2209575840",
-      "oldName": "Royalty Empire Rework Civil War Submod: The Rimirian Empire",
-      "oldAuthor": "MadeThrone11206",
-      "oldPackageId": "MadeThrone11206.Submod.Rimiria",
-      "newWorkshopId": "2806443420",
-      "newName": "The Rimirian Empire",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.Rimiria",
-      "oldVersions": [
-        "1.2"
-      ],
-      "newVersions": [
-        "1.3",
-        "1.4",
-        "1.5"
-      ]
-    },
-    {
       "oldWorkshopId": "2212105378",
       "oldName": "Project Itzal - Underbarreled weapons",
       "oldAuthor": "Itzal",
@@ -21402,25 +21203,6 @@
         "1.3",
         "1.4",
         "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "2215217049",
-      "oldName": "Anima Gear",
-      "oldAuthor": "76561198982957945",
-      "oldPackageId": "xrushha.AnimaGear",
-      "newWorkshopId": "3545349562",
-      "newName": "Anima Gear - Continued",
-      "newAuthor": "xrushha, NOTDemo",
-      "newPackageId": "xrushha.NOTDemo.AnimaGear",
-      "oldVersions": [
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5"
-      ],
-      "newVersions": [
         "1.6"
       ]
     },
@@ -28028,7 +27810,8 @@
       "newVersions": [
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -28782,20 +28565,16 @@
       ]
     },
     {
-      "oldWorkshopId": "2616538981",
-      "oldName": "Steve's Walls",
-      "oldAuthor": "Scurvyez",
-      "oldPackageId": "Scurvyez.StevesWalls",
-      "newWorkshopId": "3525402809",
-      "newName": "Steve's Walls Continued [1.6]",
-      "newAuthor": "RandallBoggs - Fork",
-      "newPackageId": "RandallBoggs.StevesWalls",
-      "oldVersions": [
+      "newVersions": [
         "1.3",
         "1.4",
         "1.5"
       ],
-      "newVersions": [
+      "newWorkshopId": "2616538981",
+      "oldName": "Steve's Walls Continued [1.6]",
+      "newName": "Steve's Walls",
+      "oldWorkshopId": "3525402809",
+      "oldVersions": [
         "1.6"
       ]
     },
@@ -31627,7 +31406,7 @@
       "oldAuthor": "SFLegion",
       "oldPackageId": "sflegion.vfeea.powerextract",
       "newWorkshopId": "3450725002",
-      "newName": "VFEEA - Extract Super-Nanites (Continued)",
+      "newName": "[Abandoned] VFEEA - Extract Super-Nanites (Continued)",
       "newAuthor": "Mlie",
       "newPackageId": "Mlie.VFEEAExtractSuperNanites",
       "oldVersions": [
@@ -32843,7 +32622,8 @@
       "newPackageId": "Seti.Victor.NOTDemo.AnimaBodies",
       "oldVersions": [
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ],
       "newVersions": [
         "1.6"
@@ -35728,7 +35508,7 @@
       "oldAuthor": "76561198836578913",
       "oldPackageId": "MYDE.AerocraftFramework",
       "newWorkshopId": "3611555958",
-      "newName": "飞行器框架 Aerocraft Framework[Unofficial]",
+      "newName": "飞行器框架 Aerocraft Framework[1.6]",
       "newAuthor": "skylon",
       "newPackageId": "MYDE.AerocraftFramework",
       "oldVersions": [
@@ -36731,7 +36511,8 @@
       ],
       "newVersions": [
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -36816,25 +36597,6 @@
         "1.4"
       ],
       "newVersions": [
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "3019723795",
-      "oldName": "Genomics",
-      "oldAuthor": "76561198027957889",
-      "oldPackageId": "sflegion.genomist",
-      "newWorkshopId": "3604480838",
-      "newName": "Genomics (Continued)",
-      "newAuthor": "SFLegion",
-      "newPackageId": "sflegion.genomist.continued",
-      "oldVersions": [
-        "1.4",
-        "1.5"
-      ],
-      "newVersions": [
-        "1.4",
         "1.5",
         "1.6"
       ]
@@ -37604,22 +37366,6 @@
       ],
       "newVersions": [
         "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "3130973020",
-      "oldName": "Rim-Effect Vehicles: Mako",
-      "oldAuthor": "xrushha",
-      "oldPackageId": "xrushha.REVM",
-      "newWorkshopId": "3528141775",
-      "newName": "Rim-Effect Renegade Vehicles: Mako (Continued)",
-      "newAuthor": "xrushha",
-      "newPackageId": "xrushha.REVM",
-      "oldVersions": [
-        "1.4"
-      ],
-      "newVersions": [
         "1.6"
       ]
     },
@@ -38813,19 +38559,15 @@
       ]
     },
     {
-      "oldWorkshopId": "3264556972",
-      "oldName": "Growth Moments Make Sense Now",
-      "oldAuthor": "76561198095351210",
-      "oldPackageId": "Jdalt.GMMSN",
-      "newWorkshopId": "3548163100",
-      "newName": "Growth Moments Make Sense Now (1.6)",
-      "newAuthor": "Tug",
-      "newPackageId": "tug.GMMSN",
+      "newWorkshopId": "3264556972",
       "oldVersions": [
-        "1.5"
-      ],
-      "newVersions": [
         "1.6"
+      ],
+      "oldName": "Growth Moments Make Sense Now (1.6)",
+      "newName": "Growth Moments Make Sense Now",
+      "oldWorkshopId": "3548163100",
+      "newVersions": [
+        "1.5"
       ]
     },
     {
@@ -41215,22 +40957,7 @@
       ]
     },
     {
-      "oldWorkshopId": "722085442",
-      "oldName": "ED-Embrasures",
-      "oldAuthor": "Jaxxa",
-      "oldPackageId": "Jaxxa.ED.Embrasures",
-      "newWorkshopId": "3277482616",
-      "newName": "ED-Embrasures (Continued)",
-      "newAuthor": "GanjaMan [NL]",
-      "newPackageId": "Ganja.ED.Embrasures",
       "oldVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4"
-      ],
-      "newVersions": [
         "1.0",
         "1.1",
         "1.2",
@@ -41238,31 +40965,16 @@
         "1.4",
         "1.5",
         "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "722086956",
-      "oldName": "ED-Laser-Drill",
-      "oldAuthor": "Jaxxa",
-      "oldPackageId": "Jaxxa.EnhancedDevelopment.LaserDrill",
-      "newWorkshopId": "2570228927",
-      "newName": "ED-Laser-Drill (Continued)",
-      "newAuthor": "Mlie",
-      "newPackageId": "Mlie.EDLaserDrill",
-      "oldVersions": [
+      ],
+      "newWorkshopId": "722086956",
+      "newName": "ED-Laser-Drill",
+      "oldWorkshopId": "2570228927",
+      "oldName": "[Abandoned] ED-Laser-Drill (Continued)",
+      "newVersions": [
         "1.0",
         "1.1",
         "1.2",
         "1.3"
-      ],
-      "newVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5",
-        "1.6"
       ]
     },
     {
@@ -43160,7 +42872,8 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -44515,7 +44228,925 @@
         "1.5",
         "1.6"
       ]
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "2848494977",
+      "oldPackageId": "bg.customloads",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "oldAuthor": "76561198004365253",
+      "newName": "CE Custom Ammo",
+      "oldName": "( NEW VERSION IN DESCRIPTION) CE Custom Ammo",
+      "newPackageId": "bg.customloads",
+      "newAuthor": "Bathub Goblin, SodaCats, Epicguru",
+      "newWorkshopId": "3614768269"
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "2573202453",
+      "oldPackageId": "Mlie.SRissPsionicSpaceMiceOfRimworld",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldAuthor": "76561197993690125",
+      "newName": "Psionic Space Mice 1.6",
+      "oldName": "[S'Riss] Psionic Space Mice of HiguerasRimworld (Continued)",
+      "newPackageId": "Higuera.PsionicSpaceMice",
+      "newAuthor": "Higuera",
+      "newWorkshopId": "3614728511"
+    },
+    {
+      "newPackageId": "zal.chimeracreation",
+      "newAuthor": "Zaljerem",
+      "oldPackageId": "Choosechee.AnomalyAllies",
+      "newName": "Chimera Creation (Continued)",
+      "oldWorkshopId": "3331963520",
+      "oldAuthor": "76561198121778064",
+      "newWorkshopId": "3615540204",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Chimera Creation"
+    },
+    {
+      "newPackageId": "Tanden22.RapidFireTurrets",
+      "newAuthor": "Kayedon (original), Tanden22 (continued)",
+      "oldPackageId": "KYD.RapidFireTurrets",
+      "newName": "[KYD] Rapid-Fire Turrets (Continued)",
+      "oldWorkshopId": "2593681752",
+      "oldAuthor": "76561198006218910",
+      "newWorkshopId": "3615348281",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldName": "[KYD] Rapid-Fire Turrets"
+    },
+    {
+      "newPackageId": "Extracting.Organs.1.5",
+      "newAuthor": "GassyTaco.kotobike",
+      "oldPackageId": "Extracting.Organs",
+      "newName": "Prisoner Harvesting 1.5",
+      "oldWorkshopId": "2879759244",
+      "oldAuthor": "76561198141981596",
+      "newWorkshopId": "3347850851",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldName": "Prisoner Harvesting - 1.4"
+    },
+    {
+      "newPackageId": "zal.cocch",
+      "newAuthor": "Jecrell",
+      "oldPackageId": "rimofmadness.CallofCthulhuCosmicHorrors",
+      "newName": "Call of Cthulhu - Cosmic Horrors (Continued)",
+      "oldWorkshopId": "3319844548",
+      "oldAuthor": "76561198084195609",
+      "newWorkshopId": "3615542371",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Call of Cthulhu - Cosmic Horrors - Unofficial 1.5-1.6"
+    },
+    {
+      "oldName": "Crazy Cat Lady",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newAuthor": "Sneaks",
+      "oldPackageId": "Uuugggg.CrazyCatLady",
+      "oldWorkshopId": "1679934065",
+      "newPackageId": "Sneaks.CrazyCatLady",
+      "newName": "Crazy Cat Lady (Cont.)",
+      "oldAuthor": "76561197985330738",
+      "newVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3598246442"
+    },
+    {
+      "oldAuthor": "76561198007889439",
+      "oldName": "Practical Pemmican",
+      "newName": "Practical Pemmican",
+      "newWorkshopId": "3618195343",
+      "newPackageId": "ETRT.PracticalPemmican",
+      "newAuthor": "Evil Tactician",
+      "oldPackageId": "ETRT.PracticalPemmican",
+      "oldWorkshopId": "2761817611",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "oldAuthor": null,
+      "oldName": "Wepl Bullet Impact Sounds",
+      "newName": "Wepl Bullet Impact Sounds (Continued)",
+      "newWorkshopId": "3618085561",
+      "newPackageId": "Keshash.BulletImpactSounds",
+      "newAuthor": "Keshash, Wepl",
+      "oldPackageId": "Keshash.BulletImpactSounds",
+      "oldWorkshopId": "2915567273",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "oldAuthor": "76561198027957889",
+      "oldName": "Genomics",
+      "newName": "Genomics (Continued)",
+      "newWorkshopId": "3619147320",
+      "newPackageId": "sflegion.genomist.continued",
+      "newAuthor": "SFLegion",
+      "oldPackageId": "sflegion.genomist",
+      "oldWorkshopId": "3019723795",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newPackageId": "CheeserupdateAiro.UltimateTrashMod",
+      "newAuthor": "CeasarCheeser",
+      "oldPackageId": "Airo.UltimateTrashMod",
+      "oldName": "Ultimate Trash Mod",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldAuthor": "76561199275410099",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldWorkshopId": "3456577653",
+      "newName": "Ultimate Trash Mod Unofficial 1.6 Update",
+      "newWorkshopId": "3619787706"
+    },
+    {
+      "oldWorkshopId": "2548444243",
+      "newPackageId": "zal.comigogreaterswamps",
+      "newAuthor": "Zaljerem",
+      "oldPackageId": "ComigoGames.Biomes.GreaterSwamps",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newWorkshopId": "3620545124",
+      "oldAuthor": "76561198318370263",
+      "oldName": "Comigo's Greater Swamps",
+      "newVersions": [
+        "1.6"
+      ],
+      "newName": "Comigo's Greater Swamps (Continued)"
+    },
+    {
+      "oldWorkshopId": "2347830858",
+      "newPackageId": "chance2000w.gumballmachine",
+      "newAuthor": "Chance2000w, Alexei Roschak",
+      "oldPackageId": "chance2000w.gumballmachine",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newWorkshopId": "3531452178",
+      "oldAuthor": "76561198082506418",
+      "oldName": "Gumball Machine",
+      "newVersions": [
+        "1.6"
+      ],
+      "newName": "Gumball Machine - Repaired"
+    },
+    {
+      "newName": "Extended Bioengineering for VFE Insectoids (Continued)",
+      "newAuthor": "Zaljerem",
+      "newWorkshopId": "3621508730",
+      "oldAuthor": "76561198155413701",
+      "newPackageId": "zal.extendedbioengineering",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldPackageId": "turnovus.submod.extendedbioengineering",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "oldWorkshopId": "2706534548",
+      "oldName": "[LEGACY] Extended Bioengineering for VFE Insectoids"
+    },
+    {
+      "newName": "Pawnmorpher: Insectoids (Continued)",
+      "newAuthor": "Zaljerem",
+      "newWorkshopId": "3621510076",
+      "oldAuthor": "76561198121400420",
+      "newPackageId": "zal.pawnmorpherinsects",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldPackageId": "tachyonite.pawnmorpher.insects",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldWorkshopId": "2215953133",
+      "oldName": "Pawnmorpher: Insectoids"
+    },
+    {
+      "newName": "Infused - Continued",
+      "newAuthor": "notfood",
+      "newWorkshopId": "3621773655",
+      "oldAuthor": "76561198031500205",
+      "newPackageId": "notfood.Infused",
+      "newVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldPackageId": "notfood.Infused",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldWorkshopId": "731287727",
+      "oldName": "Infused"
+    },
+    {
+      "oldPackageId": "booty.DMS.EPOE.CompatPatch",
+      "newPackageId": "booty.DMS.EPOE.CompatPatch.Odyssey",
+      "newWorkshopId": "3622254924",
+      "oldAuthor": "76561198039279651",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldWorkshopId": "3489314971",
+      "oldName": "DMS-EPOE Advanced bionic Compatibility Patch",
+      "newAuthor": "booty, ShadowSTARS616",
+      "newVersions": [
+        "1.6"
+      ],
+      "newName": "DMS-EPOE Compatibility Patch 1.6"
+    },
+    {
+      "oldName": "[KYD] More Condiments",
+      "newAuthor": "Zaljerem",
+      "newName": "[KYD] More Condiments (Continued)",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldAuthor": "76561198006218910",
+      "oldVersions": [
+        "1.3"
+      ],
+      "newWorkshopId": "3623866297",
+      "newPackageId": "zal.morecondiments",
+      "oldPackageId": "KYD.MoreCondiments",
+      "oldWorkshopId": "2648970869"
+    },
+    {
+      "oldName": "Advanced Cultivation",
+      "newAuthor": "MemeGoddess",
+      "newName": "Advanced Cultivation - Continued",
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldAuthor": "76561197981740422",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newWorkshopId": "3623069749",
+      "newPackageId": "Memegoddess.AdvancedCultivation",
+      "oldPackageId": "Gasch.AdvancedCultivation",
+      "oldWorkshopId": "1500420126"
+    },
+    {
+      "oldName": "Configurable Neural Supercharger",
+      "newAuthor": "White_Phant0m (original), ADL'S TOP GUY (1.6 update)",
+      "newName": "Configurable Neural Supercharger 1.6",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldAuthor": "76561198137962746",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newWorkshopId": "3623238693",
+      "newPackageId": "ADLTPG.cns16",
+      "oldPackageId": "wphant0m.cns",
+      "oldWorkshopId": "2577412252"
+    },
+    {
+      "newName": "Prisoners Are Not Swines - Continued",
+      "newWorkshopId": "3625886335",
+      "newPackageId": "Memegoddess.PrisonersAreNotSwines",
+      "newAuthor": "MemeGoddess",
+      "oldAuthor": "76561198030481505",
+      "oldPackageId": "bustedbunny.PrisonersAreNotSwines",
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "oldWorkshopId": "2613966365",
+      "oldName": "Prisoners Are Not Swines"
+    },
+    {
+      "newWorkshopId": "3626552609",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newName": "Armored Up(continue)",
+      "newAuthor": "wu0yin",
+      "oldWorkshopId": "3367866155",
+      "oldAuthor": "76561197997051685",
+      "oldPackageId": "HIMPDahak.ArmoredUp",
+      "newPackageId": "wu0yin.ArmoredUp",
+      "oldName": "Armored Up",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newWorkshopId": "3626554374",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newName": "Hopper accepts kibble - Continued",
+      "newAuthor": "ibnk7x",
+      "oldWorkshopId": "1869807934",
+      "oldAuthor": "76561198098124954",
+      "oldPackageId": "Bowen.NutrientPasteAll",
+      "newPackageId": "ibnk7x.NutrientPasteAllContinued",
+      "oldName": "Hopper accepts pemmican and kibble",
+      "newVersions": [
+        "1.6"
+      ]
+    },
+    {
+      "oldAuthor": "76561198002872756",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "3333368653",
+      "newWorkshopId": "3627086683",
+      "oldPackageId": "pphhyy.TerrorAvis",
+      "newPackageId": "zal.terroravis",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newAuthor": "Zaljerem",
+      "oldName": "Terror Avis",
+      "newName": "Terror Avis (Continued)"
+    },
+    {
+      "oldVersions": [
+        "1.1"
+      ],
+      "newWorkshopId": "3628654167",
+      "newName": "Xenn Race (Continued)",
+      "oldName": "Xenn Race 1.1",
+      "newPackageId": "zal.xennrace",
+      "oldWorkshopId": "2018390248",
+      "oldPackageId": "xen.races.xenn",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldAuthor": "76561197992399296",
+      "newAuthor": "Zaljerem"
+    },
+    {
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newWorkshopId": "3628656209",
+      "newName": "Comigo's Grim Traders (Continued)",
+      "oldName": "Comigo's Grim Traders",
+      "newPackageId": "zal.grimtraders",
+      "oldWorkshopId": "2549695765",
+      "oldPackageId": "ComigoGames.Traders.Grim",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldAuthor": "76561198318370263",
+      "newAuthor": "Zaljerem"
+    },
+    {
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newWorkshopId": "3628800386",
+      "newName": "Blended Wool - Continued",
+      "oldName": "Blended Wool",
+      "newPackageId": "ibnk7x.blendedwoolcontinued",
+      "oldWorkshopId": "2404525576",
+      "oldPackageId": "Daemon976.blendedwool",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldAuthor": "76561197970537389",
+      "newAuthor": "ibnk7x"
+    },
+    {
+      "oldVersions": [
+        "1.5"
+      ],
+      "newWorkshopId": "3628537456",
+      "newName": "Infinite Implants (Continued)",
+      "oldName": "Infinite Implants",
+      "newPackageId": "hobbes77.InfiniteImplants",
+      "oldWorkshopId": "3366038280",
+      "oldPackageId": "Soareverix.InfiniteImplants",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldAuthor": "76561198352598647",
+      "newAuthor": "Soareverix"
+    },
+    {
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "MemeGoddess.DualWield",
+      "oldName": "Dual Wield",
+      "oldPackageId": "Roolo.DualWield",
+      "oldWorkshopId": "1628211313",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newName": "Dual Wield - Continued",
+      "oldAuthor": "76561198042626816",
+      "newAuthor": "Meme Goddess",
+      "newWorkshopId": "3630049419"
+    },
+    {
+      "oldAuthor": "76561197972393937",
+      "oldPackageId": "UdderlyEvelyn.FlammableTorches",
+      "newAuthor": null,
+      "oldVersions": [
+        "1.3"
+      ],
+      "oldName": "Flammable Torches",
+      "newName": "Flammable Torches - Continued",
+      "newWorkshopId": "3630001020",
+      "newPackageId": "UdderlyEvelyn.FlammableTorches",
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "2658198797"
+    },
+    {
+      "oldAuthor": "76561198262509287",
+      "oldPackageId": "jonny02.MBI",
+      "newAuthor": "jonny02 and explodoboy",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldName": "Brain Implants and More (implants)!",
+      "newName": "Brain Implants and More (implants)!(Continued)",
+      "newWorkshopId": "3630468767",
+      "newPackageId": "hobbes77.MBI",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "1766307828"
+    },
+    {
+      "oldAuthor": "76561198045819121",
+      "oldPackageId": "polonium.RorenRaceMod",
+      "newAuthor": "Po210",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldName": "Roren, People of Rorensia",
+      "newName": "Roren, People of Rorensia",
+      "newWorkshopId": "3630682283",
+      "newPackageId": "Po210.RorenRaceModOfficial",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "3170447210"
+    },
+    {
+      "newWorkshopId": "3631525524",
+      "newPackageId": "Hawkwood.FacialAnimationsXenotypeCompatibility",
+      "oldWorkshopId": "2950353635",
+      "newAuthor": "WalterHawkwood (Original by Leaguenet)",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newName": "Facial Animations Xenotype Compatibility [Reupload]",
+      "oldAuthor": "76561198022860089",
+      "oldPackageId": "Hawkwood.FacialAnimationsXenotypeCompatibility",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldName": "Facial Animations Xenotype Compatibility"
+    },
+    {
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldAuthor": "76561198015379119",
+      "oldWorkshopId": "1190379390",
+      "oldName": "Miniature Nuclear Generator",
+      "newWorkshopId": "3634386902",
+      "newAuthor": "Lemon",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "zzz.MiniatureNuclearGenerator",
+      "newName": "Miniature Nuclear Generator For 1.6",
+      "newPackageId": "Lemon.MiniatureNuclearGenerator"
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "Feels.The.Great.War",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldName": "The Great War",
+      "oldAuthor": "76561198038630036",
+      "newAuthor": "Echo the Nomad",
+      "newPackageId": "Echo.The.Great.War",
+      "newName": "The Great War Forked",
+      "oldWorkshopId": "794159377",
+      "newWorkshopId": "3634593656"
+    },
+    {
+      "oldVersions": [
+        "0.19"
+      ],
+      "oldName": "Lost Joy Objects - Books",
+      "oldAuthor": "76561197975673361",
+      "newName": "Lost Joy Objects - Books (Continued)",
+      "newWorkshopId": "2657878164",
+      "oldWorkshopId": "1507423712",
+      "newVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newAuthor": "Zaljerem",
+      "newPackageId": "zal.books",
+      "oldPackageId": null
+    },
+    {
+      "oldVersions": [
+        "1.2"
+      ],
+      "oldName": "Royalty Empire Rework",
+      "oldAuthor": "76561198326072051",
+      "newName": "Royalty Empire Rework (Continued)",
+      "newWorkshopId": "2806440089",
+      "oldWorkshopId": "2201933633",
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newAuthor": "Zaljerem",
+      "newPackageId": "zal.RoyaltyEmpireRework",
+      "oldPackageId": "MadeThrone11206.Royalty.Empire.Rework"
+    },
+    {
+      "newAuthor": "Mlie",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldName": "ExGT UrbanCombat",
+      "newName": "ExGT UrbanCombat (Continued)",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldPackageId": "XMB.ExGTUrbanCombat",
+      "newWorkshopId": "3638597751",
+      "oldAuthor": "小面包",
+      "newPackageId": "Mlie.ExGTUrbanCombat",
+      "oldWorkshopId": "2946445530"
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "Zaljerem",
+      "oldName": "Transport Shuttle Standalone",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "Azazellz.TransportShuttleStandalone",
+      "newWorkshopId": "3640979439",
+      "oldAuthor": "76561198003138450",
+      "newPackageId": "zal.transportshuttlestandalone",
+      "oldWorkshopId": "2834132683",
+      "newName": "Transport Shuttle Standalone (Continued)"
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "ELF SLAYER",
+      "oldName": "Sandevistan Implant 3",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldPackageId": "sandevistan.implant.3",
+      "newWorkshopId": "3641185555",
+      "oldAuthor": "76561198076835631",
+      "newPackageId": "sandevistan.implant.reupload",
+      "oldWorkshopId": "3229896323",
+      "newName": "Sandevistan Implant Re-Upload"
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "Seanbeag",
+      "oldName": "HC_Creatures_1",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldPackageId": "HC.Creatures.1",
+      "newWorkshopId": "3641332277",
+      "oldAuthor": "76561198005623257",
+      "newPackageId": "HC.Creatures.1",
+      "oldWorkshopId": "2589837522",
+      "newName": "HC Creatures Continued"
+    },
+    {
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldName": "Contractors Arsenal",
+      "newAuthor": "Zaljerem",
+      "newWorkshopId": "3641786544",
+      "newName": "Contractor's Arsenal (Continued)",
+      "oldPackageId": "zerophoenix.contractorsarsenalfaction",
+      "oldAuthor": "76561198038797853",
+      "newPackageId": "zal.contractorsarsenal",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "1576710993"
+    },
+    {
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3"
+      ],
+      "oldName": "Contractors Arsenal (Factionless)",
+      "newAuthor": "Zaljerem",
+      "newWorkshopId": "3641787299",
+      "newName": "Contractor's Arsenal - Factionless (Continued)",
+      "oldPackageId": "zerophoenix.arsenalfactionless",
+      "oldAuthor": "76561198038797853",
+      "newPackageId": "zal.contarsenalfactionless",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "2040946438"
+    },
+    {
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldName": "Dispenser Extended",
+      "newAuthor": "Local Ghost",
+      "newWorkshopId": "3641803038",
+      "newName": "Dispenser Extended (Continued)",
+      "oldPackageId": "localghost.dispenser",
+      "oldAuthor": "76561198325952994",
+      "newPackageId": "localghost.dispenser",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "3154518147"
+    },
+    {
+      "oldWorkshopId": "2901034783",
+      "newWorkshopId": "3642349335",
+      "oldPackageId": "Nephlite.Carryalls",
+      "newName": "Carryalls | Intercontinental Transport (Continued)",
+      "oldName": "Carryalls | Intercontinental Transport",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newPackageId": "Mlie.CarryallsIntercontinentalTransport",
+      "newAuthor": "Mlie",
+      "oldAuthor": "Nephlite, Telefonmast",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Bill Doors' Framework - 1.6 Temporary",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newPackageId": "3HSTltd.Framework",
+      "newAuthor": "3HST Limited",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldAuthor": "76561198295907124",
+      "oldName": "Bill Doors' Framework",
+      "oldPackageId": "3HSTltd.Framework",
+      "newWorkshopId": "3642977893",
+      "oldWorkshopId": "2897160312"
+    },
+    {
+      "newAuthor": "3HST Limited",
+      "oldWorkshopId": "2937054043",
+      "newPackageId": "3HSTltd.Weapons.Plasma",
+      "newName": "Bill Doors' Plasma Weapons - 1.6 Temporary",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "3HSTltd.Weapons.Plasma",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Bill Doors' Plasma Weapons",
+      "newWorkshopId": "3643309973",
+      "oldAuthor": "76561198295907124"
+    },
+    {
+      "newAuthor": "3HST Limited",
+      "oldWorkshopId": "2740334444",
+      "newPackageId": "3HSTltd.Weapons.Base",
+      "newName": "Bill Doors' Glitterworld Weapon Pack: 3HST limited corporation - 1.6 Temporary",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "3HSTltd.Weapons.Base",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Bill Doors' Glitterworld Weapon Pack: 3HST limited corporation",
+      "newWorkshopId": "3643638527",
+      "oldAuthor": "76561198295907124"
+    },
+    {
+      "newAuthor": "Zaltys",
+      "oldWorkshopId": "1538915422",
+      "newPackageId": "Zaltys.WildPokemonUpdated",
+      "newName": "Wild Pokémon [1.6]",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "Tigerblut.WildPokemon",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Wild Pokémon",
+      "newWorkshopId": "3643078559",
+      "oldAuthor": "76561198056225990"
     }
-  ],
-  "version": "2025-11-29T13:25:12Z"
+  ]
 }

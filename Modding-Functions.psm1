@@ -97,7 +97,7 @@ function WriteProgress {
 
 	$progressObject.current = $progressObject.current + 1
 	$elapsedSeconds = $progressObject.time.Elapsed.TotalSeconds
-	if ($elapsedSeconds - $progressObject.lastsecond -lt $progressObject.updatefrequency) {
+	if ($progressObject.lastsecond -gt 0 -and $elapsedSeconds - $progressObject.lastsecond -lt $progressObject.updatefrequency) {
 		return
 	}
 
@@ -113,6 +113,19 @@ function WriteProgress {
 	$secondsLeft = New-TimeSpan -Seconds ([decimal]::round($elapsedSeconds / $percent * (100 - $percent)))
 	SetTerminalProgress -progressPercent $percent
 	Write-Progress -Activity $progressObject.title -Status "$status - $secondsLeft remaining" -PercentComplete $percent
+}
+
+function Start-SleepWithProgress {
+	param(
+		$totalSeconds
+	)
+
+	$progressObject = WriteProgress -initiate -title "Sleeping for $totalSeconds seconds" -totalActions $totalSeconds
+	for ($i = 1; $i -le $totalSeconds; $i++) {
+		WriteProgress -progressObject $progressObject
+		Start-Sleep -Seconds 1
+	}
+	WriteProgress -progressObject $progressObject -finished
 }
 
 # Shows the rimworld log progress
@@ -218,99 +231,6 @@ $Global:kofiUrl = $settings.kofi_url
 $Global:rimWorldBaseApiKey = $settings.rimworldbase_api_key
 $Global:rimWorldBaseApiUrl = $settings.rimworldbase_api_url
 $Global:rimWorldBaseApiUser = $settings.rimworldbase_api_user
-
-if (-not $Global:SteamThrottleState) {
-	$Global:SteamThrottleState = [ordered]@{
-		WaitSeconds = 0.0
-		LastAttempt = [datetime]::MinValue
-		LastSuccess = [datetime]::MinValue
-	}
-}
-
-function Get-SteamThrottleWaitSeconds {
-	if (-not $Global:SteamThrottleState) {
-		$Global:SteamThrottleState = [ordered]@{
-			WaitSeconds = 0.0
-			LastAttempt = [datetime]::MinValue
-			LastSuccess = [datetime]::MinValue
-		}
-	}
-	$state = $Global:SteamThrottleState
-	if ($state.LastAttempt -eq [datetime]::MinValue) {
-		return 0.0
-	}
-	$elapsed = (Get-Date) - $state.LastAttempt
-	$remaining = $state.WaitSeconds - $elapsed.TotalSeconds
-	if ($remaining -lt 0) {
-		return 0.0
-	}
-	return $remaining
-}
-
-function Set-SteamThrottleAttempt {
-	if (-not $Global:SteamThrottleState) {
-		$Global:SteamThrottleState = [ordered]@{
-			WaitSeconds = 0.0
-			LastAttempt = [datetime]::MinValue
-			LastSuccess = [datetime]::MinValue
-		}
-	}
-	$Global:SteamThrottleState.LastAttempt = Get-Date
-}
-
-function Update-SteamThrottleState {
-	[CmdletBinding()]
-	param(
-		[switch]$Success,
-		[switch]$Failure
-	)
-
-	if (-not $Global:SteamThrottleState) {
-		$Global:SteamThrottleState = [ordered]@{
-			WaitSeconds = 0.0
-			LastAttempt = [datetime]::MinValue
-			LastSuccess = [datetime]::MinValue
-		}
-	}
-	$state = $Global:SteamThrottleState
-	$minWait = 5.0
-	$maxWait = 300.0
-	if ($Failure) {
-		if ($state.WaitSeconds -lt $minWait) {
-			$state.WaitSeconds = $minWait
-		} else {
-			$state.WaitSeconds = [math]::Min($maxWait, $state.WaitSeconds * 2.0)
-		}
-	}
-	if ($Success -and $state.WaitSeconds -gt 0) {
-		if ($state.WaitSeconds -lt 1.0) {
-			$state.WaitSeconds = 0.0
-		} else {
-			$state.WaitSeconds = $state.WaitSeconds / 2.0
-		}
-		$state.LastSuccess = Get-Date
-	}
-	$Global:SteamThrottleState = $state
-}
-
-function Invoke-SteamThrottleWait {
-	[CmdletBinding()]
-	param(
-		[string]$Reason
-	)
-
-	$waitSeconds = Get-SteamThrottleWaitSeconds
-	if ($waitSeconds -le 0) {
-		return
-	}
-	$sleepSeconds = [math]::Ceiling($waitSeconds)
-	if ($Reason) {
-		WriteMessage -progress "Waiting $sleepSeconds seconds before $Reason due to Steam throttle"
-	} else {
-		WriteMessage -progress "Waiting $sleepSeconds seconds due to Steam throttle"
-	}
-	Start-Sleep -Seconds $sleepSeconds
-}
 $Global:nugetPackagesPath = $settings.nuget_packages_path
 $Global:autoTranslateLanguages = $settings.auto_translate_languages
 if (-not (Test-Path "$($settings.mod_staging_folder)\..\modlist.json")) {
@@ -447,6 +367,69 @@ function Get-UriExists {
 	}
 }
 
+function Get-Timestamptz {
+	param([object]$value)
+
+	# 1) Missing/DB null?
+	if (-not $value) {
+		return $null
+	}
+	if ($value -is [System.DBNull]) {
+		return $null
+	}
+
+	# 2) Already a DateTimeOffset?
+	if ($value -is [datetimeoffset]) {
+		return [datetimeoffset]$value
+	}
+
+	# 3) A DateTime? Wrap into DateTimeOffset (respect Kind)
+	if ($value -is [datetime]) {
+		$dt = [datetime]$value
+		switch ($dt.Kind) {
+			'Utc' {
+				return [datetimeoffset]::new($dt, [timespan]::Zero)
+			}
+			'Local' {
+				return [datetimeoffset]::new($dt)
+			} # uses local offset
+			default {
+				return [datetimeoffset]::new($dt, [timespan]::Zero)
+			} # assume UTC if unspecified
+		}
+	}
+
+	# 4) Treat as string (common for JSON/pscustomobject fields)
+	$s = [string]$value
+	if ([string]::IsNullOrWhiteSpace($s)) {
+		return $null
+	}
+
+	$culture = [System.Globalization.CultureInfo]::InvariantCulture
+	$styles = [System.Globalization.DateTimeStyles]::AllowWhiteSpaces
+
+	# Typical Postgres/Npgsql formats
+	$formats = @(
+		'o',                             # 2026-01-04T20:45:59.1530171+01:00
+		'yyyy-MM-dd HH:mm:ssK',          # 2026-01-04 19:45:59+00
+		'yyyy-MM-ddTHH:mm:ssK',          # 2026-01-04T19:45:59+00
+		'yyyy-MM-ddTHH:mm:ss.fffffffK'   # with fractional seconds + offset
+	)
+
+	$dto = [datetimeoffset]::MinValue
+	if ([datetimeoffset]::TryParseExact($s, $formats, $culture, $styles, [ref]$dto)) {
+		return $dto
+	}
+	if ([datetimeoffset]::TryParse($s, [ref]$dto)) {
+		return $dto
+	}
+
+	# Failed to parse
+	return $null
+}
+
+
+
 function Get-Mod {
 	param(
 		[string]$modName,
@@ -459,12 +442,14 @@ function Get-Mod {
 
 	if ($originalModObject) {
 		$modPath = $originalModObject.ModFolderPath
+		$modObject = $originalModObject
+	} else {
+		$modObject = [ordered]@{}
 	}
 
 	if (-not $modName -and -not $modPath) {
 		$modName = Get-CurrentModNameFromLocation
 	}
-	$modObject = [ordered]@{}
 	if ($publishedId) {
 		$modObject.PublishedId = $publishedId
 		$modObject.ModUrl = "https://steamcommunity.com/sharedfiles/filedetails/?id=$($modObject.PublishedId)"
@@ -528,16 +513,22 @@ function Get-Mod {
 		$modObject.Mine = $false
 	}
 
-	if ($noTypes -or $fast) {
-		$modObject.HasXml = $false
-		$modObject.HasAssemblies = $false
-	} else {
-		$modObject.HasXml = (Get-ChildItem $modObject.ModFolderPath -Directory -Recurse | ForEach-Object { if ($_.Name -eq "Defs" -or $_.Name -eq "Patches") {
-					return $true
-				} } ) -eq $true
-		$modObject.HasAssemblies = (Get-ChildItem $modObject.ModFolderPath -Directory -Recurse | ForEach-Object { if ($_.Name -eq "Assemblies") {
-					return $true
-				} } ) -eq $true
+	$modObject.HasXml = $false
+	$modObject.HasAssemblies = $false
+	if (-not $noTypes -and -not $fast) {
+		Get-ChildItem $modObject.ModFolderPath -Directory -Recurse | ForEach-Object {
+			if ($modObject.HasXml -and $modObject.HasAssemblies) {
+				return
+			}
+			if ($_.Name -eq "Defs" -or $_.Name -eq "Patches") {
+				$modObject.HasXml = $true
+				return
+			}
+			if ($_.Name -eq "Assemblies") {
+				$modObject.HasAssemblies = $true
+				return
+			}
+		}
 	}
 
 	$modObject.PublishedIdFilePath = "$($modObject.ModFolderPath)\About\PublishedFileId.txt"
@@ -636,8 +627,6 @@ function Get-Mod {
 	} else {
 		$modObject.UsesRegularAssets = $true
 		$modObject.UsesAssetBundle = $false
-		$modObject.AssetBundlesPath = $null
-		$modObject.AssetSourcePath = $null
 	}
 
 	$modObject.DescriptionClean = $modObject.Description
@@ -668,25 +657,82 @@ function Get-Mod {
 	$modObject.DescriptionClean = $modObject.DescriptionClean -replace "https?://\S+", ""
 
 	$modObject.Repository = "https://github.com/$($settings.github_username)/$($modObject.NameClean)"
-	$modObject.MetadataFilePath = "$($modObject.ModFolderPath)\Source\metadata.json"
-	if (-not (Test-Path $modObject.MetadataFilePath)) {
-		WriteMessage -progress "Could not find metadata-file, creating"
-		$metaJson = ("
-		[
-			{
-				'Continued' : '',
-				'CanAdd': '',
-				'CanRemove': ''
-			}
-		]
-		") | ConvertFrom-Json
-		$metaJson.Continued = $modObject.Continued
-		$metaJson | ConvertTo-Json | Set-Content -Path $modObject.MetadataFilePath -Force -Encoding UTF8
+
+	if ($fast) {
+		return $modObject
 	}
+	$databaseObject = Get-ModInfoFromDatabase -identifier $modObject.ModId -mine
+	# Foreach of the database fields, copy them to the modObject if they are not null
 
-	$modObject.MetadataFileContent = Get-Content -Path $modObject.MetadataFilePath -raw -Encoding UTF8
-	$modObject.MetadataFileJson = $modObject.MetadataFileContent | ConvertFrom-Json
-
+	if ($null -ne $databaseObject.can_add) {
+		$modObject.CanAdd = $databaseObject.can_add
+	}
+	if ($null -ne $databaseObject.can_remove) {
+		$modObject.CanRemove = $databaseObject.can_remove
+	}
+	if ($null -ne $databaseObject.preview_version) {
+		$modObject.PreviewVersion = $databaseObject.preview_version
+	}
+	if ($null -ne $databaseObject.social_image_set) {
+		$modObject.SocialImageSet = $databaseObject.social_image_set
+	}
+	if ($null -ne $databaseObject.search_tags) {
+		$modObject.SearchTags = $databaseObject.search_tags
+	}
+	if ($null -ne $databaseObject.last_xml_cleaning) {
+		$modObject.LastXmlCleaning = Get-Timestamptz -value $databaseObject.last_xml_cleaning
+		if ($null -ne $modObject.LastXmlCleaning) {
+			$modObject.LastXmlCleaning = $modObject.LastXmlCleaning.ToLocalTime()
+		}
+	}
+	if ($null -ne $databaseObject.has_patches) {
+		$modObject.Patches = $databaseObject.has_patches
+	}
+	if ($null -ne $databaseObject.has_defs) {
+		$modObject.Defs = $databaseObject.has_defs
+	}
+	if ($null -ne $databaseObject.has_assemblies) {
+		$modObject.Assemblies = $databaseObject.has_assemblies
+	}
+	if ($null -ne $databaseObject.lines_of_code) {
+		$modObject.LinesOfCode = $databaseObject.lines_of_code
+	}
+	if ($null -ne $databaseObject.lines_of_xml) {
+		$modObject.LinesOfXML = $databaseObject.lines_of_xml
+	}
+	if ($null -ne $databaseObject.codebase_size) {
+		$modObject.CodeBaseSize = $databaseObject.codebase_size
+	}
+	if ($null -ne $databaseObject.rimworld_base_id) {
+		$modObject.RimWorldBaseId = $databaseObject.rimworld_base_id
+	}
+	if ($null -ne $databaseObject.continued) {
+		$modObject.Continued = $databaseObject.continued
+	}
+	if ($null -ne $databaseObject.funding_set) {
+		$modObject.FundingSet = $databaseObject.funding_set
+	}
+	if ($null -ne $databaseObject.on_demand_bundle_update) {
+		$modObject.OnDemandBundleUpdate = $databaseObject.on_demand_bundle_update
+	}
+	if ($null -ne $databaseObject.skip_def_inject_translations) {
+		$modObject.SkipDefInjectTranslations = $databaseObject.skip_def_inject_translations
+	}
+	if ($null -ne $databaseObject.skip_languages) {
+		$modObject.SkipLanguages = $databaseObject.skip_languages
+	}
+	if ($null -ne $databaseObject.first_published) {
+		$modObject.FirstPublished = Get-Timestamptz -value $databaseObject.first_published
+		if ($null -ne $modObject.FirstPublished) {
+			$modObject.FirstPublished = $modObject.FirstPublished.ToLocalTime()
+		}
+	}
+	if ($null -ne $databaseObject.last_published) {
+		$modObject.LastPublished = Get-Timestamptz -value $databaseObject.last_published
+		if ($null -ne $modObject.LastPublished) {
+			$modObject.LastPublished = $modObject.LastPublished.ToLocalTime()
+		}
+	}
 	return $modObject
 }
 
@@ -1946,10 +1992,10 @@ function Set-ModXml {
 		}
 	}
 
-	if ($allFiles -or -not $modObject.MetadataFileJson.LastXmlCleaning) {
+	if ($allFiles -or -not $modObject.LastXmlCleaning) {
 		$fromDate = (Get-Date).AddDays(-1000)
 	} else {
-		$fromDate = [datetime]::Parse($modObject.MetadataFileJson.LastXmlCleaning)
+		$fromDate = [datetime]::Parse($modObject.LastXmlCleaning)
 	}
 
 	# Clean up XML-files
@@ -3032,7 +3078,7 @@ function Get-NotUpdatedMods {
 
 		if ([int](Get-ModCodeSize -modObject $modObject) -gt [int]$MaxCodeSize) {
 			if ($VerbosePreference) {
-				WriteMessage -progress "Skipping $($modObject.Name) since its code size is too large ($($modObject.MetadataFileJson.CodeSize))"
+				WriteMessage -progress "Skipping $($modObject.Name) since its code size is too large ($($modObject.CodeBaseSize))"
 			}
 			continue
 		}
@@ -3233,7 +3279,7 @@ function Invoke-SteamApi {
 		} catch {
 			if ($_.Exception.Message -match "429") {
 				WriteMessage -progress "Steam API rate limit reached, waiting for 5 seconds"
-				Start-Sleep -Seconds 5
+				Start-SleepWithProgress -totalSeconds 5
 				continue
 			} else {
 				WriteMessage -failure "Failed to call Steam API: $($_.Exception.Message)"
@@ -3349,12 +3395,12 @@ function Get-SteamWorkshopModInfo {
 	$pendingSuccessUpdate = $false
 	$responseHeaders = $null
 	$downloadedAt = $null
+	$maxAttempts = 10
 	if (-not $useCache) {
 		WriteMessage -progress "Fetching data from $url"
 		$downloaded = $false
 		for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-			Invoke-SteamThrottleWait -Reason "Steam fetch attempt $attempt for $modId"
-			Set-SteamThrottleAttempt
+			Invoke-SteamWaitTime
 			try {
 				$resp = Invoke-WebRequest -Uri $url -Headers $reqHeaders -ErrorAction Stop
 				Set-Content -Path $filePath -Value $resp.Content -Encoding UTF8
@@ -3362,26 +3408,10 @@ function Get-SteamWorkshopModInfo {
 				$downloadedAt = Get-Date
 				$pendingSuccessUpdate = $true
 				$downloaded = $true
+				Update-SteamRequest -success $true
 				break
 			} catch {
-				$webResp = $_.Exception.Response
-				if ($webResp -and ($webResp.StatusCode.value__ -eq 304)) {
-					Update-SteamThrottleState -Success
-					$downloaded = $true
-					$timestamp = Get-Date
-					if ($prevMeta) {
-						$prevMeta.Downloaded = $timestamp
-						$prevMeta | ConvertTo-Json | Set-Content -Path $metaPath -Encoding UTF8
-					} else {
-						@{
-							Downloaded = $timestamp
-						} | ConvertTo-Json | Set-Content -Path $metaPath -Encoding UTF8
-					}
-					WriteMessage -progress "Cache valid (304 Not Modified), using $filePath"
-					break
-				}
-				Update-SteamThrottleState -Failure
-				WriteMessage -warning "Attempt $attempt : Failed to fetch data from $url"
+				Update-SteamRequest -success $false
 			}
 		}
 		if ($pendingSuccessUpdate -and $downloaded) {
@@ -3399,7 +3429,7 @@ function Get-SteamWorkshopModInfo {
 		return $result
 	}
 	if ((Test-Path $filePath) -and (Get-Content -Path $filePath) -match "Please wait and try your request again later") {
-		Update-SteamThrottleState -Failure
+		Update-SteamRequest -success $false
 		$pendingSuccessUpdate = $false
 		WriteMessage -progress "Steam rate limit hit, subscribing instead of fetching data"
 		Set-ModSubscription -modId $modId -subscribe $true -noCheck
@@ -3417,20 +3447,19 @@ function Get-SteamWorkshopModInfo {
 		return $result
 	}
 	if ((Get-Content -Path $filePath) -match "Please try again later" -or -not (Get-Content -Path $filePath).StartsWith("<!DOCTYPE html>")) {
-		Update-SteamThrottleState -Failure
+		Update-SteamRequest -success $false
 		$pendingSuccessUpdate = $false
 		WriteMessage -progress "Failed to fetch data from $url, may be removed. Trying a few more times."
 		$fallbackSuccess = $false
 		for ($i = 0; $i -lt 3; $i++) {
-			Invoke-SteamThrottleWait -Reason "Steam fallback attempt $($i + 1) for $modId"
-			Set-SteamThrottleAttempt
+			Invoke-SteamWaitTime
 			$fallbackHtml = ConvertFrom-Html -URI $url -ErrorAction SilentlyContinue
 			if ($fallbackHtml) {
 				$fallbackContent = $fallbackHtml.InnerHtml
 				if ($fallbackContent) {
 					Set-Content -Path $filePath -Value $fallbackContent -Encoding UTF8
 					if ($fallbackContent -notmatch "Please try again later") {
-						Update-SteamThrottleState -Success
+						Update-SteamRequest -success $true
 						$fallbackSuccess = $true
 						$timestamp = Get-Date
 						@{
@@ -3442,7 +3471,7 @@ function Get-SteamWorkshopModInfo {
 					}
 				}
 			}
-			Update-SteamThrottleState -Failure
+			Update-SteamRequest -success $false
 		}
 		if (-not $fallbackSuccess -or (Get-Content -Path $filePath) -match "Please try again later" -or -not (Get-Content -Path $filePath).StartsWith("<!DOCTYPE html>")) {
 			WriteMessage -warning "Could not fetch data from $url after multiple attempts"
@@ -3450,7 +3479,7 @@ function Get-SteamWorkshopModInfo {
 		}
 	}
 	if ($pendingSuccessUpdate) {
-		Update-SteamThrottleState -Success
+		Update-SteamRequest -success $true
 		$pendingSuccessUpdate = $false
 	}
 	$html = ConvertFrom-Html -Path $filePath -ErrorAction SilentlyContinue
@@ -3521,7 +3550,7 @@ function Get-ModInfo {
 				$cacheEntry = $Global:ModInfoCache[$id]
 				if ($now - $cacheEntry.Timestamp -lt $cacheDuration) {
 					$returnArray += $cacheEntry.ModInfo
-					WriteMessage -progress "Cache hit for mod ID $id"
+					Write-Verbose "Cache hit for mod ID $id"
 					continue
 				}
 			}
@@ -3573,6 +3602,9 @@ function Get-ModInfo {
 					Visibility    = "Unknown"
 					Tags          = ""
 					Description   = ""
+					Created       = ""
+					Updated       = ""
+					Size          = 0
 				}
 			} elseif ($details.result -eq 9) {
 				if ($apiOnly) {
@@ -3587,6 +3619,9 @@ function Get-ModInfo {
 						Visibility    = "Unlisted"
 						Tags          = ""
 						Description   = ""
+						Created       = ""
+						Updated       = ""
+						Size          = 0
 					}
 					$returnArray += $modInfo
 					continue
@@ -3633,6 +3668,9 @@ function Get-ModInfo {
 					Visibility    = $visibility
 					Tags          = $tags
 					Description   = $details.description
+					Created       = (Get-Date "1970-01-01").AddSeconds($details.time_created).ToLocalTime()
+					Updated       = (Get-Date "1970-01-01").AddSeconds($details.time_updated).ToLocalTime()
+					Size          = $details.file_size
 				}
 			} else {
 				$modInfo = @{
@@ -3645,6 +3683,9 @@ function Get-ModInfo {
 					Visibility    = "Unknown"
 					Tags          = ""
 					Description   = ""
+					Created       = ""
+					Updated       = ""
+					Size          = 0
 				}
 				WriteMessage -warning "Failed to fetch details for mod ID $($details.publishedfileid)"
 				Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
@@ -3696,14 +3737,12 @@ function Get-ModPreviewImages {
 	if (Test-Path $filePath) {
 		$counter = 0
 		while ((Get-Content -Path $filePath) -match "Please try again later") {
+			Invoke-SteamWaitTime
 			(ConvertFrom-Html -URI $url).InnerHtml | Out-File $filePath
-			$counter++
-			if ($counter -gt 5) {
-				break
-			}
 		}
 	}
 	if (-not (Test-Path $filePath) -or (Get-Item $filePath).LastWriteTime -lt ((get-date).AddMinutes(-$cacheTime))) {
+		Invoke-SteamWaitTime
 		(ConvertFrom-Html -URI $url).InnerHtml | Out-File $filePath
 	}
 	$html = ConvertFrom-Html -Path $filePath
@@ -4006,7 +4045,7 @@ function Get-ModsInBlob {
 	$logPath = "${env:ProgramFiles(x86)}\Steam\logs\content_log.txt"
 	$wait = $true
 	while ($wait) {
-		Start-Sleep -Seconds 10
+		Start-SleepWithProgress -totalSeconds 10
 		$lastLine = Get-Content -Path $logPath -Tail 1
 		if ($lastLine -match "scheduler finished") {
 			$wait = $false
@@ -4121,7 +4160,8 @@ function Start-RimWorld {
 		[string]$skipDLC,
 		[switch]$autotest,
 		[switch]$force,
-		[switch]$bare
+		[switch]$bare,
+		[switch]$attachDebugger
 	)
 
 	if ($test -and $play) {
@@ -4386,6 +4426,9 @@ function Start-RimWorld {
 	}
 	$startTime = Get-Date
 	Start-Process -FilePath $applicationPath -ArgumentList $arguments
+	if ($attachDebugger) {
+		WriteMessage -progress "Nothing implemented yet for attaching debugger"
+	}
 	if ($currentLocation -ne (Get-Location)) {
 		Set-Location $currentLocation
 	}
@@ -4439,7 +4482,9 @@ function Test-Mod {
 		[switch] $autotest,
 		[switch] $force,
 		[switch] $lastVersion,
-		[switch] $bare)
+		[switch] $bare,
+		[switch] $attachDebugger
+	)
 
 	$modObject = Get-Mod
 
@@ -4477,7 +4522,7 @@ function Test-Mod {
 	} else {
 		WriteMessage -progress "Testing $($modObject.DisplayName)"
 	}
-	return Start-RimWorld -modObject $modObject -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -bare:$bare -otherModid $otherModid -mlieMod $mlieMod -skipDLC $skipDLC
+	return Start-RimWorld -modObject $modObject -version $version -alsoLoadBefore:$alsoLoadBefore -autotest:$autotest -force:$force -bare:$bare -otherModid $otherModid -mlieMod $mlieMod -skipDLC $skipDLC -attachDebugger:$attachDebugger
 }
 
 #endregion
@@ -4785,12 +4830,12 @@ function Update-ModDescriptionTags {
 
 	if (-not $modObject.Mine) {
 		WriteMessage -failure "$($modObject.Name) is not mine, aborting update"
-		return
+		return $modObject
 	}
 
-	if ($modObject.MetadataFileJson.SearchTags -and -not $force) {
+	if ($modObject.SearchTags -and -not $force) {
 		WriteMessage -progress "Search-tags already set for $($modObject.Name), skipping"
-		return
+		return $modObject
 	}
 
 	$prompt = @"
@@ -4823,7 +4868,7 @@ Tags:
 	} catch {
 		WriteMessage -failure "Failed to generate search-tags for $($modObject.Name)`nError: $_"
 		if ($silent) {
-			return
+			return $modObject
 		}
 	}
 
@@ -4841,7 +4886,7 @@ Tags:
 		}
 		$answer = ReadHost "$($tagsAsNumberedList -join "`n")`n`nDo you want to update the description with these tags? `nEnter to continue, n to cancel, m to modify, numbers separated by space to select tags.`n"
 		if ($answer -eq "n") {
-			return
+			return $modObject
 		}
 		if ($answer -eq "m") {
 			$tags = ReadHost "Enter tags separated by comma"
@@ -4851,13 +4896,15 @@ Tags:
 			$tags = $answer -split " " | ForEach-Object { $tags[$_ - 1] }
 		}
 	}
-	if (-not $modObject.MetadataFileJson.PSObject.Properties.Name.Contains("SearchTags")) {
-		$modObject.MetadataFileJson | Add-Member -NotePropertyName "SearchTags" -NotePropertyValue $tags
+	if (-not $modObject.SearchTags) {
+
+		$modObject | Add-Member -NotePropertyName "SearchTags" -NotePropertyValue $tags
 	} else {
-		$modObject.MetadataFileJson.SearchTags = $tags
+		$modObject.SearchTags = $tags
 	}
-	$modObject.MetadataFileJson | ConvertTo-Json | Set-Content -Path $modObject.MetadataFilePath -Force
+	Update-ModInfoToDatabase -modObject $modObject
 	WriteMessage -success "Updated search-tags for $($modObject.Name)"
+	return $modObject
 }
 
 function Update-ModCopilotMetadata {
@@ -5236,15 +5283,14 @@ function Publish-Mod {
 				Update-ModDescriptionFromPreviousMod -noConfirmation -localSearch -modObject $modObject -Force:$Force
 				$modObject = Get-Mod -originalModObject $modObject
 			}
-			Update-ModUsageButtons -modObject $modObject -silent
-			$modObject = Get-Mod -originalModObject $modObject
+			$modObject = Update-ModUsageButtons -modObject $modObject -silent
 		} else {
 			if (-not $ReRelease) {
 				Sync-ModDescriptionFromSteam -modObject $modObject -Force:$Force
 			}
 			$modObject = Get-Mod -originalModObject $modObject
 			if (-not $skipInteraction) {
-				Update-ModMetadata -modObject $modObject -silent:$silent
+				$modObject = Update-ModMetadata -modObject $modObject -silent:$silent
 			}
 		}
 	}
@@ -5275,14 +5321,14 @@ function Publish-Mod {
 			$versionLogo = "`n`n[url=https://steamcommunity.com/sharedfiles/filedetails/changelog/$($modObject.PublishedId)][img]$logo[/img][/url]"
 		}
 		$tags = ""
-		if ($modObject.MetadataFileJson.SearchTags) {
-			$tags = "| tags: " + ($modObject.MetadataFileJson.SearchTags -join ", ")
+		if ($modObject.SearchTags) {
+			$tags = "| tags: " + ($modObject.SearchTags -join ", ")
 		}
 
 		$modObject.AboutFileXml.ModMetaData.description = "$description $versionLogo $tags"
 	}
 
-	if ($modObject.MetadataFileJson.FundingSet) {
+	if ($modObject.FundingSet) {
 		$githubPath = "$($modObject.ModFolderPath)\.github"
 		$fundingPath = "$githubPath\FUNDING.yml"
 		if ($fundingFile -and (Test-Path $fundingFile) -and -not (Test-Path $fundingPath)) {
@@ -5310,6 +5356,11 @@ function Publish-Mod {
 			Copy-Item $modIcon $modObject.ModIconPath -Force -Confirm:$false
 			WriteMessage -success "Fixed wrong modicon in the About-folder"
 		}
+	}
+
+	if (Test-Path "$($modObject.ModFolderPath)\Source\metadata.json") {
+		WriteMessage -progress "Removing leftover metadata.json from Source-folder"
+		Remove-Item "$($modObject.ModFolderPath)\Source\metadata.json" -Force
 	}
 
 	if ($modObject.ModIconPath.StartsWith("$($modObject.ModFolderPath)\Textures")) {
@@ -5515,8 +5566,8 @@ function Publish-Mod {
 		WriteMessage -success "Repository set to archived, mod set to unlisted. Moving local mod-folder to Archived"
 		Push-UpdateNotification -modObject $modObject -Changenote "Original version updated, mod set to unlisted. Will not be further updated" -EndOfLife
 		Set-Location $localModFolder
-		Move-Item -Path $modObject.ModFolderPath -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
 		Update-ModInfoToDatabase -modObject $modObject -archive
+		Move-Item -Path $modObject.ModFolderPath -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
 		WriteMessage -success "Archived $($modObject.Name)"
 		return
 	}
@@ -5524,8 +5575,8 @@ function Publish-Mod {
 		WriteMessage -success "Repository set to archived. Moving local mod-folder to Archived"
 		Push-UpdateNotification -modObject $modObject -Changenote "The mod has now been included in the game. Will not be further updated" -EndOfLife
 		Set-Location $localModFolder
-		Move-Item -Path $modObject.ModFolderPath -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
 		Update-ModInfoToDatabase -modObject $modObject -archive
+		Move-Item -Path $modObject.ModFolderPath -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
 		WriteMessage -success "Archived $($modObject.Name)"
 		return
 	}
@@ -5537,8 +5588,8 @@ function Publish-Mod {
 			Push-UpdateNotification -modObject $modObject -Changenote "Mod will not be further updated" -EndOfLife
 		}
 		Set-Location $localModFolder
-		Move-Item -Path $modObject.ModFolderPath -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
 		Update-ModInfoToDatabase -modObject $modObject -archive
+		Move-Item -Path $modObject.ModFolderPath -Destination "$stagingDirectory\..\Archive\" -Force -Confirm:$false
 		WriteMessage -success "Archived $($modObject.Name)"
 		return
 	}
@@ -5547,8 +5598,9 @@ function Publish-Mod {
 	if ($ReRelease) {
 		Push-ModComment -modObject $modObject -Comment "Mod re-relased for $(Get-CurrentRimworldVersion), see info in the description"
 	} else {
-		Publish-ModToRimWorldBase -modObject $modObject
+		$modObject = Publish-ModToRimWorldBase -modObject $modObject
 		Update-ModInfoToDatabase -modObject $modObject
+		Set-PublishLogRow -identifier $modObject.ModId -version $newVersion -comment $message
 	}
 	WriteMessage -success "Published $($modObject.Name) - $($modObject.ModUrl)"
 }
@@ -5682,7 +5734,7 @@ function Publish-ModToRimWorldBase {
 
 	if (-not $rimworldBaseApiKey) {
 		WriteMessage -failure "No RimWorldBase API key defined, cannot publish"
-		return
+		return $modObject
 	}
 
 	if (-not $modObject) {
@@ -5698,7 +5750,7 @@ function Publish-ModToRimWorldBase {
 		"Content-Type"  = "application/json"
 	}
 	$new = $false
-	if (-not $modObject.MetadataFileJson.RimWorldBaseId) {
+	if (-not $modObject.RimWorldBaseId) {
 		$new = $true
 		WriteMessage "$($modObject.Name) is not listed on RimWorldBase, creating a new entry"
 		$modDescription = $modObject.DescriptionClean.Trim()
@@ -5714,27 +5766,28 @@ function Publish-ModToRimWorldBase {
 		# Check if there are any preview images on steam and add them to the description
 		$failed = $false
 		try {
+			Invoke-SteamWaitTime
 			$steamPage = Invoke-WebRequest -Uri $modObject.ModUrl -UseBasicParsing
 		} catch {
-			WriteMessage -failure "Failed to fetch steam page, waiting 10 seconds and trying again"
+			Update-SteamRequest -success $false
 			$failed = $true
 		}
 
 		# We just updated the steam-page so it may not be available right away, check for the text of Steam Community :: Error
 		if ($failed -or $steamPage.Content -match "Steam Community :: Error") {
-			for ($i = 0; $i -lt 5; $i++) {
-				WriteMessage -progress "Steam page not available yet, waiting 10 seconds and trying again"
-				Start-Sleep -Seconds 10
+			while ($true) {
+				Invoke-SteamWaitTime
 				$failed = $false
 				try {
 					$steamPage = Invoke-WebRequest -Uri $modObject.ModUrl -UseBasicParsing
 				} catch {
-					WriteMessage -failure "Failed to fetch steam page, waiting 10 seconds and trying again"
 					$failed = $true
 				}
 				if (-not $failed -and $steamPage.Content -notmatch "Steam Community :: Error") {
+					Update-SteamRequest -success $true
 					break
 				}
+				Update-SteamRequest -success $false
 			}
 		}
 		if ($failed -or $steamPage.Content -match "Steam Community :: Error") {
@@ -5763,8 +5816,8 @@ function Publish-ModToRimWorldBase {
 		$response = Invoke-RestMethod -Uri $postUrl -Method Post -Headers $updateHeader -Body $body
 		$rimworldBaseId = $response.id
 		$postUrl = "$postUrl/$rimworldBaseId"
-		$modObject.MetadataFileJson = $modObject.MetadataFileJson | Add-Member -MemberType NoteProperty -Name RimWorldBaseId -Value $rimworldBaseId -Force -PassThru
-		$modObject.MetadataFileJson | ConvertTo-Json -Depth 5 | Set-Content -Path $modObject.MetadataFilePath -Encoding UTF8
+		$modObject | Add-Member -MemberType NoteProperty -Name RimWorldBaseId -Value $rimworldBaseId -Force -PassThru
+		Update-ModInfoToDatabase -modObject $modObject
 
 		WriteMessage -progress "Uploading preview image"
 		$imageBytes = [System.IO.File]::ReadAllBytes($modObject.PreviewFilePath)
@@ -5782,7 +5835,7 @@ function Publish-ModToRimWorldBase {
 	}
 
 	# Fetch all existing field data
-	$rimworldBaseId = $modObject.MetadataFileJson.RimWorldBaseId
+	$rimworldBaseId = $modObject.RimWorldBaseId
 	$url = "$($rimWorldBaseApiUrl)$rimworldBaseId"
 	$response = Invoke-RestMethod -Uri $url -Method Get -Headers @{
 		"Authorization" = "Basic $base64AuthInfo"
@@ -5849,7 +5902,7 @@ function Publish-ModToRimWorldBase {
 		$anythingChanged = $true
 	}
 
-	$requiresNewGame = $modObject.MetadataFileJson.CanAdd -eq "2"
+	$requiresNewGame = $modObject.CanAdd -eq "2"
 	if ($fields.requires_new_game -ne $requiresNewGame) {
 		WriteMessage -progress "Setting requires_new_game to $requiresNewGame"
 		$body = @{ fields = @{ requires_new_game = $requiresNewGame } } | ConvertTo-Json -Depth 5
@@ -5927,7 +5980,7 @@ function Publish-ModToRimWorldBase {
 
 	if (-not $anythingChanged) {
 		WriteMessage -progress "No changes necessary"
-		return
+		return $modObject
 	}
 	$now = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss")
 	$body = @{ date = $now } | ConvertTo-Json -Depth 5
@@ -5935,9 +5988,11 @@ function Publish-ModToRimWorldBase {
 
 	if ($new) {
 		WriteMessage -success "Created new entry for $($modObject.Name) on RimWorldBase: $($response.link)"
+		Update-ModInfoToDatabase -modObject $modObject
 	} else {
 		WriteMessage -progress "Updated $($modObject.Name) on RimWorldBase: $($response.link)"
 	}
+	return $modObject
 }
 
 #endregion
@@ -6278,7 +6333,7 @@ function Update-ModAssetBundle {
 		return $false
 	}
 
-	if ($modObject.MetadataFileJson.OnDemandBundleUpdate -and -not $force) {
+	if ($modObject.OnDemandBundleUpdate -and -not $force) {
 		WriteMessage -message "$($modObject.Name) is set to OnDemandBundleUpdate, skipping AssetBundle creation"
 		return $true
 	}
@@ -6473,7 +6528,7 @@ function Update-Translations {
 		if (Test-Path $translationTemplateFolderPath) {
 			$translationTemplateFiles = Get-ChildItem -Path $translationTemplateFolderPath -Recurse -File
 		}
-		if ($translationTemplateFiles -and -not $modObject.MetadataFileJson.SkipDefInjectTranslations) {
+		if ($translationTemplateFiles -and -not $modObject.SkipDefInjectTranslations) {
 			WriteMessage -progress "Updating defInject translations for $($modObject.Name)"
 			if (-not (Test-Path $defInjectBaseFolderPath)) {
 				New-Item -Path $defInjectBaseFolderPath -ItemType Directory -Force | Out-Null
@@ -6488,7 +6543,7 @@ function Update-Translations {
 			}
 			$progressObject = WriteProgress -initiate -title "Updating DefInject translations" -totalActions ($languagesToTranslate.Count * $translationTemplateFiles.Count)
 			foreach ($language in $languagesToTranslate) {
-				if ($modObject.MetadataFileJson.SkipLanguages -contains $language) {
+				if ($modObject.SkipLanguages -contains $language) {
 					WriteMessage -progress "Mod is set to skip autotranslation to $language"
 					$progressObject.current += $translationTemplateFiles.Count
 					continue
@@ -6548,7 +6603,7 @@ function Update-Translations {
 		}
 
 		foreach ($language in $autoTranslateLanguages) {
-			if ($modObject.MetadataFileJson.SkipLanguages -contains $language) {
+			if ($modObject.SkipLanguages -contains $language) {
 				WriteMessage -progress "Mod is set to skip autotranslation to $language"
 				continue
 			}
