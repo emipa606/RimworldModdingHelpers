@@ -128,6 +128,27 @@ function Start-SleepWithProgress {
 	WriteProgress -progressObject $progressObject -finished
 }
 
+
+function Add-MemberIfMissing {
+	param(
+		[PSObject]$Object,
+		[string]$Name,
+		$Value,
+		$DefaultValue
+	)
+
+	if ($Object.PSObject.Properties.Match($Name) -and $Value) {
+		$Object.$Name = $Value
+	} else {
+		if (-not $Value -and $DefaultValue) {
+			$Value = $DefaultValue
+		}
+		$Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value
+		WriteMessage -message "Added missing property '$Name' to object" -progress
+	}
+}
+
+
 # Shows the rimworld log progress
 function Get-RimworldLog {
 	param(
@@ -4896,12 +4917,7 @@ Tags:
 			$tags = $answer -split " " | ForEach-Object { $tags[$_ - 1] }
 		}
 	}
-	if (-not $modObject.SearchTags) {
-
-		$modObject | Add-Member -NotePropertyName "SearchTags" -NotePropertyValue $tags
-	} else {
-		$modObject.SearchTags = $tags
-	}
+	Add-MemberIfMissing -Object $modObject -Name "SearchTags" -Value $tags
 	Update-ModInfoToDatabase -modObject $modObject
 	WriteMessage -success "Updated search-tags for $($modObject.Name)"
 	return $modObject
@@ -5816,7 +5832,7 @@ function Publish-ModToRimWorldBase {
 		$response = Invoke-RestMethod -Uri $postUrl -Method Post -Headers $updateHeader -Body $body
 		$rimworldBaseId = $response.id
 		$postUrl = "$postUrl/$rimworldBaseId"
-		$modObject | Add-Member -MemberType NoteProperty -Name RimWorldBaseId -Value $rimworldBaseId -Force -PassThru
+		Add-MemberIfMissing -Object $modObject -Name "RimWorldBaseId" -Value $rimworldBaseId
 		Update-ModInfoToDatabase -modObject $modObject
 
 		WriteMessage -progress "Uploading preview image"
@@ -5840,7 +5856,7 @@ function Publish-ModToRimWorldBase {
 	$response = Invoke-RestMethod -Uri $url -Method Get -Headers @{
 		"Authorization" = "Basic $base64AuthInfo"
 	}
-	$fields = $response.acf
+	$fields = Get-FieldsFromResponse -response $response
 	$anythingChanged = $false
 
 	# Parse all fields and update if necessary
@@ -5848,7 +5864,7 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting mod to downloadable"
 		$body = @{ fields = @{ is_a_downloadable = $true } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
@@ -5856,7 +5872,7 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting content author"
 		$body = @{ fields = @{ is_content_author = $true } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
@@ -5864,7 +5880,7 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting is_updated to true"
 		$body = @{ fields = @{ is_updated = $true } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
@@ -5873,7 +5889,7 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting wants_donations to $wantsDonations"
 		$body = @{ fields = @{ wants_donations = $wantsDonations } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
@@ -5881,7 +5897,7 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting kofi_url to $kofiUrl"
 		$body = @{ fields = @{ kofi_url_list = @( @{ kofi_url = $kofiUrl } ) } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
@@ -5889,7 +5905,7 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting steam_download to $($modObject.ModUrl)"
 		$body = @{ fields = @{ steam_download = $modObject.ModUrl } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
@@ -5898,7 +5914,7 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting direct_download to $directDownloadUrl"
 		$body = @{ fields = @{ direct_download = $directDownloadUrl } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
@@ -5907,43 +5923,64 @@ function Publish-ModToRimWorldBase {
 		WriteMessage -progress "Setting requires_new_game to $requiresNewGame"
 		$body = @{ fields = @{ requires_new_game = $requiresNewGame } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
-	$hasRequirements = $modObject.AboutFileXml.ModMetaData.modDependencies?.Length -gt 0 -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion?.Length -gt 0
+	$gameVersion = Get-CurrentRimworldVersion
+	$hasRequirements = $modObject.AboutFileXml.ModMetaData.modDependencies?.Length -gt 0 -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion?."v$gameVersion".Length -gt 0
 	if ($fields.requires_libraries -ne $hasRequirements) {
 		WriteMessage -progress "Setting requires_libraries to $hasRequirements"
 		$body = @{ fields = @{ requires_libraries = $hasRequirements } } | ConvertTo-Json -Depth 5
 		$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-		$fields = $response.acf
+		$fields = Get-FieldsFromResponse -response $response
 		$anythingChanged = $true
 	}
 
-	if ($hasRequirements) {
-		$gameVersion = Get-CurrentRimworldVersion
-		$requiresHarmony = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId?.Contains("brrainz.harmony") -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId?.Contains("brrainz.harmony")
-		if ($requiresHarmony -and (-not $fields.libraries_list -or $fields.libraries_list -notcontains 8517)) {
-			WriteMessage -progress "Adding harmony to libraries_list"
-			if (-not $fields.libraries_list) {
-				$fields | Add-Member -MemberType NoteProperty -Name libraries_list -Value @()
-			}
-			$fields.libraries_list += 8517
-			$somethingChanged = $true
+	if ($hasRequirements ) {
+		$modToBaseTranslations = @{
+			"brrainz.harmony"                           = 8517
+			"OskarPotocki.VanillaFactionsExpanded.Core" = 9172
+			"UnlimitedHugs.HugsLib"                     = 645
+			"CETeam.CombatExtended"                     = 3215
+			"jecrell.jecstools"                         = 1396
+			"syrchalis.processor.framework"             = 14376
 		}
-		$requiresVanillaExpanded = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId?.Contains("OskarPotocki.VanillaFactionsExpanded.Core") -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId?.Contains("OskarPotocki.VanillaFactionsExpanded.Core")
-		if ($requiresVanillaExpanded -and (-not $fields.libraries_list -or $fields.libraries_list -notcontains 9172)) {
-			WriteMessage -progress "Adding vanilla expanded to libraries_list"
-			if (-not $fields.libraries_list) {
-				$fields | Add-Member -MemberType NoteProperty -Name libraries_list -Value @()
+
+		foreach ($key in $modToBaseTranslations.Keys) {
+			$requiresMod = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId?.Contains($key) -or $modObject.AboutFileXml.ModMetaData.modDependenciesByVersion."v$gameVersion".li.packageId?.Contains($key)
+			$modId = $modToBaseTranslations[$key]
+			if ($requiresMod -and (-not $fields.libraries_list -or $null -eq $fields.libraries_list -or $fields.libraries_list -notcontains $modId)) {
+				WriteMessage -progress "Adding $key to libraries_list"
+				Add-MemberIfMissing -Object $fields -Name "libraries_list" -DefaultValue @()
+				$fields.libraries_list += $modId
+				$somethingChanged = $true
 			}
-			$fields.libraries_list += 9172
-			$somethingChanged = $true
+		}
+		$myDependencies = $modObject.AboutFileXml.ModMetaData.modDependencies.li.packageId | Where-Object { $_.StartsWith("Mlie.") }
+		if ($myDependencies) {
+			foreach ($dependency in $myDependencies) {
+				$dependecyObject = Get-Mod -modName $dependency.Replace("Mlie.","")
+				if (-not $dependecyObject) {
+					WriteMessage -warning "Could not find dependency $dependency locally, skipping adding to libraries_list"
+					continue
+				}
+				if (-not $dependecyObject.RimWorldBaseId) {
+					WriteMessage -warning "Dependency $($dependecyObject.Name) is not listed on RimWorldBase, publishing that first"
+					$dependecyObject = Publish-ModToRimWorldBase -modObject $dependecyObject
+				}
+				if (-not $fields.libraries_list -or $null -eq $fields.libraries_list -or $fields.libraries_list -notcontains $dependecyObject.RimWorldBaseId) {
+					WriteMessage -progress "Adding dependency $($dependecyObject.Name) to libraries_list"
+					Add-MemberIfMissing -Object $fields -Name "libraries_list" -DefaultValue @()
+					$fields.libraries_list += $dependecyObject.RimWorldBaseId
+					$somethingChanged = $true
+				}
+			}
 		}
 		if ($somethingChanged) {
 			$body = @{ fields = @{ libraries_list = $fields.libraries_list } } | ConvertTo-Json -Depth 5
 			$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-			$fields = $response.acf
+			$fields = Get-FieldsFromResponse -response $response
 			$anythingChanged = $true
 		}
 
@@ -5962,7 +5999,7 @@ function Publish-ModToRimWorldBase {
 				$body = @{ fields = @{ required_dlc = $requiredDLCs } } | ConvertTo-Json -Depth 5
 			}
 			$response = Invoke-RestMethod -Uri $url -Method Post -Headers $updateHeader -Body $body
-			$fields = $response.acf
+			$fields = Get-FieldsFromResponse -response $response
 			$anythingChanged = $true
 		}
 	}
@@ -5988,11 +6025,24 @@ function Publish-ModToRimWorldBase {
 
 	if ($new) {
 		WriteMessage -success "Created new entry for $($modObject.Name) on RimWorldBase: $($response.link)"
+		$modObject = Get-Mod -modName $modObject.Name
 		Update-ModInfoToDatabase -modObject $modObject
 	} else {
 		WriteMessage -progress "Updated $($modObject.Name) on RimWorldBase: $($response.link)"
 	}
 	return $modObject
+}
+
+function Get-FieldsFromResponse {
+	param(
+		$response
+	)
+	# Sometimes the response-object is the json object, sometimes its under the fields property
+	if ($response.PSObject.Properties.Name -contains "acf") {
+		return $response.acf
+	} else {
+		return ($response | ConvertFrom-Json -AsHashTable).acf
+	}
 }
 
 #endregion

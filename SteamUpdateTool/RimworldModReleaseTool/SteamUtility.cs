@@ -217,6 +217,7 @@ namespace RimworldModReleaseTool
 
                 if (dependencyResult.m_details.m_unNumChildren > 0)
                 {
+                    Console.WriteLine("Current dependencies defined on Steam, checking mod-dependencies");
                     PublishedFileId_t[] publishedFileIDs = { mod.PublishedFileId };
                     m_UGCQueryHandle =
                         SteamUGC.CreateQueryUGCDetailsRequest(publishedFileIDs, (uint)publishedFileIDs.Length);
@@ -242,9 +243,8 @@ namespace RimworldModReleaseTool
                     {
                         if (pvecPublishedFileID.Length > 0)
                         {
-                            for (var index = 0; index < pvecPublishedFileID.Length - 1; index++)
+                            foreach (var publishedFileIdT in pvecPublishedFileID)
                             {
-                                var publishedFileIdT = pvecPublishedFileID[index];
                                 if (mod.Dependencies.Contains(publishedFileIdT.m_PublishedFileId))
                                 {
                                     Console.ForegroundColor = ConsoleColor.DarkGreen;
@@ -296,6 +296,7 @@ namespace RimworldModReleaseTool
                 }
                 else
                 {
+                    Console.WriteLine("No current dependencies defined on Steam, checking mod-dependencies");
                     foreach (var modDependency in mod.Dependencies)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGreen;

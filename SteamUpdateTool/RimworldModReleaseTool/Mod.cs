@@ -44,6 +44,7 @@ namespace RimworldModReleaseTool
             // open About.xml
             var aboutXml = new XmlDocument();
             aboutXml.Load(about);
+            var highestVersion = new Version(0, 0);
             foreach (XmlNode node in aboutXml.ChildNodes)
             {
                 if (node.Name != "ModMetaData")
@@ -71,11 +72,17 @@ namespace RimworldModReleaseTool
                     foreach (XmlNode tagNode in metaNode.ChildNodes)
                     {
                         Version.TryParse(tagNode.InnerText, out var version);
+                        if (version > highestVersion)
+                        {
+                            highestVersion = version;
+                        }
+
                         Tags.Add($"{version.Major}.{version.Minor}");
                     }
                 }
             }
 
+            var highestVersionString = $"v{highestVersion.Major}.{highestVersion.Minor}";
             Dependencies = new List<ulong>();
             AppDependencies = new List<uint>();
             var modDependencies = XElement.Parse(aboutXml.InnerXml).Element("modDependencies");
@@ -116,36 +123,45 @@ namespace RimworldModReleaseTool
             var modDependenciesByVersion = XElement.Parse(aboutXml.InnerXml).Element("modDependenciesByVersion");
             if (modDependenciesByVersion != null && modDependenciesByVersion.HasElements)
             {
-                var latestVersion = modDependenciesByVersion.Elements().ElementAt(modDependenciesByVersion.Elements().Count() - 1);
-
-                foreach (var xElement in latestVersion.Elements())
+                var latestVersion = modDependenciesByVersion.Elements()
+                    .ElementAt(modDependenciesByVersion.Elements().Count() - 1);
+                if (latestVersion.Name != highestVersionString)
                 {
-                    if (xElement.Element("downloadUrl")?.Value.Contains("store.steampowered.com/app") == true)
+                    Console.WriteLine(
+                        $"Highest mod dependency {latestVersion.Name} is lower than the highest supported version: {highestVersionString}, skipping modDependenciesByVersion.");
+                }
+                else
+                {
+                    foreach (var xElement in latestVersion.Elements())
                     {
-                        var stringAppDependency =
-                            xElement.Element("downloadUrl")?.Value.Replace("https://store.steampowered.com/app/", "")
-                                .Split('/').First();
+                        if (xElement.Element("downloadUrl")?.Value.Contains("store.steampowered.com/app") == true)
+                        {
+                            var stringAppDependency =
+                                xElement.Element("downloadUrl")?.Value
+                                    .Replace("https://store.steampowered.com/app/", "")
+                                    .Split('/').First();
+                            try
+                            {
+                                AppDependencies.Add(Convert.ToUInt32(stringAppDependency));
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"Could not convert {stringAppDependency} to uint {e}");
+                            }
+
+                            continue;
+                        }
+
+                        var stringDependency =
+                            xElement.Element("steamWorkshopUrl")?.Value.Replace("=", "/").Split('/').Last();
                         try
                         {
-                            AppDependencies.Add(Convert.ToUInt32(stringAppDependency));
+                            Dependencies.Add(Convert.ToUInt64(stringDependency));
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine($"Could not convert {stringAppDependency} to uint {e}");
+                            Console.WriteLine($"Could not convert {stringDependency} to ulong {e}");
                         }
-
-                        continue;
-                    }
-
-                    var stringDependency =
-                        xElement.Element("steamWorkshopUrl")?.Value.Replace("=", "/").Split('/').Last();
-                    try
-                    {
-                        Dependencies.Add(Convert.ToUInt64(stringDependency));
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"Could not convert {stringDependency} to ulong {e}");
                     }
                 }
             }
