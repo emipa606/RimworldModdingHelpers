@@ -137,8 +137,11 @@ function Add-MemberIfMissing {
 		$DefaultValue
 	)
 
-	if ($Object.PSObject.Properties.Match($Name) -and $Value) {
-		$Object.$Name = $Value
+	# Chck if the property already exists
+	if ($null -ne ($Object.PSObject.Properties | Where-Object { $_.Name -eq $Name })) {
+		if ($Value) {
+			$Object.$Name = $Value
+		}
 	} else {
 		if (-not $Value -and $DefaultValue) {
 			$Value = $DefaultValue
@@ -3364,7 +3367,8 @@ function Get-LatestPackageVersion {
 
 function Get-SteamWorkshopModInfo {
 	param (
-		[string]$modId
+		[string]$modId,
+		[switch]$expandAuthor
 	)
 	$result = [ordered]@{
 		SteamId       = "$modId"
@@ -3550,6 +3554,50 @@ function Get-SteamWorkshopModInfo {
 }
 
 
+function Get-ModIdentifier {
+	[CmdletBinding()]
+	param (
+		[string]$steamId
+	)
+	$modPath = "$localModFolder\..\..\..\workshop\content\294100\$steamId"
+	$keep = $true
+	$exists = Test-Path $modPath
+
+	while (-not $exists) {
+		WriteMessage -progress "Could not find mod with id $steamId, subscribing"
+		if (-not (Set-ModSubscription -modId $steamId -subscribe $true)) {
+			WriteMessage -failure "Could not subscribe to mod with id $steamId, aborting"
+			return
+		}
+		$exists = Test-Path $modPath
+		$keep = $false
+	}
+
+	$modAboutFilePath = "$modPath\About\About.xml"
+	if (-not (Test-Path $modAboutFilePath)) {
+		WriteMessage -warning "Mod with id $steamId has no About-file, aborting"
+		if (-not $keep) {
+			Set-ModSubscription -modId $steamId -subscribe $false | Out-Null
+		}
+		return
+	}
+
+	$modInfo = Get-Mod -modPath $modPath
+
+	if (-not $modInfo) {
+		WriteMessage -failure "Could not find mod to replace"
+		if (-not $keep) {
+			Set-ModSubscription -modId $steamId -subscribe $false | Out-Null
+		}
+		return
+	}
+
+	if (-not $keep) {
+		Set-ModSubscription -modId $steamId -subscribe $false | Out-Null
+	}
+	return $modInfo.ModId
+}
+
 function Get-ModInfo {
 	[CmdletBinding()]
 	param (
@@ -3654,9 +3702,6 @@ function Get-ModInfo {
 				Write-Debug "Found details for mod ID $($details.publishedfileid): $($details | ConvertTo-Json -Depth 5)"
 				$modName = $details.title
 				$author = $details.creator
-				if ($expandAuthor) {
-					$author = Get-AuthorInformation -authorId $details.creator
-				}
 				$previewUrl = $details.preview_url
 				$subscriptions = $details.subscriptions
 				$visibility = $details.visibility
@@ -3712,6 +3757,9 @@ function Get-ModInfo {
 				Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
 				Write-Debug "Response body: $($response | ConvertTo-Json -Depth 5)"
 
+			}
+			if ($expandAuthor -and $modInfo.Author -and $modInfo.Author -ne "Unknown") {
+				$modInfo.Author = Get-AuthorInformation -authorId $modInfo.Author
 			}
 			$Global:ModInfoCache[$modInfo.SteamId] = @{
 				Timestamp = $now
@@ -4309,28 +4357,30 @@ function Start-RimWorld {
 					$otherModid = $mlieMod
 				}
 				if ($otherModid) {
-					if ($alsoLoadBefore) {
-						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid -alsoLoadBefore
-					} else {
-						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid
-					}
-					$combinedIdentifiers = @()
-					if ($identifiersToAdd.Count -gt 1) {
-						for ($i = 0; $i -lt $identifiersToAdd.Count - 1; $i++) {
-							$combinedIdentifiers += $identifiersToAdd[$i]
+					foreach ($modId in $otherModid.Split(",")) {
+						if ($alsoLoadBefore) {
+							$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $modId -alsoLoadBefore
+						} else {
+							$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $modId
 						}
-					}
-					foreach ($id in $extraIdentifiersToAdd) {
-						if ($identifiersToAdd -notcontains $id) {
-							$combinedIdentifiers += $id
+						$combinedIdentifiers = @()
+						if ($identifiersToAdd.Count -gt 1) {
+							for ($i = 0; $i -lt $identifiersToAdd.Count - 1; $i++) {
+								$combinedIdentifiers += $identifiersToAdd[$i]
+							}
 						}
+						foreach ($id in $extraIdentifiersToAdd) {
+							if ($identifiersToAdd -notcontains $id) {
+								$combinedIdentifiers += $id
+							}
+						}
+						if ($identifiersToAdd.Count -gt 1) {
+							$combinedIdentifiers += $identifiersToAdd[-1]
+						} else {
+							$combinedIdentifiers += $identifiersToAdd
+						}
+						$identifiersToAdd = $combinedIdentifiers
 					}
-					if ($identifiersToAdd.Count -gt 1) {
-						$combinedIdentifiers += $identifiersToAdd[-1]
-					} else {
-						$combinedIdentifiers += $identifiersToAdd
-					}
-					$identifiersToAdd = $combinedIdentifiers
 				}
 			}
 			if ($mlieMod) {
@@ -4367,28 +4417,30 @@ function Start-RimWorld {
 				$identifiersToAdd = Get-IdentifiersFromMod -modObject $modObject
 			}
 			if ($otherModid) {
-				if ($alsoLoadBefore) {
-					$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid -alsoLoadBefore
-				} else {
-					$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $otherModid
-				}
-				$combinedIdentifiers = @()
-				if ($identifiersToAdd.Count -gt 1) {
-					for ($i = 0; $i -lt $identifiersToAdd.Count - 1; $i++) {
-						$combinedIdentifiers += $identifiersToAdd[$i]
+				foreach ($modId in $otherModid.Split(",")) {
+					if ($alsoLoadBefore) {
+						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $modId -alsoLoadBefore
+					} else {
+						$extraIdentifiersToAdd = Get-IdentifiersFromMod -modId $modId
 					}
-				}
-				foreach ($id in $extraIdentifiersToAdd) {
-					if ($identifiersToAdd -notcontains $id) {
-						$combinedIdentifiers += $id
+					$combinedIdentifiers = @()
+					if ($identifiersToAdd.Count -gt 1) {
+						for ($i = 0; $i -lt $identifiersToAdd.Count - 1; $i++) {
+							$combinedIdentifiers += $identifiersToAdd[$i]
+						}
 					}
+					foreach ($id in $extraIdentifiersToAdd) {
+						if ($identifiersToAdd -notcontains $id) {
+							$combinedIdentifiers += $id
+						}
+					}
+					if ($identifiersToAdd.Count -gt 1) {
+						$combinedIdentifiers += $identifiersToAdd[-1]
+					} else {
+						$combinedIdentifiers += $identifiersToAdd
+					}
+					$identifiersToAdd = $combinedIdentifiers
 				}
-				if ($identifiersToAdd.Count -gt 1) {
-					$combinedIdentifiers += $identifiersToAdd[-1]
-				} else {
-					$combinedIdentifiers += $identifiersToAdd
-				}
-				$identifiersToAdd = $combinedIdentifiers
 			}
 		}
 		$modIdentifiers = ""
@@ -4522,20 +4574,24 @@ function Test-Mod {
 	}
 
 	if ($otherModName) {
-		if ($otherModName.StartsWith("Mlie.") ) {
-			$mlieMod = $otherModName
-		} else {
-			$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound -lastVersion:$lastVersion
-			if (-not $modLink -and -not $lastVersion) {
-				WriteMessage -progress "Could not find other mod named $otherModName, trying to find the last version"
-				$modLink = Get-ModLink -modName $otherModName -chooseIfNotFound -lastVersion:$true
+		$modIds = @()
+		foreach ($modName in $otherModName.Split(",")) {
+			if ($modName.StartsWith("Mlie.") ) {
+				$mlieMod = $modName
+			} else {
+				$modLink = Get-ModLink -modName $modName -chooseIfNotFound -lastVersion:$lastVersion
+				if (-not $modLink -and -not $lastVersion) {
+					WriteMessage -progress "Could not find other mod named $modName, trying to find the last version"
+					$modLink = Get-ModLink -modName $modName -chooseIfNotFound -lastVersion:$true
+				}
+				if (-not $modLink) {
+					WriteMessage -failure "Could not find other mod named $modName, exiting"
+					return
+				}
+				$modIds += $modLink.Split('=')[1]
 			}
-			if (-not $modLink) {
-				WriteMessage -failure "Could not find other mod named $otherModName, exiting"
-				return
-			}
-			$otherModid = $modLink.Split('=')[1]
 		}
+		$otherModid = $modIds -join ","
 	}
 
 	if ($autotest) {
@@ -5242,9 +5298,7 @@ function Publish-Mod {
 		Copy-Item -Path $publisherPlusTemplate $modObject.ModPublisherPath -Force | Out-Null
 		((Get-Content -path $modObject.ModPublisherPath -Raw -Encoding UTF8).Replace("[modpath]", $modObject.ModFolderPath)) | Set-Content -Path $modObject.ModPublisherPath
 	}
-	if ($modObject.UsesAssetBundle) {
-		Update-ModAssetBundle -modObject $modObject -update
-	}
+	Update-ModAssetBundle -modObject $modObject -update
 
 	# Create repo if does not exists
 	if ((Get-RepositoryStatus -repositoryName $modObject.NameClean) -eq $true) {
@@ -6446,7 +6500,7 @@ function Update-ModAssetBundle {
 		$assetSize = ($assetFiles | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum)
 		if ($assetSize -gt $assetSizeLimit) {
 			if (-not $force) {
-				WriteMessage -failure "Total size of asset files in $($modObject.ModFolderPath) is $([math]::Round($assetSize / 1MB, 2)) Mb, exceeding the limit of $assetSizeLimitMb, skipping AssetBundle creation"
+				WriteMessage -failure "Total size of asset files in $($modObject.ModFolderPath) is $([math]::Round($assetSize / 1MB, 2)) Mb, exceeds the limit of $assetSizeLimitMb, skipping AssetBundle creation"
 				return $false
 			}
 			$noLegacy = $true

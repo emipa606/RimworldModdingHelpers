@@ -1,4 +1,5 @@
 {
+  "version": "2026-02-09T07:48:04Z",
   "rules": [
     {
       "oldWorkshopId": "1076950211",
@@ -635,7 +636,7 @@
     {
       "oldWorkshopId": "1132557840",
       "oldName": "Easy Speedup",
-      "oldAuthor": "76561198024473785",
+      "oldAuthor": "fyarn",
       "oldPackageId": "fyarn.EasySpeedup",
       "newWorkshopId": "3609256117",
       "newName": "Easy Speedup DX",
@@ -909,7 +910,7 @@
     {
       "oldWorkshopId": "1180718996",
       "oldName": "[KV] ReColor Stockpile & Growing Zones",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "recolorstockpile.kv.rw",
       "newWorkshopId": "3604158395",
       "newName": "[KV] ReColor Stockpile & Growing Zones (Cont.)",
@@ -988,7 +989,7 @@
     {
       "oldWorkshopId": "1180719658",
       "oldName": "[KV] Trading Spot",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "tradingspot.kv.rw",
       "newWorkshopId": "3507108484",
       "newName": "Trading Spot",
@@ -1037,7 +1038,7 @@
     {
       "oldWorkshopId": "1182992587",
       "oldName": "[KV] Change Research Speed",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "changeresearchspeed.kv.rw",
       "newWorkshopId": "3537476613",
       "newName": "Custom Research Speed",
@@ -1181,7 +1182,7 @@
     {
       "oldWorkshopId": "1205496521",
       "oldName": "FFGermanShepherd Caravaneer re-upload",
-      "oldAuthor": "76561198083415891",
+      "oldAuthor": "forestfey",
       "oldPackageId": "forestfey.GermanShepherdCaravan",
       "newWorkshopId": "3568442908",
       "newName": "German Shepherd Caravaneer 1.6",
@@ -1263,7 +1264,7 @@
     {
       "oldWorkshopId": "1207934602",
       "oldName": "Ameiro anime hairs",
-      "oldAuthor": "76561197968791836",
+      "oldAuthor": "Dizzo",
       "oldPackageId": "Ameiro.Animehairs",
       "newWorkshopId": "2883565328",
       "newName": "[FB] Ameiro anime hairs",
@@ -1751,7 +1752,7 @@
       "oldWorkshopId": "1241579445",
       "oldName": "RandomThings - SmeltDesignation",
       "oldAuthor": "Madolinn",
-      "oldPackageId": "",
+      "oldPackageId": "RandomThings.SmeltDesignation",
       "newWorkshopId": "2591787798",
       "newName": "RandomThings - SmeltDesignation (Continued)",
       "newAuthor": "Mlie",
@@ -1814,7 +1815,7 @@
     {
       "oldWorkshopId": "1254969827",
       "oldName": "Balanced Eclipse and Solar Flare",
-      "oldAuthor": "76561197993430118",
+      "oldAuthor": "NECEROS",
       "oldPackageId": "neceros.balancedeclipseandsolarflare",
       "newWorkshopId": "2929407615",
       "newName": "Balanced Eclipse and Solar Flare - Forked",
@@ -2998,7 +2999,7 @@
     {
       "oldWorkshopId": "1345928533",
       "oldName": "Mining Priority",
-      "oldAuthor": "76561197985330738",
+      "oldAuthor": "Uuugggg",
       "oldPackageId": "Uuugggg.MiningPriority",
       "newWorkshopId": "3610712721",
       "newName": "Mining Priority (Continued)",
@@ -3386,7 +3387,7 @@
     {
       "oldWorkshopId": "1369828656",
       "oldName": "[KV] Adjustable Trade Ships",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "adjustabletradeships.kv.rw",
       "newWorkshopId": "2876541977",
       "newName": "Trading Options",
@@ -3431,7 +3432,7 @@
     {
       "oldWorkshopId": "1372130541",
       "oldName": "Reworked Temperature Extreme Events [1.3]",
-      "oldAuthor": "76561198046592121",
+      "oldAuthor": "Stoic Saltine",
       "oldPackageId": "ONegative.ReworkedTemperatureExtremeEvents",
       "newWorkshopId": "2894673715",
       "newName": "Adjustable Temperature Events",
@@ -3581,7 +3582,7 @@
       "oldWorkshopId": "1386385125",
       "oldName": "[XND] Profitable Weapons",
       "oldAuthor": "XeoNovaDan",
-      "oldPackageId": "",
+      "oldPackageId": "XeoNovaDan.ProfitableWeapons",
       "newWorkshopId": "2269697598",
       "newName": "[XND] Profitable Weapons (Continued)",
       "newAuthor": "Mlie",
@@ -3915,7 +3916,7 @@
     {
       "oldWorkshopId": "1408863965",
       "oldName": "Labels on Floor",
-      "oldAuthor": "76561198012077806",
+      "oldAuthor": "falconne",
       "oldPackageId": "falconne.LabelsOnFloor",
       "newWorkshopId": "3546003256",
       "newName": "Labels on Floor (continued)",
@@ -4211,7 +4212,7 @@
     {
       "oldWorkshopId": "1430084631",
       "oldName": "Mod Medicine Patch",
-      "oldAuthor": "76561198071742963",
+      "oldAuthor": "Aeon",
       "oldPackageId": "antaioz.modmedicinepatch",
       "newWorkshopId": "3550702277",
       "newName": "Mod Medicine Patch 1.6",
@@ -4232,7 +4233,7 @@
     {
       "oldWorkshopId": "1430086135",
       "oldName": "Table Diner",
-      "oldAuthor": "76561198071742963",
+      "oldAuthor": "Aeon",
       "oldPackageId": "antaioz.tdiner",
       "newWorkshopId": "2835769177",
       "newName": "Table Range",
@@ -4277,7 +4278,7 @@
       "oldWorkshopId": "1437612522",
       "oldName": "[XND] Memorable Auroras",
       "oldAuthor": "XeoNovaDan",
-      "oldPackageId": "",
+      "oldPackageId": "XeoNovaDan.MemorableAuroras",
       "newWorkshopId": "2270039395",
       "newName": "[XND] Memorable Auroras (Continued)",
       "newAuthor": "Mlie",
@@ -4825,7 +4826,7 @@
     {
       "oldWorkshopId": "1488100231",
       "oldName": "[SYR] Blueberries",
-      "oldAuthor": "76561198075650758",
+      "oldAuthor": "Syrchalis",
       "oldPackageId": "syrchalis.blueberries",
       "newWorkshopId": "3548290073",
       "newName": "[SYR] Blueberries Fork",
@@ -5351,7 +5352,7 @@
     {
       "oldWorkshopId": "1498706339",
       "oldName": "[SS]Lovely Hair Style",
-      "oldAuthor": "76561198261589887",
+      "oldAuthor": "LingLuo",
       "oldPackageId": "BJIS.LovelyHairStyle",
       "newWorkshopId": "2883283629",
       "newName": "[1.6] Lovely Hair Style",
@@ -5743,7 +5744,7 @@
     {
       "oldWorkshopId": "1507384362",
       "oldName": "[KV] Consolidated Traits",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "consolidatedtraits.kv.rw",
       "newWorkshopId": "2879753009",
       "newName": "[LC] Consolidated Traits",
@@ -5834,7 +5835,7 @@
     {
       "oldWorkshopId": "1508292711",
       "oldName": "[KV] More Trait Slots",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "moretraitslots.kv.rw",
       "newWorkshopId": "2878346573",
       "newName": "[KV] More Trait Slots [1.4]",
@@ -5878,7 +5879,7 @@
     {
       "oldWorkshopId": "1509102551",
       "oldName": "[KV] Faction Control",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "factioncontrol.kv.rw",
       "newWorkshopId": "2882785581",
       "newName": "Faction Control (1.4-1.6)",
@@ -6448,7 +6449,7 @@
     {
       "oldWorkshopId": "1529857843",
       "oldName": "[RF] Rainbeau Flambe - Storyteller [b19]",
-      "oldAuthor": "76561198030815109",
+      "oldAuthor": "E-Claire",
       "oldPackageId": "",
       "newWorkshopId": "3582588553",
       "newName": "[RF] Rainbeau Flambe - Storyteller (Continued)",
@@ -7215,7 +7216,7 @@
     {
       "oldWorkshopId": "1541519487",
       "oldName": "Orassans (Obsolete)",
-      "oldAuthor": "76561198063663543",
+      "oldAuthor": "Diana (Kitty)",
       "oldPackageId": "dianawinters.Orassans",
       "newWorkshopId": "3571041719",
       "newName": "Orassans (Continued)",
@@ -7258,7 +7259,7 @@
     {
       "oldWorkshopId": "1541567184",
       "oldName": "Ni'Hal 1.0-1.4",
-      "oldAuthor": "76561197995250756",
+      "oldAuthor": "Zeri",
       "oldPackageId": "zerithos.NiHal",
       "newWorkshopId": "3571221462",
       "newName": "Ni'Hal (Continued)",
@@ -7800,7 +7801,7 @@
     {
       "oldWorkshopId": "1544558250",
       "oldName": "ETRT: Tribal Apparel",
-      "oldAuthor": "76561198007889439",
+      "oldAuthor": "Evil Tactician",
       "oldPackageId": "ETRT.TribalApparel",
       "newWorkshopId": "3545351721",
       "newName": "ETRT: Tribal Apparel (continued)",
@@ -8173,11 +8174,11 @@
     {
       "oldWorkshopId": "1547394294",
       "oldName": "Haul Explicitly",
-      "oldAuthor": "76561198010456496",
+      "oldAuthor": "likeafox",
       "oldPackageId": "likeafox.haulexplicitly",
       "newWorkshopId": "3556245703",
       "newName": "Haul Explicitly Reborn",
-      "newAuthor": "",
+      "newAuthor": "Keahuy",
       "newPackageId": "likeafox.haulexplicitly",
       "oldVersions": [
         "1.0",
@@ -8217,7 +8218,7 @@
       "oldWorkshopId": "1549446374",
       "oldName": "Musical Instruments",
       "oldAuthor": "Dog Problems",
-      "oldPackageId": "",
+      "oldPackageId": "dogproblems.musicalinstruments",
       "newWorkshopId": "2274558815",
       "newName": "Musical Instruments (Continued)",
       "newAuthor": "Mlie",
@@ -8608,7 +8609,7 @@
     {
       "oldWorkshopId": "1558464886",
       "oldName": "Stockpile Ranking",
-      "oldAuthor": "76561197985330738",
+      "oldAuthor": "Uuugggg",
       "oldPackageId": "Uuugggg.StockpileRanking",
       "newWorkshopId": "3549739420",
       "newName": "Stockpile Ranking - Continued",
@@ -8807,7 +8808,7 @@
     {
       "oldWorkshopId": "1566269698",
       "oldName": "[XND] Survival Tools",
-      "oldAuthor": "76561198168346339",
+      "oldAuthor": "XeoNovaDan",
       "oldPackageId": "",
       "newWorkshopId": "3554664966",
       "newName": "Survival Tools Reborn",
@@ -8931,7 +8932,7 @@
     {
       "oldWorkshopId": "1572211791",
       "oldName": "Orassans Lite",
-      "oldAuthor": "76561198063663543",
+      "oldAuthor": "Diana (Kitty)",
       "oldPackageId": "dianawinters.OrassansLite",
       "newWorkshopId": "3600731055",
       "newName": "Orassans Lite (Continued)",
@@ -8973,7 +8974,7 @@
       "oldWorkshopId": "1573233249",
       "oldName": "Desynchronized: Tales and News (v2.0.0)",
       "oldAuthor": "Vectorial1024",
-      "oldPackageId": "",
+      "oldPackageId": "V1024.Desynchronized",
       "newWorkshopId": "2222607126",
       "newName": "Desynchronized: Tales and News (Continued)",
       "newAuthor": "Mlie",
@@ -9038,7 +9039,7 @@
     },
     {
       "oldWorkshopId": "1578693166",
-      "oldName": "NewRatkinPlus",
+      "oldName": "Ratkin",
       "oldAuthor": "NukaFrog",
       "oldPackageId": "Solaris.RatkinRaceMod",
       "newWorkshopId": "3497673755",
@@ -9145,7 +9146,7 @@
     {
       "oldWorkshopId": "1582686191",
       "oldName": "Friendly Fire Tweaks",
-      "oldAuthor": "76561198008499127",
+      "oldAuthor": "Alex",
       "oldPackageId": "Alex.FriendlyFireTweaks",
       "newWorkshopId": "3591533573",
       "newName": "Friendly Fire Tweaks (Continued)",
@@ -9257,7 +9258,7 @@
     {
       "oldWorkshopId": "1588831229",
       "oldName": "[KV] No Max Bills",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "nomaxbills.kv.rw",
       "newWorkshopId": "3526216885",
       "newName": "No Max Bills: Redux",
@@ -9521,7 +9522,7 @@
       "oldWorkshopId": "1613783924",
       "oldName": "Roads of the Rim",
       "oldAuthor": "Loconeko",
-      "oldPackageId": "",
+      "oldPackageId": "Loconeko.RoadsOfTheRim",
       "newWorkshopId": "2280318231",
       "newName": "Roads of the Rim (Continued)",
       "newAuthor": "Mlie",
@@ -9722,7 +9723,7 @@
     {
       "oldWorkshopId": "1624131230",
       "oldName": "Time-Based Dangers",
-      "oldAuthor": "76561197973106144",
+      "oldAuthor": "Nales",
       "oldPackageId": "com.RimWorld.Nales.TimeBasedDangers",
       "newWorkshopId": "3588546987",
       "newName": "Time-Based Dangers (Continued)",
@@ -9741,7 +9742,7 @@
     {
       "oldWorkshopId": "1624460492",
       "oldName": "【Beta】Anime Hair—Ver·4.5",
-      "oldAuthor": "76561198062122868",
+      "oldAuthor": "♬献给某Beta的恋歌™",
       "oldPackageId": "Beta.AnimeHair",
       "newWorkshopId": "3580170169",
       "newName": "[Beta]Anime Hair_1.6Unofficial",
@@ -9865,7 +9866,7 @@
       "oldWorkshopId": "1639311130",
       "oldName": "Better Pod Launcher",
       "oldAuthor": "Kang060302",
-      "oldPackageId": "",
+      "oldPackageId": "kang.berry.BetterPodLauncher",
       "newWorkshopId": "2297374652",
       "newName": "Better Pod Launcher (Continued)",
       "newAuthor": "Mlie",
@@ -9949,7 +9950,7 @@
     {
       "oldWorkshopId": "1658712035",
       "oldName": "Dynamic Population",
-      "oldAuthor": "76561198018724252",
+      "oldAuthor": "anemia",
       "oldPackageId": "Anomalous.DynamicPopulation",
       "newWorkshopId": "3525027977",
       "newName": "[MFH] Max's Population Settings",
@@ -10054,7 +10055,7 @@
     {
       "oldWorkshopId": "1667901146",
       "oldName": "Dress Patients",
-      "oldAuthor": "76561197980262023",
+      "oldAuthor": "eagle0600",
       "oldPackageId": "eagle0600.dressPatients",
       "newWorkshopId": "2877763074",
       "newName": "Dress Patients (Continued) (obsolete 1.6)",
@@ -10735,7 +10736,7 @@
     {
       "oldWorkshopId": "1710127259",
       "oldName": "[Ry]Rimcraft Animals",
-      "oldAuthor": "76561198015121418",
+      "oldAuthor": "Ryflamer",
       "oldPackageId": "Ryflamer.Rimcraft.Animals",
       "newWorkshopId": "3599363187",
       "newName": "[Ry]Rimcraft Animals (Continued)",
@@ -11272,7 +11273,7 @@
       "oldWorkshopId": "1729795429",
       "oldName": "Pawn Education (1.1)",
       "oldAuthor": "Tyler",
-      "oldPackageId": "",
+      "oldPackageId": "Mlie.PawnEducation",
       "newWorkshopId": "2296533470",
       "newName": "Pawn Education (Continued)",
       "newAuthor": "Mlie",
@@ -11397,7 +11398,7 @@
     {
       "oldWorkshopId": "1733633429",
       "oldName": "[Ry]Rimcraft Metals",
-      "oldAuthor": "76561198015121418",
+      "oldAuthor": "Ryflamer",
       "oldPackageId": "Ryflamer.Rimcraft.Metals",
       "newWorkshopId": "3599364171",
       "newName": "[Ry]Rimcraft Metals (Continued)",
@@ -12885,7 +12886,7 @@
       "oldWorkshopId": "1841138974",
       "oldName": "Supreme Melee",
       "oldAuthor": "ChJees",
-      "oldPackageId": "",
+      "oldPackageId": "ChJees.SupremeMelee",
       "newWorkshopId": "2311299987",
       "newName": "Supreme Melee (Continued)",
       "newAuthor": "Mlie",
@@ -13967,7 +13968,7 @@
     {
       "oldWorkshopId": "1908437382",
       "oldName": "OnlineCity",
-      "oldAuthor": "76561198101179328",
+      "oldAuthor": "Aantt",
       "oldPackageId": "Aant.OnlineCity",
       "newWorkshopId": "3572429738",
       "newName": "OnlineCity 1.6",
@@ -14006,7 +14007,7 @@
     {
       "oldWorkshopId": "1911273785",
       "oldName": "Xenobionic Patcher",
-      "oldAuthor": "76561198002407062",
+      "oldAuthor": "SineSwiper",
       "oldPackageId": "SineSwiper.XenobionicPatcher",
       "newWorkshopId": "3554676828",
       "newName": "Xenobionic Patcher (1.6 Unofficial)",
@@ -14134,7 +14135,7 @@
     {
       "oldWorkshopId": "1924942266",
       "oldName": "[WD] Fueled Heaters",
-      "oldAuthor": "76561198075944826",
+      "oldAuthor": "Sand Dog",
       "oldPackageId": "Wemd.FueledHeaters",
       "newWorkshopId": "3546940856",
       "newName": "[WD] Fueled Heaters (1.6 Updated)",
@@ -14302,7 +14303,7 @@
     {
       "oldWorkshopId": "1941652952",
       "oldName": "Vanilla RT Solar Flare Shield Retexture (OBSOLETE SEE NEW MOD)",
-      "oldAuthor": "76561198065995968",
+      "oldAuthor": "Phoenix",
       "oldPackageId": "Phoenix.VanillaSolarSheild",
       "newWorkshopId": "3058941124",
       "newName": "Vanilla Solar Shield Retexture",
@@ -14866,7 +14867,7 @@
       "oldWorkshopId": "2000244851",
       "oldName": "Apothecary",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.apothecary",
       "newWorkshopId": "2195469123",
       "newName": "Apothecary (Continued)",
       "newAuthor": "Mlie",
@@ -14887,7 +14888,7 @@
       "oldWorkshopId": "2000287305",
       "oldName": "Brrr and Phew",
       "oldAuthor": "peldor",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.brrrandphew",
       "newWorkshopId": "2195938471",
       "newName": "Brrr and Phew (Continued)",
       "newAuthor": "Mlie",
@@ -14908,7 +14909,7 @@
       "oldWorkshopId": "2000335507",
       "oldName": "Drug Policy Fix",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.drugpolicyfix",
       "newWorkshopId": "2195390245",
       "newName": "Drug Policy Fix (Continued)",
       "newAuthor": "Mlie",
@@ -14929,7 +14930,7 @@
       "oldWorkshopId": "2000354200",
       "oldName": "Immunities Reset",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.immunitiesreset",
       "newWorkshopId": "2195961535",
       "newName": "Immunities Reset (Continued)",
       "newAuthor": "Mlie",
@@ -14950,7 +14951,7 @@
       "oldWorkshopId": "2000371183",
       "oldName": "NPC Bonus",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.npcbonus",
       "newWorkshopId": "2195967255",
       "newName": "NPC Bonus (Continued)",
       "newAuthor": "Mlie",
@@ -14971,7 +14972,7 @@
       "oldWorkshopId": "2000755840",
       "oldName": "Insulation",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.insulation",
       "newWorkshopId": "2196454890",
       "newName": "Insulation (Continued)",
       "newAuthor": "Mlie",
@@ -14992,7 +14993,7 @@
       "oldWorkshopId": "2001398514",
       "oldName": "Fermenter",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.fermenter",
       "newWorkshopId": "2194522312",
       "newName": "Fermenter (Continued)",
       "newAuthor": "Mlie",
@@ -15013,7 +15014,7 @@
       "oldWorkshopId": "2001863952",
       "oldName": "Prospecting",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.prospecting",
       "newWorkshopId": "2194979850",
       "newName": "Prospecting (Continued)",
       "newAuthor": "Mlie",
@@ -15034,7 +15035,7 @@
       "oldWorkshopId": "2002019195",
       "oldName": "TVForPrison",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.tvforprison",
       "newWorkshopId": "2194535018",
       "newName": "TVForPrison (Continued)",
       "newAuthor": "Mlie",
@@ -15055,7 +15056,7 @@
       "oldWorkshopId": "2002292418",
       "oldName": "Fire Extinguisher",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.fireextinguisher",
       "newWorkshopId": "2195996970",
       "newName": "Fire Extinguisher (Continued)",
       "newAuthor": "Mlie",
@@ -15076,7 +15077,7 @@
       "oldWorkshopId": "2002295141",
       "oldName": "Fire Warden",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.firewarden",
       "newWorkshopId": "2197425463",
       "newName": "Fire Warden (Continued)",
       "newAuthor": "Mlie",
@@ -15097,7 +15098,7 @@
       "oldWorkshopId": "2002341555",
       "oldName": "JetPack",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.jetpack",
       "newWorkshopId": "2196487991",
       "newName": "JetPack (Continued)",
       "newAuthor": "Mlie",
@@ -15118,7 +15119,7 @@
       "oldWorkshopId": "2002963487",
       "oldName": "Drug Response",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.drugresponse",
       "newWorkshopId": "2196401201",
       "newName": "Drug Response (Continued)",
       "newAuthor": "Mlie",
@@ -15139,7 +15140,7 @@
       "oldWorkshopId": "2002971559",
       "oldName": "Best Mix",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.bestmix",
       "newWorkshopId": "2195986094",
       "newName": "Best Mix (Continued)",
       "newAuthor": "Mlie",
@@ -15160,7 +15161,7 @@
       "oldWorkshopId": "2003149630",
       "oldName": "Common Ailments",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.commonailments",
       "newWorkshopId": "2194968364",
       "newName": "Common Ailments (Continued)",
       "newAuthor": "Mlie",
@@ -15181,7 +15182,7 @@
       "oldWorkshopId": "2004190331",
       "oldName": "RimPlas",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.rimplas",
       "newWorkshopId": "2194993727",
       "newName": "RimPlas (Continued)",
       "newAuthor": "Mlie",
@@ -15202,7 +15203,7 @@
       "oldWorkshopId": "2004334162",
       "oldName": "Rimoleum",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.rimoleum",
       "newWorkshopId": "2194437011",
       "newName": "[Legacy] Rimoleum (Continued)",
       "newAuthor": "Mlie",
@@ -15222,7 +15223,7 @@
       "oldWorkshopId": "2004368312",
       "oldName": "[XND] Nocturnal Animals",
       "oldAuthor": "XeoNovaDan",
-      "oldPackageId": "",
+      "oldPackageId": "XeoNovaDan.NocturnalAnimals",
       "newWorkshopId": "2269731409",
       "newName": "[XND] Nocturnal Animals (Continued)",
       "newAuthor": "Mlie",
@@ -15243,7 +15244,7 @@
       "oldWorkshopId": "2004944243",
       "oldName": "Medical Supplements",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.medicalsupplements",
       "newWorkshopId": "2195037369",
       "newName": "Medical Supplements (Continued)",
       "newAuthor": "Mlie",
@@ -15264,7 +15265,7 @@
       "oldWorkshopId": "2005917068",
       "oldName": "Social Supplements",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.socialsupplements",
       "newWorkshopId": "2195052690",
       "newName": "Social Supplements (Continued)",
       "newAuthor": "Mlie",
@@ -15563,7 +15564,7 @@
       "oldWorkshopId": "2008986676",
       "oldName": "Emporium",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.emporium",
       "newWorkshopId": "2194481462",
       "newName": "Emporium (Continued)",
       "newAuthor": "Mlie",
@@ -15815,7 +15816,7 @@
       "oldWorkshopId": "2012459600",
       "oldName": "Utility Supplements",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.utilitysupplements",
       "newWorkshopId": "2195065488",
       "newName": "Utility Supplements (Continued)",
       "newAuthor": "Mlie",
@@ -15835,7 +15836,7 @@
     {
       "oldWorkshopId": "2012484790",
       "oldName": "[Legacy] Simply More Bridges (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.SimplyMoreBridges",
       "newWorkshopId": "3560458000",
       "newName": "Simply More Bridges (Continued)",
@@ -15881,7 +15882,7 @@
       "oldWorkshopId": "2013191418",
       "oldName": "[Legacy] Realistic Human Sounds (Continued)",
       "oldAuthor": "Mlie",
-      "oldPackageId": "",
+      "oldPackageId": "Mlie.RealisticHumanSounds",
       "newWorkshopId": "3497264525",
       "newName": "Realistic Human Sounds (Continued)",
       "newAuthor": "Mlie",
@@ -15993,7 +15994,7 @@
     {
       "oldWorkshopId": "2014838309",
       "oldName": "More Monster Girls",
-      "oldAuthor": "76561197971028520",
+      "oldAuthor": "KiameV",
       "oldPackageId": "moremonstergirls.rw",
       "newWorkshopId": "3524636708",
       "newName": "More Monster Girls",
@@ -16038,7 +16039,7 @@
       "oldWorkshopId": "2015532615",
       "oldName": "[Remade+Updated] Stockpile Stack Limit",
       "oldAuthor": "sellophane",
-      "oldPackageId": "",
+      "oldPackageId": "stockpilelimit.updated",
       "newWorkshopId": "2274678322",
       "newName": "[Abandoned] Stockpile Stack Limit (Continued)",
       "newAuthor": "Mlie",
@@ -16061,7 +16062,7 @@
       "oldWorkshopId": "2015562690",
       "oldName": "Ghost Gear",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.ghostgear",
       "newWorkshopId": "2195369467",
       "newName": "Ghost Gear (Continued)",
       "newAuthor": "Mlie",
@@ -16246,7 +16247,7 @@
       "oldWorkshopId": "2017485672",
       "oldName": "[XND] Tiny Tweaks",
       "oldAuthor": "XeoNovaDan",
-      "oldPackageId": "",
+      "oldPackageId": "XeoNovaDan.TinyTweaks",
       "newWorkshopId": "2270049772",
       "newName": "[XND] Tiny Tweaks (Continued)",
       "newAuthor": "Mlie",
@@ -16359,7 +16360,7 @@
     {
       "oldWorkshopId": "2018432252",
       "oldName": "Room Size Tolerance",
-      "oldAuthor": "76561197993430118",
+      "oldAuthor": "NECEROS",
       "oldPackageId": "neceros.roomsizetolerance",
       "newWorkshopId": "2558042766",
       "newName": "Realistic Rooms Rewritten",
@@ -16426,7 +16427,7 @@
       "oldWorkshopId": "2018863937",
       "oldName": "Feng Shui",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.fengshui",
       "newWorkshopId": "2195949698",
       "newName": "Feng Shui (Continued)",
       "newAuthor": "Mlie",
@@ -16537,7 +16538,7 @@
       "oldWorkshopId": "2019776293",
       "oldName": "Camouflage and Stealth",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.camouflageandstealth",
       "newWorkshopId": "2196949737",
       "newName": "Camouflage and Stealth (Continued)",
       "newAuthor": "Mlie",
@@ -16558,7 +16559,7 @@
       "oldWorkshopId": "2019786449",
       "oldName": "CAS: Flak Armour",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.casflakarmour",
       "newWorkshopId": "2196958352",
       "newName": "CAS: Flak Armour (Continued)",
       "newAuthor": "Mlie",
@@ -16579,7 +16580,7 @@
       "oldWorkshopId": "2019792753",
       "oldName": "CAS: Power Armour",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.caspowerarmour",
       "newWorkshopId": "2196958119",
       "newName": "CAS: Power Armour (Continued)",
       "newAuthor": "Mlie",
@@ -16619,7 +16620,7 @@
       "oldWorkshopId": "2020321214",
       "oldName": "Wildfire",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.wildfire",
       "newWorkshopId": "2195955980",
       "newName": "Wildfire (Continued)",
       "newAuthor": "Mlie",
@@ -16856,7 +16857,7 @@
       "oldWorkshopId": "2025354794",
       "oldName": "CAS: Recon Armour",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.casreconarmour",
       "newWorkshopId": "2196958462",
       "newName": "CAS: Recon Armour (Continued)",
       "newAuthor": "Mlie",
@@ -16970,7 +16971,7 @@
       "oldWorkshopId": "2026252186",
       "oldName": "Tactical Charged Gear",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.tacticalchargedgear",
       "newWorkshopId": "2196429233",
       "newName": "Tactical Charged Gear (Continued)",
       "newAuthor": "Mlie",
@@ -16991,7 +16992,7 @@
       "oldWorkshopId": "2026720565",
       "oldName": "Targeting Modes",
       "oldAuthor": "XeoNovaDan",
-      "oldPackageId": "",
+      "oldPackageId": "OdysseyScorpio.TargetingModes.20200317",
       "newWorkshopId": "3565359455",
       "newName": "[XND] Targeting Modes (Continued)",
       "newAuthor": "Mlie",
@@ -17017,7 +17018,7 @@
     {
       "oldWorkshopId": "2027296393",
       "oldName": "Rockmen race",
-      "oldAuthor": "76561197992216829",
+      "oldAuthor": "Gouda quiche",
       "oldPackageId": "goudaquiche.LtfRockmenRace",
       "newWorkshopId": "3610970101",
       "newName": "Rockmen race 1.6",
@@ -17059,7 +17060,7 @@
       "oldWorkshopId": "2028063878",
       "oldName": "Faction to Empires",
       "oldAuthor": "BookBurner",
-      "oldPackageId": "",
+      "oldPackageId": "com.yayo.empireMaker",
       "newWorkshopId": "2209170071",
       "newName": "Faction to Empires (Continued)",
       "newAuthor": "Mlie",
@@ -17260,7 +17261,7 @@
       "oldWorkshopId": "2036872981",
       "oldName": "(New Version linked in Description) Ore Yields [Deprecated]",
       "oldAuthor": "Neceros",
-      "oldPackageId": "",
+      "oldPackageId": "neceros.oreyields",
       "newWorkshopId": "2374350066",
       "newName": "Ore Yields (Continued)",
       "newAuthor": "Mlie",
@@ -17346,7 +17347,7 @@
     {
       "oldWorkshopId": "2039219077",
       "oldName": "Nature is Beautiful [1.3+]",
-      "oldAuthor": "76561198057687114",
+      "oldAuthor": "zhrocks11",
       "oldPackageId": "zhrocks11.NatureIsBeautiful",
       "newWorkshopId": "2011794898",
       "newName": "Beautiful Outdoors",
@@ -17577,7 +17578,7 @@
     {
       "oldWorkshopId": "2049822320",
       "oldName": "Mind control",
-      "oldAuthor": "76561197992216829",
+      "oldAuthor": "Gouda quiche",
       "oldPackageId": "goudaquiche.LtfMindControl",
       "newWorkshopId": "3588912757",
       "newName": "Mind Control (Continued)",
@@ -17804,12 +17805,12 @@
     {
       "oldWorkshopId": "2057001924",
       "oldName": "MoHAR framework",
-      "oldAuthor": "76561197992216829",
+      "oldAuthor": "Gouda quiche",
       "oldPackageId": "goudaquiche.MoharFramework",
-      "newWorkshopId": "3568067093",
-      "newName": "MoHAR framework 1.6",
-      "newAuthor": "Gouda quiche",
-      "newPackageId": "goudaquiche.MoharFramework",
+      "newWorkshopId": "3661194051",
+      "newName": "MoHAR Framework (Continued)",
+      "newAuthor": "Zaljerem",
+      "newPackageId": "zal.moharframework",
       "oldVersions": [
         "1.2",
         "1.3",
@@ -17817,10 +17818,6 @@
         "1.5"
       ],
       "newVersions": [
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5",
         "1.6"
       ]
     },
@@ -18095,7 +18092,7 @@
     {
       "oldWorkshopId": "2068523117",
       "oldName": "Slow Starvation",
-      "oldAuthor": "76561198069543160",
+      "oldAuthor": "Beast",
       "oldPackageId": "Beast.SlowStarvation",
       "newWorkshopId": "2898001855",
       "newName": "Malnutrition Reworked",
@@ -18330,8 +18327,8 @@
     {
       "oldWorkshopId": "2077003756",
       "oldName": "RealDining 真实用餐",
-      "oldAuthor": "222821750",
-      "oldPackageId": "",
+      "oldAuthor": "Unknown Author",
+      "oldPackageId": "222821750.RealDining",
       "newWorkshopId": "2280250569",
       "newName": "RealDining (Continued)",
       "newAuthor": "Mlie",
@@ -18581,7 +18578,7 @@
     {
       "oldWorkshopId": "2092014538",
       "oldName": "[JDS] Exiled Dawn",
-      "oldAuthor": "76561198052480497",
+      "oldAuthor": "JangoD'soul",
       "oldPackageId": "JangoDsoul.ExiledDawn",
       "newWorkshopId": "3515900311",
       "newName": "[JDS] Exiled Dawn",
@@ -18685,7 +18682,7 @@
       "oldWorkshopId": "2097355697",
       "oldName": "CAS: Cataphract Armour",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.cascataphractarmour",
       "newWorkshopId": "2196958241",
       "newName": "CAS: Cataphract Armour (Continued)",
       "newAuthor": "Mlie",
@@ -18968,7 +18965,7 @@
       "oldWorkshopId": "2109246043",
       "oldName": "Recovery Pod",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.recoverypod",
       "newWorkshopId": "2195978222",
       "newName": "Recovery Pod (Continued)",
       "newAuthor": "Mlie",
@@ -19167,7 +19164,7 @@
     {
       "oldWorkshopId": "2113692574",
       "oldName": "Antimatter Annihilation",
-      "oldAuthor": "76561198169244520",
+      "oldAuthor": "Epicguru",
       "oldPackageId": "co.uk.epicguru.antimatterannihilation",
       "newWorkshopId": "3583860914",
       "newName": "Antimatter Annihilation (1.6 Temporary Update)",
@@ -19308,7 +19305,7 @@
       "oldWorkshopId": "2120551963",
       "oldName": "Aquarium",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "pelador.aquarium",
       "newWorkshopId": "2194463553",
       "newName": "[Legacy] Aquarium (Continued)",
       "newAuthor": "Mlie",
@@ -19479,7 +19476,7 @@
     {
       "oldWorkshopId": "2130100658",
       "oldName": "Advanced Polyamory Beds",
-      "oldAuthor": "76561198038791648",
+      "oldAuthor": "Rainee",
       "oldPackageId": "Inggo.AdvancedPolyBeds",
       "newWorkshopId": "3522181690",
       "newName": "Advanced Polyamory Beds",
@@ -19712,7 +19709,7 @@
     {
       "oldWorkshopId": "2140349611",
       "oldName": "Misc. Craftable Robots Retexture",
-      "oldAuthor": "76561198128834346",
+      "oldAuthor": "gloriousyuri",
       "oldPackageId": "gloriousyuri.MCRRetexture",
       "newWorkshopId": "3566009871",
       "newName": "Misc. Craftable Robots Retexture Continued and Resized",
@@ -19888,7 +19885,7 @@
     {
       "oldWorkshopId": "2149755445",
       "oldName": "[1.4] Vanilla Factions Expanded - Insectoids",
-      "oldAuthor": "76561198084132616",
+      "oldAuthor": "Oskar Potocki",
       "oldPackageId": "OskarPotocki.VFE.Insectoid",
       "newWorkshopId": "3309003431",
       "newName": "Vanilla Factions Expanded - Insectoids 2",
@@ -20011,7 +20008,7 @@
     {
       "oldWorkshopId": "2156624153",
       "oldName": "HalloweenParade(continued)",
-      "oldAuthor": "76561198032065507",
+      "oldAuthor": "velcroboy333",
       "oldPackageId": "HalloweenParade.velcroboy333",
       "newWorkshopId": "3593434506",
       "newName": "Pan-Halloweenie Integration Mod II (Continued) (TSP)",
@@ -20242,7 +20239,7 @@
     {
       "oldWorkshopId": "2174298905",
       "oldName": "XCOM:Terror From the Deep weapons",
-      "oldAuthor": "76561197995219517",
+      "oldAuthor": "AsG_Alligator",
       "oldPackageId": "AsGAlligator.TFTD",
       "newWorkshopId": "3569040277",
       "newName": "XCOM:Terror From the Deep Weapons (Continued)",
@@ -20324,7 +20321,7 @@
     {
       "oldWorkshopId": "2178003816",
       "oldName": "Persona Bond Forge",
-      "oldAuthor": "76561198201121849",
+      "oldAuthor": "Chefboyjc",
       "oldPackageId": "xedos.personabond",
       "newWorkshopId": "2881724503",
       "newName": "Persona Bond Forge",
@@ -20404,7 +20401,7 @@
     {
       "oldWorkshopId": "2185809028",
       "oldName": "Use Minified Buildings",
-      "oldAuthor": "76561197991129326",
+      "oldAuthor": "Hultis",
       "oldPackageId": "dhultgren.useminifiedbuildings",
       "newWorkshopId": "3523011187",
       "newName": "Build From Storage",
@@ -20518,7 +20515,7 @@
       "oldWorkshopId": "2194437011",
       "oldName": "[Legacy] Rimoleum (Continued)",
       "oldAuthor": "pelador",
-      "oldPackageId": "",
+      "oldPackageId": "Mlie.Rimoleum",
       "newWorkshopId": "3499058572",
       "newName": "Rimoleum (Continued)",
       "newAuthor": "Mlie",
@@ -20537,7 +20534,7 @@
     {
       "oldWorkshopId": "2194463553",
       "oldName": "[Legacy] Aquarium (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.Aquarium",
       "newWorkshopId": "3544186181",
       "newName": "Aquarium (Continued)",
@@ -20848,7 +20845,7 @@
     {
       "oldWorkshopId": "2206107940",
       "oldName": "Death Rattle Continued [1.2+]",
-      "oldAuthor": "76561198010773432",
+      "oldAuthor": "troopersmith1",
       "oldPackageId": "Troopersmith1.DeathRattle",
       "newWorkshopId": "2896207870",
       "newName": "Death Rattle Continued [1.2+]",
@@ -21445,7 +21442,7 @@
     {
       "oldWorkshopId": "2239914457",
       "oldName": "Autoinjectors",
-      "oldAuthor": "76561198134225311",
+      "oldAuthor": "Anri",
       "oldPackageId": "BFAnri.Autoinjectors",
       "newWorkshopId": "3553095671",
       "newName": "Autoinjectors (Continued)",
@@ -21468,7 +21465,7 @@
     {
       "oldWorkshopId": "2240610130",
       "oldName": "Call For Intel",
-      "oldAuthor": "76561198027025876",
+      "oldAuthor": "8Z",
       "oldPackageId": "8Z.CallForIntel",
       "newWorkshopId": "2557139479",
       "newName": "Call For Intel",
@@ -21528,7 +21525,7 @@
     {
       "oldWorkshopId": "2245149538",
       "oldName": "Lord of the Rims - Ents (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.LordoftheRimsEnts",
       "newWorkshopId": "3551416454",
       "newName": "Lord of the Rims - Ents (Continued)",
@@ -21548,7 +21545,7 @@
     {
       "oldWorkshopId": "2245502655",
       "oldName": "Lord of the Rims - Wizardry (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.LordoftheRimsWizardry",
       "newWorkshopId": "3551419391",
       "newName": "Lord of the Rims - Wizardry (Continued)",
@@ -21589,7 +21586,7 @@
     {
       "oldWorkshopId": "2249879548",
       "oldName": "Vanilla Storytellers Expanded - Igor Invader",
-      "oldAuthor": "76561198084132616",
+      "oldAuthor": "Oskar Potocki",
       "oldPackageId": "VSE.IgorInvader",
       "newWorkshopId": "3582195822",
       "newName": "Vanilla Storytellers Expanded - Igor Invader (Continued)",
@@ -21608,7 +21605,7 @@
     {
       "oldWorkshopId": "2250773505",
       "oldName": "Erin's Mountain Animals",
-      "oldAuthor": "76561198012464791",
+      "oldAuthor": "Erin",
       "oldPackageId": "Erin.Mountain",
       "newWorkshopId": "3521909777",
       "newName": "Erin's Fluffy Fauna",
@@ -21647,7 +21644,7 @@
     {
       "oldWorkshopId": "2253550390",
       "oldName": "Dormitories Not Barracks",
-      "oldAuthor": "76561198027025876",
+      "oldAuthor": "8Z",
       "oldPackageId": "8Z.DormitoriesNotBarracks",
       "newWorkshopId": "2558890999",
       "newName": "Dormitories (Not Barracks)",
@@ -21704,7 +21701,7 @@
     {
       "oldWorkshopId": "2255432128",
       "oldName": "VFME - Caravan Packs!",
-      "oldAuthor": "76561198158814294",
+      "oldAuthor": "PlayIgel",
       "oldPackageId": "VFME.CaravanPacks",
       "newWorkshopId": "3609057140",
       "newName": "VFME - Caravan Packs!",
@@ -21949,7 +21946,7 @@
     {
       "oldWorkshopId": "2265540797",
       "oldName": "Door Expanded Star Wars edition",
-      "oldAuthor": "76561198020911807",
+      "oldAuthor": "Lumi",
       "oldPackageId": "Lumi.doorsexpanded",
       "newWorkshopId": "3550435517",
       "newName": "Doors Expanded: Star Wars Edition (continued)",
@@ -22112,11 +22109,11 @@
     {
       "oldWorkshopId": "2274680538",
       "oldName": "Advanced Moisture Pump",
-      "oldAuthor": "76561198077641347",
+      "oldAuthor": "ISOREX",
       "oldPackageId": "isorex.advancedmoisturepump",
       "newWorkshopId": "2880970348",
       "newName": "Advanced Moisture Pump (Continued)",
-      "newAuthor": "",
+      "newAuthor": "CiXwOw",
       "newPackageId": "CiXwOw.advancedmoisturepump",
       "oldVersions": [
         "1.1",
@@ -22317,7 +22314,7 @@
     {
       "oldWorkshopId": "2290462337",
       "oldName": "Research Info",
-      "oldAuthor": "76561198012474522",
+      "oldAuthor": "Reiquard",
       "oldPackageId": "reiquard.researchinfo",
       "newWorkshopId": "3283434105",
       "newName": "Show Research ETA",
@@ -22396,7 +22393,7 @@
     {
       "oldWorkshopId": "2314163152",
       "oldName": "WorldEdit 2.0",
-      "oldAuthor": "76561198164943840",
+      "oldAuthor": "FunkyShit",
       "oldPackageId": "FunkyShit.Mods.WorldEdit",
       "newWorkshopId": "3590928058",
       "newName": "WorldEdit 2.0",
@@ -22520,7 +22517,7 @@
     {
       "oldWorkshopId": "2325652084",
       "oldName": "Pen's StunWeapons",
-      "oldAuthor": "76561198313443941",
+      "oldAuthor": "chromasoIve",
       "oldPackageId": "StunWeapons.theholyepicpenguin",
       "newWorkshopId": "3570569423",
       "newName": "Stun Weapons 1.6",
@@ -22537,7 +22534,7 @@
     {
       "oldWorkshopId": "2329899837",
       "oldName": "H.C_AnimalReskins_Complete2",
-      "oldAuthor": "76561198005623257",
+      "oldAuthor": "[Kor]HellCrossH",
       "oldPackageId": "HC.AnimalReskins.Complete2",
       "newWorkshopId": "3600202032",
       "newName": "H.C_AnimalReskins_Complete2 (Continued)",
@@ -22577,7 +22574,7 @@
     {
       "oldWorkshopId": "2336610918",
       "oldName": "Drop All Inventory",
-      "oldAuthor": "76561198037538179",
+      "oldAuthor": "Captain Muscles",
       "oldPackageId": "CaptainMuscles.DropInventory",
       "newWorkshopId": "3520772933",
       "newName": "Drop All Inventory (Continued)",
@@ -22597,7 +22594,7 @@
     {
       "oldWorkshopId": "2340181629",
       "oldName": "Project RimFactory - Materials",
-      "oldAuthor": "76561197982844751",
+      "oldAuthor": "zyMex",
       "oldPackageId": "PRF.Materials",
       "newWorkshopId": "3581627851",
       "newName": "Project RimFactory - Materials 1.6folk",
@@ -22683,7 +22680,7 @@
     {
       "oldWorkshopId": "2346328970",
       "oldName": "Minecraft",
-      "oldAuthor": "76561198249825340",
+      "oldAuthor": "Stinkaap",
       "oldPackageId": "Paul.Minecraft",
       "newWorkshopId": "3605541244",
       "newName": "Minecraft 1.6(Forked)",
@@ -22724,7 +22721,7 @@
     {
       "oldWorkshopId": "2349566282",
       "oldName": "Arasaka Corporation",
-      "oldAuthor": "76561198016573808",
+      "oldAuthor": "ALIEN",
       "oldPackageId": "ALIEN.ArasakaCorporation",
       "newWorkshopId": "3571093776",
       "newName": "Arasaka Corporation (Continued)",
@@ -23121,7 +23118,7 @@
     {
       "oldWorkshopId": "2372543327",
       "oldName": "Almost There!",
-      "oldAuthor": "76561198042626816",
+      "oldAuthor": "roolo",
       "oldPackageId": "roolo.AlmostThere",
       "newWorkshopId": "3515165298",
       "newName": "Almost There! Fork",
@@ -23206,7 +23203,7 @@
     {
       "oldWorkshopId": "2375193973",
       "oldName": "Do Your F****** Research",
-      "oldAuthor": "76561198037538179",
+      "oldAuthor": "Captain Muscles",
       "oldPackageId": "CaptainMuscles.PrioritizeResearch",
       "newWorkshopId": "2880481073",
       "newName": "Discontinued - Do Your F****** Research",
@@ -23530,7 +23527,7 @@
     {
       "oldWorkshopId": "2386352416",
       "oldName": "Rimworld Hearts",
-      "oldAuthor": "76561198119242914",
+      "oldAuthor": "Zeitloser",
       "oldPackageId": "zeitloser.rimworldhearts",
       "newWorkshopId": "3593019877",
       "newName": "Rimworld Hearts (1.6 Fork)",
@@ -23587,7 +23584,7 @@
     {
       "oldWorkshopId": "2388933704",
       "oldName": "RimOutbreak",
-      "oldAuthor": "76561198059111244",
+      "oldAuthor": "Dr.Peter",
       "oldPackageId": "DrPOutBreak_copy",
       "newWorkshopId": "3588551410",
       "newName": "RimOutbreak (Continued)",
@@ -23881,7 +23878,7 @@
     {
       "oldWorkshopId": "2406226869",
       "oldName": "Ancient Fallout Armory",
-      "oldAuthor": "76561198175590206",
+      "oldAuthor": "Gemi ningen",
       "oldPackageId": "Fallout.Armory.Geminingen",
       "newWorkshopId": "2886671050",
       "newName": "Ancient Fallout Armory (1.4+)",
@@ -24326,7 +24323,7 @@
     {
       "oldWorkshopId": "2444015491",
       "oldName": "Organ harvesting production chain",
-      "oldAuthor": "76561198320388132",
+      "oldAuthor": "Hcup",
       "oldPackageId": "Nowano.OrganProductionChain",
       "newWorkshopId": "3544221069",
       "newName": "Organ harvesting production chain (continued)",
@@ -24905,7 +24902,7 @@
     {
       "oldWorkshopId": "2473951034",
       "oldName": "Morphs Assorted: Unique and Rare Items",
-      "oldAuthor": "76561198022382298",
+      "oldAuthor": "Morphium",
       "oldPackageId": "MorphsAssorted.UniqueRareItems",
       "newWorkshopId": "3547824946",
       "newName": "Morph's Assorted: Unique and Rare Items (Continued)",
@@ -24924,7 +24921,7 @@
     {
       "oldWorkshopId": "2474059013",
       "oldName": "Morph Gun",
-      "oldAuthor": "76561199065983477",
+      "oldAuthor": "Taranchuk",
       "oldPackageId": "Rax.MorphGun",
       "newWorkshopId": "3588911594",
       "newName": "Morph Gun (Continued)",
@@ -25090,7 +25087,7 @@
     {
       "oldWorkshopId": "2489644195",
       "oldName": "More Traits",
-      "oldAuthor": "76561198967153669",
+      "oldAuthor": "GRIMZY",
       "oldPackageId": "HackerLaastad.Moretraits",
       "newWorkshopId": "3561579189",
       "newName": "More Traits (Continued)",
@@ -25117,7 +25114,7 @@
     {
       "oldWorkshopId": "2491646797",
       "oldName": "Star Crafters Armory",
-      "oldAuthor": "76561198173455910",
+      "oldAuthor": "AKRI",
       "oldPackageId": "AKRI.StarcraftersArmory",
       "newWorkshopId": "3562583066",
       "newName": "Star Crafters Armory 1.6",
@@ -25233,7 +25230,7 @@
     {
       "oldWorkshopId": "2504546310",
       "oldName": "WTH Expanded : Core [1.3]",
-      "oldAuthor": "76561198138622993",
+      "oldAuthor": "ggfirst_youtube",
       "oldPackageId": "ggfirst.WTHExCore",
       "newWorkshopId": "3601032092",
       "newName": "WTH Expanded (Continued)",
@@ -25289,7 +25286,7 @@
     {
       "oldWorkshopId": "2506029522",
       "oldName": "Release When Healthy",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.ReleaseWhenHealthy",
       "newWorkshopId": "2841231775",
       "newName": "Custom Prisoner Interactions",
@@ -25538,7 +25535,7 @@
     {
       "oldWorkshopId": "2519621745",
       "oldName": "Better Linkable Colors",
-      "oldAuthor": "76561198008057505",
+      "oldAuthor": "drummeur",
       "oldPackageId": "drummeur.BetterLinkableColors",
       "newWorkshopId": "3577372705",
       "newName": "Better Linkable Colors (Continued)",
@@ -25576,7 +25573,7 @@
     {
       "oldWorkshopId": "2523248314",
       "oldName": "World Map Enhanced",
-      "oldAuthor": "76561198019163168",
+      "oldAuthor": "Laast",
       "oldPackageId": "laast.WorldMapEnhanced",
       "newWorkshopId": "3599967849",
       "newName": "World Map Enhanced (Continued)",
@@ -25849,7 +25846,7 @@
     {
       "oldWorkshopId": "2538773133",
       "oldName": "Make Reinforced Barrel",
-      "oldAuthor": "76561198134590962",
+      "oldAuthor": "BBBBilly",
       "oldPackageId": "bbbbilly.makereinforcedbarrel",
       "newWorkshopId": "3558524659",
       "newName": "Make Reinforced Barrel 1.6",
@@ -26287,7 +26284,7 @@
       "oldPackageId": "SR.ModRimworld.RaidExtension",
       "newWorkshopId": "3340459422",
       "newName": "[SR]Raid Extension (fork)",
-      "newAuthor": "",
+      "newAuthor": "llunak",
       "newPackageId": "SR.ModRimworld.RaidExtension",
       "oldVersions": [
         "1.2",
@@ -26305,7 +26302,7 @@
     {
       "oldWorkshopId": "2555013434",
       "oldName": "Roles Apparel Unlocked",
-      "oldAuthor": "76561198016279777",
+      "oldAuthor": "DevDesigner",
       "oldPackageId": "DevDesigner.RolesApparelUnlocked",
       "newWorkshopId": "2980235255",
       "newName": "Delmain Tweaks - Role Apparel",
@@ -26382,7 +26379,7 @@
     {
       "oldWorkshopId": "2557555437",
       "oldName": "Outfit Builder (Dizzy)",
-      "oldAuthor": "76561198022152163",
+      "oldAuthor": "Dizzy Ioeuy",
       "oldPackageId": "dizzyioeuy.outfitbuilder",
       "newWorkshopId": "2568222561",
       "newName": "Outfit Builder Redux",
@@ -26482,7 +26479,7 @@
     {
       "oldWorkshopId": "2558272601",
       "oldName": "Medicines+ (Forked) [1.3]",
-      "oldAuthor": "76561198000127180",
+      "oldAuthor": "Mercenary",
       "oldPackageId": "TedDraws.MedicinesPlus.AT",
       "newWorkshopId": "2878860499",
       "newName": "Medicines+",
@@ -26638,7 +26635,7 @@
       "oldWorkshopId": "2561691857",
       "oldName": "Rename Everything Continued!",
       "oldAuthor": "XeoNovaDan",
-      "oldPackageId": "",
+      "oldPackageId": "rename.everything",
       "newWorkshopId": "3424422876",
       "newName": "[XND] Rename Everything! (Continued)",
       "newAuthor": "Mlie",
@@ -26999,7 +26996,7 @@
     {
       "oldWorkshopId": "2568865984",
       "oldName": "Animal Equipment",
-      "oldAuthor": "76561198017085779",
+      "oldAuthor": "Owlchemist",
       "oldPackageId": "Owlchemist.AnimalGear.Equipment",
       "newWorkshopId": "3513849448",
       "newName": "Animal Apparel: Basic Armor",
@@ -27111,7 +27108,7 @@
     {
       "oldWorkshopId": "2573040103",
       "oldName": "Erin's Chocobos",
-      "oldAuthor": "76561198012464791",
+      "oldAuthor": "Erin",
       "oldPackageId": "Erin.Chocobos",
       "newWorkshopId": "2877589761",
       "newName": "Erin's Final Fantasy Animals",
@@ -27407,7 +27404,7 @@
     {
       "oldWorkshopId": "2581471011",
       "oldName": "LTS Ammo - Turrets use Ammo",
-      "oldAuthor": "76561198052328619",
+      "oldAuthor": "bblkepling",
       "oldPackageId": "bblkepling.LTSAmmoTurretsuseAmmo",
       "newWorkshopId": "3584027601",
       "newName": "LTS Ammo - Turrets use Ammo (forked)",
@@ -27682,7 +27679,7 @@
     {
       "oldWorkshopId": "2590363477",
       "oldName": "Call of Duty: Zombies Pack",
-      "oldAuthor": "76561198137822091",
+      "oldAuthor": "Rowful",
       "oldPackageId": "Robotrowful.CODZombies",
       "newWorkshopId": "3588550180",
       "newName": "Call of Duty: Zombies Pack (Continued)",
@@ -28099,7 +28096,7 @@
     {
       "oldWorkshopId": "2606603589",
       "oldName": "[KYD] Gourmet Pemmican",
-      "oldAuthor": "76561198006218910",
+      "oldAuthor": "Kayedon",
       "oldPackageId": "KYD.GourmetPemmican",
       "newWorkshopId": "3543664417",
       "newName": "[KYD] Gourmet Pemmican (Continued)",
@@ -28137,7 +28134,7 @@
     {
       "oldWorkshopId": "2607478154",
       "oldName": "Allow Adjacent Settlements",
-      "oldAuthor": "76561198079524796",
+      "oldAuthor": "whatamidoing",
       "oldPackageId": "whatamidoing.adjacentsettlements",
       "newWorkshopId": "2600837512",
       "newName": "Close Settlements",
@@ -28342,7 +28339,7 @@
       "oldPackageId": "sixdd.cloth.production.expanded",
       "newWorkshopId": "3516299224",
       "newName": "Cloth Production Expanded Continued",
-      "newAuthor": "",
+      "newAuthor": "cyanobot",
       "newPackageId": "cyanobot.cloth.production.expanded",
       "oldVersions": [
         "1.3",
@@ -28509,7 +28506,8 @@
       "newVersions": [
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ],
       "newWorkshopId": "2616538981",
       "oldName": "Steve's Walls Continued [1.6]",
@@ -28517,7 +28515,11 @@
       "oldWorkshopId": "3525402809",
       "oldVersions": [
         "1.6"
-      ]
+      ],
+      "oldAuthor": "Randall Boggs",
+      "oldPackageId": "RandallBoggs.StevesWalls",
+      "newAuthor": "Scurvyez",
+      "newPackageId": "Scurvyez.StevesWalls"
     },
     {
       "oldWorkshopId": "2617475245",
@@ -28615,7 +28617,7 @@
     {
       "oldWorkshopId": "2625369932",
       "oldName": "Faster Relic Subquests",
-      "oldAuthor": "76561198119342034",
+      "oldAuthor": "Profligate",
       "oldPackageId": "brat.fastersubquests",
       "newWorkshopId": "3563274495",
       "newName": "Faster Relic Subquests (Unofficial v1.6)",
@@ -29083,7 +29085,7 @@
     {
       "oldWorkshopId": "2648808175",
       "oldName": "No Restrictions on Faction Ideologies",
-      "oldAuthor": "76561198025048047",
+      "oldAuthor": "Slashandz",
       "oldPackageId": "Slashandz.NoRestrictionsonFactionIdeologies",
       "newWorkshopId": "3568916597",
       "newName": "No Restrictions on Faction Ideologies (continued)",
@@ -29120,7 +29122,7 @@
     {
       "oldWorkshopId": "2649548096",
       "oldName": "Total Control",
-      "oldAuthor": "76561197985973180",
+      "oldAuthor": "Orpheusly",
       "oldPackageId": "co.uk.epicguru.factionloadout",
       "newWorkshopId": "3063465133",
       "newName": "Rimsential - Total Control: Continued",
@@ -29306,7 +29308,7 @@
     {
       "oldWorkshopId": "2662801413",
       "oldName": "Erin's Miqo'te",
-      "oldAuthor": "76561198012464791",
+      "oldAuthor": "Erin",
       "oldPackageId": "Erin.Miqote",
       "newWorkshopId": "3521414450",
       "newName": "Erin's FFXIV Races",
@@ -29359,7 +29361,7 @@
     {
       "oldWorkshopId": "2669036490",
       "oldName": "Awesome Inventory Forked",
-      "oldAuthor": "76561199065983477",
+      "oldAuthor": "Taranchuk",
       "oldPackageId": "NotooShabby.AwesomeInventoryForked",
       "newWorkshopId": "3552214807",
       "newName": "Awesome Inventory 1.6",
@@ -29377,7 +29379,7 @@
     {
       "oldWorkshopId": "2670896802",
       "oldName": "Rimatomics PID Autothrottle",
-      "oldAuthor": "76561198030969723",
+      "oldAuthor": "belzebot",
       "oldPackageId": "beelzebot.RimaomicsPIDAutothrottle",
       "newWorkshopId": "3548908112",
       "newName": "(Temp 1.6)Rimatomics PID Autothrottle",
@@ -29499,7 +29501,7 @@
     {
       "oldWorkshopId": "2678376745",
       "oldName": "TasteOfVanilla-ish Dryad Retexture",
-      "oldAuthor": "76561198094174176",
+      "oldAuthor": "IcyCheeseCake",
       "oldPackageId": "ICC.TOV.Dryad",
       "newWorkshopId": "3567016097",
       "newName": "TasteOfVanilla-ish Dryad Retexture (Continued++)",
@@ -29562,7 +29564,7 @@
     {
       "oldWorkshopId": "2681760380",
       "oldName": "Erin's Au Ra",
-      "oldAuthor": "76561198012464791",
+      "oldAuthor": "Erin",
       "oldPackageId": "Erin.AuRa",
       "newWorkshopId": "3521414450",
       "newName": "Erin's FFXIV Races",
@@ -29780,7 +29782,7 @@
     {
       "oldWorkshopId": "2702584632",
       "oldName": "Convert Then Recruit",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.ConvertThenRecruit",
       "newWorkshopId": "2841231775",
       "newName": "Custom Prisoner Interactions",
@@ -29800,11 +29802,11 @@
     {
       "oldWorkshopId": "2704529871",
       "oldName": "Foot Traffic Heatmap",
-      "oldAuthor": "76561198414820033",
+      "oldAuthor": "cliffyq",
       "oldPackageId": "Cliffyq.FootTrafficHeatmap",
       "newWorkshopId": "3240217316",
       "newName": "Foot Traffic Heatmap",
-      "newAuthor": "",
+      "newAuthor": "missionz3r0",
       "newPackageId": "missionz3r0.FootTrafficHeatmap",
       "oldVersions": [
         "1.3",
@@ -29821,7 +29823,7 @@
     {
       "oldWorkshopId": "2704627783",
       "oldName": "[Alien/Race] Seren, from Stardust",
-      "oldAuthor": "76561198259510549",
+      "oldAuthor": "OdysseyLotus",
       "oldPackageId": "odysseylotus.seren",
       "newWorkshopId": "3549527869",
       "newName": "[Alien/Race] Seren, from Stardust",
@@ -29839,7 +29841,7 @@
     {
       "oldWorkshopId": "2705395014",
       "oldName": "Convert Then Enslave",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.ConvertThenEnslave",
       "newWorkshopId": "2841231775",
       "newName": "Custom Prisoner Interactions",
@@ -29878,7 +29880,7 @@
     {
       "oldWorkshopId": "2711504627",
       "oldName": "Simple Learning",
-      "oldAuthor": "76561198118814059",
+      "oldAuthor": "TechnoFox",
       "oldPackageId": "Fox.SimpleLearning",
       "newWorkshopId": "3580464748",
       "newName": "Simple Learning (Continued)",
@@ -29991,7 +29993,7 @@
     {
       "oldWorkshopId": "2720562164",
       "oldName": "Favourites!",
-      "oldAuthor": "76561198168346339",
+      "oldAuthor": "XeoNovaDan",
       "oldPackageId": "XeoNovaDan.RimworldFavourites",
       "newWorkshopId": "2883755766",
       "newName": "[777] Favourites!",
@@ -30044,7 +30046,7 @@
     {
       "oldWorkshopId": "2725237301",
       "oldName": "Atelier [1.3]",
-      "oldAuthor": "76561198138622993",
+      "oldAuthor": "ggfirst_youtube",
       "oldPackageId": "Timuttie.Atelier",
       "newWorkshopId": "3554040577",
       "newName": "Atelier (Continued)",
@@ -30266,7 +30268,7 @@
     {
       "oldWorkshopId": "2750411181",
       "oldName": "Mandalorian SRTS",
-      "oldAuthor": "76561198347814151",
+      "oldAuthor": "Dylann",
       "oldPackageId": "DylanScoot.StarWarsSRTS",
       "newWorkshopId": "3549759658",
       "newName": "Mandalorian SRTS (continued)",
@@ -30393,7 +30395,7 @@
     {
       "oldWorkshopId": "2757398561",
       "oldName": "Yayo's Combat Warcaskets",
-      "oldAuthor": "76561198009875037",
+      "oldAuthor": "Soky",
       "oldPackageId": "Dra.YayoCombatWarcaskets",
       "newWorkshopId": "3544300996",
       "newName": "Yayo's Combat Warcaskets (1.6 temp)",
@@ -30541,7 +30543,7 @@
     {
       "oldWorkshopId": "2773821103",
       "oldName": "Tribal Backstories [1.3]",
-      "oldAuthor": "76561198029054433",
+      "oldAuthor": "Shenanigans",
       "oldPackageId": "Shenanigans.TribalBackstories",
       "newWorkshopId": "2879649038",
       "newName": "Tribal Backstories",
@@ -30602,7 +30604,7 @@
       "oldPackageId": "tikubonn.RemoteDetonator",
       "newWorkshopId": "3534046382",
       "newName": "Remote Detonator - Rearmed",
-      "newAuthor": "",
+      "newAuthor": "Aleksey",
       "newPackageId": "tikubonn.RemoteDetonator",
       "oldVersions": [
         "1.3",
@@ -30710,7 +30712,7 @@
     {
       "oldWorkshopId": "2782318255",
       "oldName": "Alternate Archonexus",
-      "oldAuthor": "76561198141375977",
+      "oldAuthor": "xokem",
       "oldPackageId": "exokem.AlternateArchonexus",
       "newWorkshopId": "3571618208",
       "newName": "Alternate Archonexus (Continued)",
@@ -30750,7 +30752,7 @@
     {
       "oldWorkshopId": "2783460002",
       "oldName": "Star Wars - Clone Medical Officer",
-      "oldAuthor": "76561198273245423",
+      "oldAuthor": "Ranger Rick",
       "oldPackageId": "Canon.StarWars.MedicalOfficer",
       "newWorkshopId": "3551489076",
       "newName": "Star Wars - Clone Medical Officer (continued)",
@@ -30788,7 +30790,7 @@
     {
       "oldWorkshopId": "2783938718",
       "oldName": "Buildable Ancient Ruins",
-      "oldAuthor": "76561198847292392",
+      "oldAuthor": "AmliFurx",
       "oldPackageId": "Amlifurx.FunnyPack.BARs",
       "newWorkshopId": "3578621233",
       "newName": "「1.6」可建远古遗迹：Buildable Ancient Ruins",
@@ -31377,7 +31379,7 @@
         "1.4"
       ],
       "newVersions": [
-        "1.5"
+        "1.6"
       ]
     },
     {
@@ -31634,7 +31636,7 @@
     {
       "oldWorkshopId": "2835548917",
       "oldName": "[1.5] Glitterworld Uprising",
-      "oldAuthor": "76561198308120632",
+      "oldAuthor": "BlueEagle421",
       "oldPackageId": "Ushanka.GlitterworldUprising",
       "newWorkshopId": "3522676478",
       "newName": "Glittertech Expansion",
@@ -31653,7 +31655,7 @@
     {
       "oldWorkshopId": "2835600618",
       "oldName": "Erin's Azaphrae",
-      "oldAuthor": "76561198012464791",
+      "oldAuthor": "Erin",
       "oldPackageId": "Erin.Azaphrae",
       "newWorkshopId": "3035240271",
       "newName": "Erin's Azaphrae - Biotech Ver.",
@@ -31691,7 +31693,7 @@
     {
       "oldWorkshopId": "2836605140",
       "oldName": "Just Copy",
-      "oldAuthor": "76561198052292470",
+      "oldAuthor": "iforgotmysocks",
       "oldPackageId": "iforgotmysocks.JustCopy",
       "newWorkshopId": "3400923070",
       "newName": "Better Policies",
@@ -31710,7 +31712,7 @@
     {
       "oldWorkshopId": "2838846353",
       "oldName": "Convert Then Release",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.ConvertThenRelease",
       "newWorkshopId": "2841231775",
       "newName": "Custom Prisoner Interactions",
@@ -32019,7 +32021,7 @@
     {
       "oldWorkshopId": "2861216796",
       "oldName": "UT2004 Weapons Pack",
-      "oldAuthor": "76561197995219517",
+      "oldAuthor": "AsG_Alligator",
       "oldPackageId": "AsGAlligator.UT2004",
       "newWorkshopId": "3569038895",
       "newName": "UT2004 Weapons Pack (Continued)",
@@ -32258,7 +32260,7 @@
     {
       "oldWorkshopId": "2874517333",
       "oldName": "[GMT] Trading Spot",
-      "oldAuthor": "76561198154762940",
+      "oldAuthor": "Grizzle",
       "oldPackageId": "Grizzlemethis.TradingSpot.RW",
       "newWorkshopId": "3507108484",
       "newName": "Trading Spot",
@@ -32556,7 +32558,7 @@
     {
       "oldWorkshopId": "2879835262",
       "oldName": "Anima Bionics - Forked",
-      "oldAuthor": "76561198076695937",
+      "oldAuthor": "Victor",
       "oldPackageId": "Seti.Victor.AnimaBodies",
       "newWorkshopId": "3546005700",
       "newName": "Anima Bionics - Forked - Continued",
@@ -32574,7 +32576,7 @@
     {
       "oldWorkshopId": "2880272189",
       "oldName": "Juggling",
-      "oldAuthor": "76561198082999029",
+      "oldAuthor": "peanutter 2",
       "oldPackageId": "Peanutter.JugglingMod",
       "newWorkshopId": "3588545948",
       "newName": "Juggling (Continued)",
@@ -32613,7 +32615,7 @@
     {
       "oldWorkshopId": "2880481073",
       "oldName": "Discontinued - Do Your F****** Research",
-      "oldAuthor": "76561198178302969",
+      "oldAuthor": "Khobs",
       "oldPackageId": "KB.PrioritizeResearch",
       "newWorkshopId": "3523205869",
       "newName": "Do Your F****** Research",
@@ -32875,7 +32877,7 @@
     {
       "oldWorkshopId": "2882466074",
       "oldName": "Papou Race : emotional birds",
-      "oldAuthor": "76561198117388547",
+      "oldAuthor": "YAYO",
       "oldPackageId": "com.yayo.papagoRace",
       "newWorkshopId": "3571039438",
       "newName": "Papou Xenotype: Emotional Birds (Continued)",
@@ -32965,7 +32967,7 @@
     {
       "oldWorkshopId": "2884952468",
       "oldName": "Preemptive Strike (v1.4+ Fork)",
-      "oldAuthor": "76561197993602698",
+      "oldAuthor": "Ogliss",
       "oldPackageId": "LtBob.PreemptiveStrike.Rimworld",
       "newWorkshopId": "3566031180",
       "newName": "Preemptive Strike 1.6",
@@ -33029,7 +33031,7 @@
     {
       "oldWorkshopId": "2885420111",
       "oldName": "Rebel Psycasts",
-      "oldAuthor": "76561198355960890",
+      "oldAuthor": "Stormtrooper",
       "oldPackageId": "stormtrooper.rebelpsycasts",
       "newWorkshopId": "3599392042",
       "newName": "Rebel Psycasts (Continued)",
@@ -33065,7 +33067,7 @@
     {
       "oldWorkshopId": "2885606418",
       "oldName": "【1.4】Buildable Ancient Ruins",
-      "oldAuthor": "76561197983568156",
+      "oldAuthor": "Akiha",
       "oldPackageId": "Amlifurx.FunnyPack.BARs",
       "newWorkshopId": "3578621233",
       "newName": "「1.6」可建远古遗迹：Buildable Ancient Ruins",
@@ -33120,7 +33122,7 @@
     {
       "oldWorkshopId": "2886338818",
       "oldName": "No Lung Rot",
-      "oldAuthor": "76561198994437783",
+      "oldAuthor": "1trickPwnyta",
       "oldPackageId": "nolungrot.1trickPwnyta",
       "newWorkshopId": "3550129847",
       "newName": "No Lung Rot (Continued)",
@@ -33212,7 +33214,7 @@
     {
       "oldWorkshopId": "2889186547",
       "oldName": "Antigrain (Continued)",
-      "oldAuthor": "76561199084100095",
+      "oldAuthor": "Mr.Rock23",
       "oldPackageId": "MrRock23.Antigrain.Continued",
       "newWorkshopId": "3572260864",
       "newName": "可制作的反物质弹头 - Antigrain (Continued)",
@@ -33431,7 +33433,7 @@
     {
       "oldWorkshopId": "2893316224",
       "oldName": "Aztec Weapon Style Pack",
-      "oldAuthor": "76561198129076421",
+      "oldAuthor": "Halituis Amaricanous",
       "oldPackageId": "ATWSP.HalituisAmaricanus",
       "newWorkshopId": "3588908703",
       "newName": "Aztec Weapon Style Pack (Continued)",
@@ -33737,7 +33739,7 @@
     {
       "oldWorkshopId": "2897048164",
       "oldName": "Red Alert!",
-      "oldAuthor": "76561198370377253",
+      "oldAuthor": "Admiral Zander",
       "oldPackageId": "Endermaster567.RedAlert",
       "newWorkshopId": "3559280714",
       "newName": "Red Alert! (Continued)",
@@ -33790,7 +33792,7 @@
     {
       "oldWorkshopId": "2898282983",
       "oldName": "Venerated Xenotype Flexibility",
-      "oldAuthor": "76561198031409367",
+      "oldAuthor": "ChrisFloofyKitsune",
       "oldPackageId": "ChrisClark13.VeneratedXenotypeFlexibility",
       "newWorkshopId": "3586153375",
       "newName": "Venerated Xenotype Flexibility (Revisited + Fixed)",
@@ -33826,7 +33828,7 @@
     {
       "oldWorkshopId": "2898841700",
       "oldName": "Aztec Factions and Culture Patch",
-      "oldAuthor": "76561198259510549",
+      "oldAuthor": "OdysseyLotus",
       "oldPackageId": "odysseylotus.AztecAllTogether",
       "newWorkshopId": "3588910595",
       "newName": "Aztec Factions and Culture Patch (Continued)",
@@ -33990,7 +33992,7 @@
     {
       "oldWorkshopId": "2903582351",
       "oldName": "[Legacy] Star Wars Animal Collection (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.StarWarsAnimalCollection",
       "newWorkshopId": "3497316713",
       "newName": "Star Wars Animal Collection (Continued)",
@@ -34028,7 +34030,7 @@
     {
       "oldWorkshopId": "2904510148",
       "oldName": "Atomic Patches - Hostile Labels",
-      "oldAuthor": "76561198056948306",
+      "oldAuthor": "Mo",
       "oldPackageId": "momo.Atomic.HostileLabels",
       "newWorkshopId": "3547826722",
       "newName": "Atomic Patches - Hostile Labels (Continued)",
@@ -34235,7 +34237,7 @@
     {
       "oldWorkshopId": "2908453851",
       "oldName": "Enhanced Vat Learning",
-      "oldAuthor": "76561198377544102",
+      "oldAuthor": "SmArtKar",
       "oldPackageId": "smartkar.enhancedvatlearning",
       "newWorkshopId": "3551263267",
       "newName": "Enhanced Vat Learning",
@@ -34432,7 +34434,7 @@
     {
       "oldWorkshopId": "2921337233",
       "oldName": "Drags Race - Biotech (READ DESCRIPTION)",
-      "oldAuthor": "76561198416666838",
+      "oldAuthor": "speedentron",
       "oldPackageId": "speedentron.drags",
       "newWorkshopId": "3577797081",
       "newName": "Drags Race - Biotech (Continued)",
@@ -34556,7 +34558,7 @@
       "newWorkshopId": "1547510568",
       "newName": "Replica Vanometric Power Cells",
       "newAuthor": "Phoebe",
-      "newPackageId": "",
+      "newPackageId": "phoebepotat.replicavano",
       "oldVersions": [
         "1.4",
         "1.5"
@@ -34626,11 +34628,11 @@
     {
       "oldWorkshopId": "2925015383",
       "oldName": "Pharmacist Icon",
-      "oldAuthor": "76561198001792580",
+      "oldAuthor": "Keksa",
       "oldPackageId": "Keksa.Pharmacist.Icon",
       "newWorkshopId": "3593612390",
       "newName": "[1.6] Pharmacist Icon",
-      "newAuthor": "",
+      "newAuthor": "Marconius",
       "newPackageId": "Keksa.Pharmacist.Icon",
       "oldVersions": [
         "1.3",
@@ -34643,7 +34645,7 @@
     {
       "oldWorkshopId": "2926292009",
       "oldName": "Atelier",
-      "oldAuthor": "76561198138622993",
+      "oldAuthor": "ggfirst_youtube",
       "oldPackageId": "Timuttie.Atelier",
       "newWorkshopId": "3554040577",
       "newName": "Atelier (Continued)",
@@ -34699,7 +34701,7 @@
     {
       "oldWorkshopId": "2927491015",
       "oldName": "[Abandoned] Android tiers - TX Series (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.AndroidTiersTXSeries",
       "newWorkshopId": "3579662510",
       "newName": "Android tiers - TX Series (1.6 Port)",
@@ -34718,7 +34720,7 @@
     {
       "oldWorkshopId": "2927812651",
       "oldName": "Roo's Minotaur Xenotype",
-      "oldAuthor": "76561198272592569",
+      "oldAuthor": "Rooboid",
       "oldPackageId": "Rooboid.Minotaur",
       "newWorkshopId": "3548423129",
       "newName": "Roo's Minotaur Xenotype (1.6)",
@@ -34734,7 +34736,7 @@
     {
       "oldWorkshopId": "2927815286",
       "oldName": "Roo's Minotaur Xenotype Expanded",
-      "oldAuthor": "76561198272592569",
+      "oldAuthor": "Rooboid",
       "oldPackageId": "Rooboid.Minotaur.Expanded",
       "newWorkshopId": "3550835154",
       "newName": "Roo's Minotaur Xenotype Expanded (1.6)",
@@ -34896,7 +34898,7 @@
     {
       "oldWorkshopId": "2933963058",
       "oldName": "High School Uniform Thai Girl",
-      "oldAuthor": "76561198111994941",
+      "oldAuthor": "Nomad  D",
       "oldPackageId": "ADD.APP.HSG",
       "newWorkshopId": "3044882634",
       "newName": "Useful Clothes (Continued) (TSP)",
@@ -34951,23 +34953,22 @@
       ]
     },
     {
-      "oldWorkshopId": "2934420800",
-      "oldName": "Prepatcher",
-      "oldAuthor": "76561198859731542",
-      "oldPackageId": "zetrith.prepatcher",
-      "newWorkshopId": "3563469557",
-      "newName": "Prepatcher",
-      "newAuthor": "Zetrith, jikulopo",
-      "newPackageId": "jikulopo.prepatcher",
-      "oldVersions": [
-        "1.4",
-        "1.5"
-      ],
+      "oldWorkshopId": "3563469557",
       "newVersions": [
         "1.4",
         "1.5",
         "1.6"
-      ]
+      ],
+      "oldName": "[Deprecated]Prepatcher",
+      "oldVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Prepatcher",
+      "newWorkshopId": "2934420800",
+      "newAuthor": "zetrith",
+      "newPackageId": "zetrith.prepatcher"
     },
     {
       "oldWorkshopId": "2934666296",
@@ -35040,7 +35041,7 @@
     {
       "oldWorkshopId": "2940267235",
       "oldName": "Risk of Rain Bungus",
-      "oldAuthor": "76561199377833097",
+      "oldAuthor": "Elseud",
       "oldPackageId": "EL.Bungus",
       "newWorkshopId": "3546641771",
       "newName": "Risk of Rain Bungus (1.6 Temp)",
@@ -35067,7 +35068,8 @@
       "newPackageId": "Mlie.AncientRimCore",
       "oldVersions": [
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ],
       "newVersions": [
         "1.5",
@@ -35198,7 +35200,7 @@
     {
       "oldWorkshopId": "2945931715",
       "oldName": "Realistic Trade",
-      "oldAuthor": "76561198026512111",
+      "oldAuthor": "Raug",
       "oldPackageId": "Raug.RealisticTrade",
       "newWorkshopId": "3580496059",
       "newName": "Realistic Trade Forked",
@@ -35268,27 +35270,25 @@
       ]
     },
     {
-      "oldWorkshopId": "2957904090",
-      "oldName": "Connected Beds",
-      "oldAuthor": "zed_0xff",
-      "oldPackageId": "zed.0xff.VNPE.ConnectedBed",
-      "newWorkshopId": "3259209078",
-      "newName": "Connected Bed (Continued)",
-      "newAuthor": "Mlie",
-      "newPackageId": "Mlie.ConnectedBed",
-      "oldVersions": [
-        "1.4"
-      ],
+      "oldName": "Connected Bed",
       "newVersions": [
         "1.4",
         "1.5",
         "1.6"
-      ]
+      ],
+      "oldVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Connected Bed (Continued)",
+      "oldWorkshopId": "3259209078",
+      "newWorkshopId": "2957904090"
     },
     {
       "oldWorkshopId": "2958123079",
       "oldName": "Warhammer: Fimir (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.WarhammerFimir",
       "newWorkshopId": "3605026676",
       "newName": "Warhammer: Fimir 1.6",
@@ -35308,7 +35308,7 @@
     {
       "oldWorkshopId": "2958123418",
       "oldName": "Warhammer: Gor (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.WarhammerGor",
       "newWorkshopId": "3602680913",
       "newName": "Warhammer: Gor 1.6",
@@ -35351,40 +35351,44 @@
       ]
     },
     {
-      "oldWorkshopId": "2958300354",
-      "oldName": "Force Xenogerm Implantation",
-      "oldAuthor": "Zed",
-      "oldPackageId": "zed.0xff.ForceXenogermImplantation",
-      "newWorkshopId": "3261498531",
-      "newName": "Force Xenogerm Implantation",
-      "newAuthor": "Cyber",
-      "newPackageId": "Cyber.ForceXenogermImplantation",
-      "oldVersions": [
-        "1.4"
-      ],
       "newVersions": [
         "1.4",
         "1.5",
         "1.6"
-      ]
+      ],
+      "newWorkshopId": "2958300354",
+      "oldName": "Force Xenogerm Implantation",
+      "oldVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Force Xenogerm Implantation",
+      "oldWorkshopId": "3261498531",
+      "oldAuthor": "Cyber",
+      "oldPackageId": "Cyber.ForceXenogermImplantation",
+      "newAuthor": "Zed",
+      "newPackageId": "zed.0xff.ForceXenogermImplantation"
     },
     {
-      "oldWorkshopId": "2959446434",
-      "oldName": "Archite Capsule Extractor",
-      "oldAuthor": "Zed",
-      "oldPackageId": "zed.0xff.ArchiteCapsuleExtractor",
-      "newWorkshopId": "3308148863",
-      "newName": "Archite Capsule Extractor (Continuned)",
-      "newAuthor": "ViralReaction",
-      "newPackageId": "vr.ArchiteCapsuleExtractor",
-      "oldVersions": [
-        "1.4"
-      ],
       "newVersions": [
         "1.4",
         "1.5",
         "1.6"
-      ]
+      ],
+      "newWorkshopId": "2959446434",
+      "oldWorkshopId": "3308148863",
+      "oldVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Archite Capsule Extractor",
+      "oldName": "Archite Capsule Extractor (Continuned)",
+      "oldAuthor": "ViralReaction",
+      "oldPackageId": "vr.ArchiteCapsuleExtractor",
+      "newAuthor": "Zed",
+      "newPackageId": "zed.0xff.ArchiteCapsuleExtractor"
     },
     {
       "oldWorkshopId": "2959623724",
@@ -35431,7 +35435,7 @@
     {
       "oldWorkshopId": "2959802157",
       "oldName": "Aerocraft Framework",
-      "oldAuthor": "76561198836578913",
+      "oldAuthor": "空曜",
       "oldPackageId": "MYDE.AerocraftFramework",
       "newWorkshopId": "3611555958",
       "newName": "飞行器框架 Aerocraft Framework[1.6]",
@@ -35460,23 +35464,29 @@
         "1.5",
         "1.6"
       ],
-      "newWorkshopId": "2960248659"
+      "newWorkshopId": "2960248659",
+      "oldAuthor": "Apache",
+      "newAuthor": "Halituis Amaricanous",
+      "oldPackageId": "apache.AerocraftRetexture",
+      "newPackageId": "HalituisAmaricanous.AerocraftRetexture"
     },
     {
-      "oldWorkshopId": "2961708299",
-      "oldName": "Loft Bed",
-      "oldAuthor": "Zed",
-      "oldPackageId": "zed.0xff.LoftBed",
-      "newWorkshopId": "3531523881",
-      "newName": "Loft Bed (Continued)",
-      "newAuthor": "",
-      "newPackageId": "Nekoemi.LoftBed",
-      "oldVersions": [
-        "1.4"
-      ],
       "newVersions": [
+        "1.4",
+        "1.5",
         "1.6"
-      ]
+      ],
+      "newWorkshopId": "2961708299",
+      "oldWorkshopId": "3531523881",
+      "oldVersions": [
+        "1.6"
+      ],
+      "newName": "Loft Bed",
+      "oldName": "Loft Bed (Continued)",
+      "oldAuthor": "Nekoemi",
+      "oldPackageId": "Nekoemi.LoftBed",
+      "newAuthor": "Zed",
+      "newPackageId": "zed.0xff.LoftBed"
     },
     {
       "oldWorkshopId": "2961996244",
@@ -35502,7 +35512,7 @@
     {
       "oldWorkshopId": "2962811979",
       "oldName": "Warhammer:Freeguild (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.WarhammerFreeguild",
       "newWorkshopId": "3602680092",
       "newName": "Warhammer:Freeguild+Deathjacks 1.6",
@@ -35538,21 +35548,21 @@
       ]
     },
     {
-      "oldWorkshopId": "2963773456",
-      "oldName": "Gene Courier Gene",
-      "oldAuthor": "Zed",
-      "oldPackageId": "zed.0xff.GeneCourier",
-      "newWorkshopId": "3381152252",
-      "newName": "Gene Courier Gene (Continued)",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.genecourier",
-      "oldVersions": [
-        "1.4"
-      ],
       "newVersions": [
+        "1.4",
         "1.5",
         "1.6"
-      ]
+      ],
+      "newWorkshopId": "2963773456",
+      "oldWorkshopId": "3381152252",
+      "oldVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Gene Courier Gene",
+      "oldName": "Gene Courier Gene (Continued)",
+      "newAuthor": "Zed",
+      "newPackageId": "zed.0xff.GeneCourier"
     },
     {
       "oldWorkshopId": "2965398269",
@@ -35596,7 +35606,7 @@
       "oldPackageId": "eth0net.CropStats",
       "newWorkshopId": "3515900767",
       "newName": "Crop Stats",
-      "newAuthor": "",
+      "newAuthor": "Planetace",
       "newPackageId": "planetace.cropstats",
       "oldVersions": [
         "1.4"
@@ -35740,7 +35750,7 @@
     {
       "oldWorkshopId": "2971780621",
       "oldName": "Warhammer: Deathjacks (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.WarhammerDeathjacks",
       "newWorkshopId": "3602680092",
       "newName": "Warhammer:Freeguild+Deathjacks 1.6",
@@ -35760,7 +35770,7 @@
     {
       "oldWorkshopId": "2971802777",
       "oldName": "Warhammer: Zhthy'hl (Continued)",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.WarhammerZhthyhl",
       "newWorkshopId": "3605027046",
       "newName": "Warhammer: Zhthy'hl 1.6",
@@ -35780,7 +35790,7 @@
     {
       "oldWorkshopId": "2971803439",
       "oldName": "Roo's Satyr Xenotype",
-      "oldAuthor": "76561198272592569",
+      "oldAuthor": "Rooboid",
       "oldPackageId": "Rooboid.Satyr",
       "newWorkshopId": "3548322381",
       "newName": "Roo's Satyr Xenotype (1.6)",
@@ -35796,7 +35806,7 @@
     {
       "oldWorkshopId": "2971804169",
       "oldName": "Roo's Satyr and Faun Xenotypes Expanded",
-      "oldAuthor": "76561198272592569",
+      "oldAuthor": "Rooboid",
       "oldPackageId": "Rooboid.SatyrFaun.Expanded",
       "newWorkshopId": "3548973881",
       "newName": "Roo's Satyr and Faun Xenotypes Expanded (1.6)",
@@ -35812,7 +35822,7 @@
     {
       "oldWorkshopId": "2973780726",
       "oldName": "Euglena Expanded - Implantor",
-      "oldAuthor": "76561198331789275",
+      "oldAuthor": "Demon 2016",
       "oldPackageId": "EuglenaExpanded.EuglenaImplantor",
       "newWorkshopId": "3605856960",
       "newName": "Euglena Expanded - Implantor (Continued)",
@@ -35828,7 +35838,7 @@
     {
       "oldWorkshopId": "2973786903",
       "oldName": "Euglena Framework",
-      "oldAuthor": "76561198331789275",
+      "oldAuthor": "Demon 2016",
       "oldPackageId": "DemonRoka.EuglenaLibrary",
       "newWorkshopId": "3605854156",
       "newName": "Euglena Framework (Continued)",
@@ -35862,7 +35872,7 @@
     {
       "oldWorkshopId": "2974524016",
       "oldName": "Mechanical Humanlikes Core",
-      "oldAuthor": "76561198057190006",
+      "oldAuthor": "Killathon",
       "oldPackageId": "Killathon.MechanicalHumanlikesCore",
       "newWorkshopId": "3284097810",
       "newName": "ABF: Artificial Beings Framework",
@@ -35897,7 +35907,7 @@
     {
       "oldWorkshopId": "2975005239",
       "oldName": "Euglena Expanded - Euglena Xenotype",
-      "oldAuthor": "76561198331789275",
+      "oldAuthor": "Demon 2016",
       "oldPackageId": "EuglenaExpanded.EuglenaXenotype",
       "newWorkshopId": "3605855667",
       "newName": "Euglena Expanded - Euglena Xenotype (Continued)",
@@ -35914,7 +35924,7 @@
     {
       "oldWorkshopId": "2975250797",
       "oldName": "Artifacts+",
-      "oldAuthor": "76561198818682348",
+      "oldAuthor": "Cybranian",
       "oldPackageId": "DimonSever000.Artifacts.Specific",
       "newWorkshopId": "3604478404",
       "newName": "Artifacts+ (Continued)",
@@ -35933,7 +35943,7 @@
     {
       "oldWorkshopId": "2976907621",
       "oldName": "Genes+",
-      "oldAuthor": "76561198818682348",
+      "oldAuthor": "Cybranian",
       "oldPackageId": "DimonSever000.Genes.Specific",
       "newWorkshopId": "3554395043",
       "newName": "Genes+ – Rebalanced and Continued",
@@ -36003,7 +36013,7 @@
     {
       "oldWorkshopId": "2980152893",
       "oldName": "Euglena Expanded - Slime Printer",
-      "oldAuthor": "76561198331789275",
+      "oldAuthor": "Demon 2016",
       "oldPackageId": "EuglenaExpanded.SlimePrinter",
       "newWorkshopId": "3605857809",
       "newName": "Euglena Expanded - Slime Printer (Continued)",
@@ -36043,7 +36053,7 @@
     {
       "oldWorkshopId": "2980954290",
       "oldName": "The Brotherhood Compendium \"Continued\"",
-      "oldAuthor": "76561198009537752",
+      "oldAuthor": "Ricky",
       "oldPackageId": "Ricky.BosCompendium",
       "newWorkshopId": "3571412768",
       "newName": "The Brotherhood Compendium 1.6",
@@ -36068,7 +36078,7 @@
     {
       "oldWorkshopId": "2981697023",
       "oldName": "Necrogene [1.4]",
-      "oldAuthor": "76561198818682348",
+      "oldAuthor": "Cybranian",
       "oldPackageId": "DimonSever000.Necrogene.Specific",
       "newWorkshopId": "3547828847",
       "newName": "Necrogene (Continued)",
@@ -36125,25 +36135,25 @@
       ]
     },
     {
-      "oldWorkshopId": "2983955822",
-      "oldName": "Blocky Core",
-      "oldAuthor": "76561198043849998",
-      "oldPackageId": "Blocky.Core",
-      "newWorkshopId": "3612570959",
-      "newName": "Blocky Core 1.6(fork)",
-      "newAuthor": "綠菇",
-      "newPackageId": "Blocky.Core",
-      "oldVersions": [
-        "1.4"
-      ],
       "newVersions": [
+        "1.4",
+        "1.5",
         "1.6"
-      ]
+      ],
+      "newWorkshopId": "2983955822",
+      "oldWorkshopId": "3612570959",
+      "oldVersions": [
+        "1.6"
+      ],
+      "newName": "Blocky Core",
+      "oldName": "Blocky Core 1.6(fork)",
+      "newAuthor": "Zed",
+      "newPackageId": "Blocky.Core"
     },
     {
       "oldWorkshopId": "2984120010",
       "oldName": "E-Web Heavy Repeating Blaster",
-      "oldAuthor": "76561198827008257",
+      "oldAuthor": "Maincrep",
       "oldPackageId": "",
       "newWorkshopId": "3555571107",
       "newName": "Star Wars Heavy Blaster Turret (continued)",
@@ -36197,20 +36207,22 @@
       ]
     },
     {
-      "oldWorkshopId": "2992032852",
-      "oldName": "Hemogen Grinder",
-      "oldAuthor": "Zed",
-      "oldPackageId": "zed.0xff.HemogenGrinder",
-      "newWorkshopId": "3259447618",
-      "newName": "Hemogen Grinder Continued",
-      "newAuthor": "FerrisCG",
-      "newPackageId": "zed.0xff.HemogenGrinder",
-      "oldVersions": [
-        "1.4"
-      ],
       "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "2992032852",
+      "oldWorkshopId": "3259447618",
+      "oldVersions": [
         "1.5"
-      ]
+      ],
+      "newName": "Hemogen Grinder",
+      "oldName": "Hemogen Grinder Continued",
+      "oldAuthor": "FerrisCG",
+      "newAuthor": "Zed",
+      "oldPackageId": "zed.0xff.HemogenGrinder",
+      "newPackageId": "zed.0xff.HemogenGrinder"
     },
     {
       "oldWorkshopId": "2992241905",
@@ -36321,7 +36333,7 @@
     {
       "oldWorkshopId": "3005196131",
       "oldName": "Hydroponics Expanded",
-      "oldAuthor": "76561198095412602",
+      "oldAuthor": "Xevion",
       "oldPackageId": "Xevion.HydroponicsExpanded",
       "newWorkshopId": "3600238326",
       "newName": "Hydroponics Expanded (Continued)",
@@ -36390,7 +36402,7 @@
     {
       "oldWorkshopId": "3009304695",
       "oldName": "Auto Mod Config",
-      "oldAuthor": "76561198001328978",
+      "oldAuthor": "Gareth",
       "oldPackageId": "Garethp.ModlistConfigurator",
       "newWorkshopId": "3586136174",
       "newName": "Auto Mod Config (Continued)",
@@ -36461,7 +36473,7 @@
     {
       "oldWorkshopId": "3014617494",
       "oldName": "Snow Crawler",
-      "oldAuthor": "76561198097808300",
+      "oldAuthor": "hYPERION",
       "oldPackageId": "Pal5k.SnowCrawler",
       "newWorkshopId": "3558174046",
       "newName": "Snow Crawler (Continued)",
@@ -36512,7 +36524,7 @@
     {
       "oldWorkshopId": "3021768017",
       "oldName": "Nyanpuppu Mod",
-      "oldAuthor": "76561198121066935",
+      "oldAuthor": "kaitorisenkou",
       "oldPackageId": "kaitorisenkou.Nyanpuppu",
       "newWorkshopId": "3570644581",
       "newName": "[1.6]Nyanpuppu Mod",
@@ -36618,7 +36630,7 @@
     {
       "oldWorkshopId": "3029526972",
       "oldName": "Sleep Meditation",
-      "oldAuthor": "76561198366887295",
+      "oldAuthor": "MIS42NE",
       "oldPackageId": "Sl4vP0weR.SleepMeditation",
       "newWorkshopId": "3238976509",
       "newName": "Sleep Meditation",
@@ -36818,7 +36830,7 @@
     {
       "oldWorkshopId": "3049570419",
       "oldName": "Power Rangers Attire",
-      "oldAuthor": "76561198258196272",
+      "oldAuthor": "AgRipnus",
       "oldPackageId": "Bean.SuperSentai",
       "newWorkshopId": "3550238045",
       "newName": "Power Rangers Attire (continued)",
@@ -36834,7 +36846,7 @@
     {
       "oldWorkshopId": "3052467818",
       "oldName": "Scenario Searchbars [OUTDATED - SEE DESCRIPTION]",
-      "oldAuthor": "76561198076544762",
+      "oldAuthor": "Robfal2",
       "oldPackageId": "nimrag.scenariosearchbar",
       "newWorkshopId": "3579415129",
       "newName": "Scenario Searchbars [1.6]",
@@ -36853,7 +36865,7 @@
     {
       "oldWorkshopId": "3057187334",
       "oldName": "Girls' frontline少女前线格里芬模组",
-      "oldAuthor": "76561198150481471",
+      "oldAuthor": "Sil",
       "oldPackageId": "silsGelifen.Girlsfrontline",
       "newWorkshopId": "3550635874",
       "newName": "Girls' frontline少女前线格里芬模组 1.6 Continued",
@@ -36872,7 +36884,7 @@
     {
       "oldWorkshopId": "3057626086",
       "oldName": "Peer Pressure",
-      "oldAuthor": "76561198004603333",
+      "oldAuthor": "joseasoler",
       "oldPackageId": "joseasoler.peerpressure",
       "newWorkshopId": "3605155621",
       "newName": "Peer Pressure (Continued)",
@@ -36891,7 +36903,7 @@
     {
       "oldWorkshopId": "3066648800",
       "oldName": "Fuel Pipenet for SOS2",
-      "oldAuthor": "76561199122815759",
+      "oldAuthor": "HRG164hjo",
       "oldPackageId": "hrg164hjo.vfefuelpipenet.sos2",
       "newWorkshopId": "3554122922",
       "newName": "Fuel Pipenet for SOS2 1.6",
@@ -36998,7 +37010,7 @@
     {
       "oldWorkshopId": "3088102171",
       "oldName": "Meditation Focus Traits and Genes",
-      "oldAuthor": "76561198052719042",
+      "oldAuthor": "GwenBlanketSpecter",
       "oldPackageId": "GwenBlanketSpecter.MeditationFocus",
       "newWorkshopId": "3572166443",
       "newName": "Meditation Focus Traits and Genes (Continued)",
@@ -37086,7 +37098,7 @@
     {
       "oldWorkshopId": "3094804793",
       "oldName": "Growing Zones +",
-      "oldAuthor": "76561197977399001",
+      "oldAuthor": "BabyLettuce",
       "oldPackageId": "babylettuce.growingzone",
       "newWorkshopId": "3564071643",
       "newName": "Growing Zones Plus Reborn",
@@ -37121,7 +37133,7 @@
     {
       "oldWorkshopId": "3097471692",
       "oldName": "Non-Lethal Extra for Vanilla Expanded (deprecated)",
-      "oldAuthor": "76561198035372761",
+      "oldAuthor": "℟ E V O L V E ℟",
       "oldPackageId": "loregret.veextra.nonlethal",
       "newWorkshopId": "3549434396",
       "newName": "Non-Lethal Extra for Vanilla Expanded (Continued)",
@@ -37157,7 +37169,7 @@
     {
       "oldWorkshopId": "3102649632",
       "oldName": "[1.4/1.5] Gendered Genes",
-      "oldAuthor": "76561198064363306",
+      "oldAuthor": "GarryFlowers",
       "oldPackageId": "GarryFlowers.GenderedGenes",
       "newWorkshopId": "3555383445",
       "newName": "Gendered Genes 2",
@@ -37174,7 +37186,7 @@
     {
       "oldWorkshopId": "3103849302",
       "oldName": "Crypto Bionics",
-      "oldAuthor": "76561198415486588",
+      "oldAuthor": "CatLover366",
       "oldPackageId": "CatLover366.CryptoBionics",
       "newWorkshopId": "3587732096",
       "newName": "Crypto Bionics [Forked]",
@@ -37191,7 +37203,7 @@
     {
       "oldWorkshopId": "3106756751",
       "oldName": "Dubs' Bad Hygiene - More Drinkables",
-      "oldAuthor": "76561198829872469",
+      "oldAuthor": "lorsieab2",
       "oldPackageId": "DBH.DrinkPatches",
       "newWorkshopId": "3603632744",
       "newName": "Dubs' Bad Hygiene - More Drinkables 1.6 Fix",
@@ -37208,7 +37220,7 @@
     {
       "oldWorkshopId": "3108690645",
       "oldName": "[YUZUSOFT]SABBAT OF THE WITCH - Styles Apparel Pack",
-      "oldAuthor": "76561198433466831",
+      "oldAuthor": "云之遥Rikka",
       "oldPackageId": "RicoFox233.yuzu.SOTWPack",
       "newWorkshopId": "3598782720",
       "newName": "[YUZU]SABBAT OF THE WITCH - Apparel pack(Continued)",
@@ -37280,7 +37292,7 @@
     {
       "oldWorkshopId": "3130978666",
       "oldName": "Eccentric Tech - Defense Grid Patch",
-      "oldAuthor": "76561198298490055",
+      "oldAuthor": "路小君",
       "oldPackageId": "Aelanna.EccentricTech.DefenseGrid.JackWzw.patch",
       "newWorkshopId": "3561253063",
       "newName": "Eccentric Tech - Defense Grid Patch (Continued)",
@@ -37645,7 +37657,7 @@
     {
       "oldWorkshopId": "3218602770",
       "oldName": "Primitive Fridge",
-      "oldAuthor": "76561198313372292",
+      "oldAuthor": "hanging",
       "oldPackageId": "alt4s.PrimitiveFridge",
       "newWorkshopId": "3588183529",
       "newName": "Primitive Fridge (Continued)",
@@ -37711,7 +37723,7 @@
       "oldPackageId": "SR.ModRimworld.RaidExtensionContinued",
       "newWorkshopId": "3340459422",
       "newName": "[SR]Raid Extension (fork)",
-      "newAuthor": "",
+      "newAuthor": "llunak",
       "newPackageId": "SR.ModRimworld.RaidExtension",
       "oldVersions": [
         "1.2",
@@ -37893,7 +37905,7 @@
       "oldAuthor": "general tsingtao",
       "oldPackageId": "zvq.RealisticPlanetsContinued",
       "newWorkshopId": "3533147031",
-      "newName": "Realistic Planets 1.6 (DISCONTINUED)",
+      "newName": "Realistic Planets 1.6",
       "newAuthor": "Various",
       "newPackageId": "koth.RealisticPlanets1.6",
       "oldVersions": [
@@ -37933,7 +37945,7 @@
       "oldPackageId": "com.lessprisonbreaks",
       "newWorkshopId": "3527260958",
       "newName": "Configurable Prison Breaks - Continued",
-      "newAuthor": "",
+      "newAuthor": "Sk",
       "newPackageId": "com.lessprisonbreaks",
       "oldVersions": [
         "1.5"
@@ -37985,7 +37997,7 @@
     {
       "oldWorkshopId": "3228847496",
       "oldName": "Sake Brewery",
-      "oldAuthor": "76561197971227756",
+      "oldAuthor": "Match",
       "oldPackageId": "Match.Sake",
       "newWorkshopId": "3574420212",
       "newName": "Sake Brewery (1.3-1.6)",
@@ -38025,7 +38037,7 @@
     {
       "oldWorkshopId": "3234461612",
       "oldName": "Reequip Weapon Upon Recovery",
-      "oldAuthor": "76561198112869529",
+      "oldAuthor": "Riketta",
       "oldPackageId": "Riketta.ReequipWeaponUponRecovery",
       "newWorkshopId": "1778821244",
       "newName": "Non uno Pinata (don't drop items)",
@@ -38063,7 +38075,7 @@
     {
       "oldWorkshopId": "3238458870",
       "oldName": "Golden Fox Cube",
-      "oldAuthor": "76561198025047114",
+      "oldAuthor": "Seioch",
       "oldPackageId": "Seioch.GoldenFoxCube",
       "newWorkshopId": "3576397770",
       "newName": "Golden Fox Cube（Continued）",
@@ -38080,7 +38092,7 @@
     {
       "oldWorkshopId": "3240564766",
       "oldName": "Shamblers Expanded: Runner",
-      "oldAuthor": "76561198077772951",
+      "oldAuthor": "Loki Laufeyjarson",
       "oldPackageId": "ShamblersExpanded.Runner",
       "newWorkshopId": "3577836145",
       "newName": "Shamblers Expanded: Runner [Forked]",
@@ -38169,7 +38181,7 @@
     {
       "oldWorkshopId": "3246715020",
       "oldName": "Persona Warcasket Weapons",
-      "oldAuthor": "76561198044459404",
+      "oldAuthor": "Sovereign",
       "oldPackageId": "Sov.WarcasketWeapons",
       "newWorkshopId": "3597129303",
       "newName": "Persona Warcasket Weapons (1.6 temp)",
@@ -38201,7 +38213,7 @@
     {
       "oldWorkshopId": "3248351716",
       "oldName": "Inclusive Skin Tones",
-      "oldAuthor": "76561198963422589",
+      "oldAuthor": "H2Forge",
       "oldPackageId": "h2forge.InclusiveSkinTones",
       "newWorkshopId": "3551840130",
       "newName": "Inclusive Skin Tones 1.6",
@@ -38288,7 +38300,7 @@
     {
       "oldWorkshopId": "3254890432",
       "oldName": "Medieval Overhaul: House Roxmont",
-      "oldAuthor": "76561198238606754",
+      "oldAuthor": "SirLalaPyon",
       "oldPackageId": "DankPyon.Medieval.Overhaul.House.Roxmont",
       "newWorkshopId": "3526042587",
       "newName": "Medieval Overhaul: House Roxmont",
@@ -38321,11 +38333,11 @@
     {
       "oldWorkshopId": "3256204706",
       "oldName": "Pharmacist - 1.5 Unofficial (+ Blood Rot & Lung Rot fix)",
-      "oldAuthor": "76561198276158944",
+      "oldAuthor": "DomB",
       "oldPackageId": "Fluffy.Pharmacist",
       "newWorkshopId": "3527418098",
       "newName": "Pharmacist: Represcribed",
-      "newAuthor": "",
+      "newAuthor": "Ceres et al.",
       "newPackageId": "Fluffy.Pharmacist",
       "oldVersions": [
         "1.4",
@@ -38338,7 +38350,7 @@
     {
       "oldWorkshopId": "3258618997",
       "oldName": "The Army Of Fetid Corpses Continued",
-      "oldAuthor": "76561198079524804",
+      "oldAuthor": "FerrisCG",
       "oldPackageId": "BlackMarket420.TAOFC",
       "newWorkshopId": "3597124120",
       "newName": "The Army Of Fetid Corpses (Continued)",
@@ -38357,7 +38369,7 @@
     {
       "oldWorkshopId": "3260029110",
       "oldName": "Medical IVs 1.5",
-      "oldAuthor": "76561198221685648",
+      "oldAuthor": "Toph",
       "oldPackageId": "tophd7.MedicalIVs",
       "newWorkshopId": "3480177412",
       "newName": "Medical IVs Fork (Does not require Biotech)",
@@ -38374,7 +38386,7 @@
     {
       "oldWorkshopId": "3260446812",
       "oldName": "Clean Pathfinding 2 Continued",
-      "oldAuthor": "76561198079524804",
+      "oldAuthor": "FerrisCG",
       "oldPackageId": "Owlchemist.CleanPathfinding",
       "newWorkshopId": "3530140490",
       "newName": "Pathfinding Avoidance",
@@ -38411,7 +38423,7 @@
     {
       "oldWorkshopId": "3262876961",
       "oldName": "Monster Birth",
-      "oldAuthor": "76561198818682348",
+      "oldAuthor": "Cybranian",
       "oldPackageId": "DimonSever000.MonsterBirth.Specific",
       "newWorkshopId": "3575378399",
       "newName": "Monster Birth [Forked]",
@@ -38428,7 +38440,7 @@
     {
       "oldWorkshopId": "3263594757",
       "oldName": "ResearchPal - Continued",
-      "oldAuthor": "76561198155180921",
+      "oldAuthor": "TonTon",
       "oldPackageId": "Maruf61.ResearchPalForkd",
       "newWorkshopId": "3549325465",
       "newName": "ResearchPal 1.6 - Temp",
@@ -38475,13 +38487,15 @@
       "newName": "Growth Moments Make Sense Now",
       "oldWorkshopId": "3548163100",
       "newVersions": [
-        "1.5"
-      ]
+        "1.6"
+      ],
+      "newAuthor": "Jdalt40",
+      "newPackageId": "Jdalt.GMMSN"
     },
     {
       "oldWorkshopId": "3265425314",
       "oldName": "Fuck Psytrainers [1.5]",
-      "oldAuthor": "76561198092276025",
+      "oldAuthor": "ferny",
       "oldPackageId": "ferny.fuckpsytrainers",
       "newWorkshopId": "3582261920",
       "newName": "Fuck Psytrainers 2",
@@ -38497,11 +38511,11 @@
     {
       "oldWorkshopId": "3266386203",
       "oldName": "[Jedi515] Eccentric Power - Even More Linkables compatibility patch",
-      "oldAuthor": "76561198068147695",
+      "oldAuthor": "Jedi",
       "oldPackageId": "jedi515.aelannafusion.evenmorelinkables",
       "newWorkshopId": "3559851627",
       "newName": "[Jedi515] Eccentric Power - Even More Linkables compatibility patch (Unofficial 1.6)",
-      "newAuthor": "",
+      "newAuthor": "pillbug2",
       "newPackageId": "jedi515.aelannafusion.evenmorelinkables",
       "oldVersions": [
         "1.5"
@@ -38564,7 +38578,7 @@
     {
       "oldWorkshopId": "3270803948",
       "oldName": "Mass Graves (Continued)",
-      "oldAuthor": "76561198818682348",
+      "oldAuthor": "Cybranian",
       "oldPackageId": "pyrce.mass.graves.continued",
       "newWorkshopId": "3545739596",
       "newName": "Mass Graves 1.6",
@@ -38597,7 +38611,7 @@
     {
       "oldWorkshopId": "3273797689",
       "oldName": "Improved Void touched",
-      "oldAuthor": "76561198092301342",
+      "oldAuthor": "Dankan37",
       "oldPackageId": "Dankan37.improvedVoidTouched",
       "newWorkshopId": "3551975390",
       "newName": "Improved Void Touched Fork",
@@ -38647,7 +38661,7 @@
     {
       "oldWorkshopId": "3277574613",
       "oldName": "RimDead Redemption",
-      "oldAuthor": "76561198321269627",
+      "oldAuthor": "blitz",
       "oldPackageId": "RDR.Flee",
       "newWorkshopId": "3544724978",
       "newName": "RimDead Redemption (Continued)",
@@ -38702,7 +38716,7 @@
     {
       "oldWorkshopId": "3278795774",
       "oldName": "Medieval Extras",
-      "oldAuthor": "76561198077821581",
+      "oldAuthor": "Hank Bot",
       "oldPackageId": "Satpyn.MedievalExtras",
       "newWorkshopId": "3582426486",
       "newName": "Medieval Extras (Continued)",
@@ -38737,7 +38751,7 @@
     {
       "oldWorkshopId": "3282779636",
       "oldName": "Vanilla Android Genes Unofficially Expanded",
-      "oldAuthor": "76561198224188932",
+      "oldAuthor": "Barry, Aged 63",
       "oldPackageId": "VanillaAndroidsUnofficialExpansion.Genes",
       "newWorkshopId": "3582602115",
       "newName": "Vanilla Android Genes Unofficially Expanded 1.6 error fix",
@@ -38789,7 +38803,7 @@
     {
       "oldWorkshopId": "3289175077",
       "oldName": "All Animals Nuzzle",
-      "oldAuthor": "76561198216800624",
+      "oldAuthor": "kad",
       "oldPackageId": "Kad.AllAnimalsNuzzle",
       "newWorkshopId": "3561546187",
       "newName": "All Animals Nuzzle [Forked]",
@@ -38814,7 +38828,7 @@
     {
       "oldWorkshopId": "3290574585",
       "oldName": "Ghoul can cryptosleep",
-      "oldAuthor": "76561197996888574",
+      "oldAuthor": "Matstar",
       "oldPackageId": "Phoneixx.GhoulCanCryptosleep",
       "newWorkshopId": "3568498636",
       "newName": "Ghoul Can Cryptosleep [Forked]",
@@ -38867,7 +38881,7 @@
     {
       "oldWorkshopId": "3300829226",
       "oldName": "Home Sweet Home",
-      "oldAuthor": "76561198251732544",
+      "oldAuthor": "Levka",
       "oldPackageId": "Lewkah0.HomeSweetHome",
       "newWorkshopId": "3577757539",
       "newName": "Home Sweet Home (Continued)",
@@ -38901,7 +38915,7 @@
     {
       "oldWorkshopId": "3306148928",
       "oldName": "Warhammer-ish:Dryad (Continued+)",
-      "oldAuthor": "76561198147260756",
+      "oldAuthor": "Sans",
       "oldPackageId": "Sans.WarhammerishDryad",
       "newWorkshopId": "3563451515",
       "newName": "Warhammer-ish:Dryad (Continued++)",
@@ -38962,7 +38976,7 @@
     {
       "oldWorkshopId": "3309976104",
       "oldName": "Area Unlocker forked (1.5 reorder fix)",
-      "oldAuthor": "76561198139563058",
+      "oldAuthor": "Pos 4/5",
       "oldPackageId": "Fluffy.AreaUnlocker.forked",
       "newWorkshopId": "3550817577",
       "newName": "Area Unlocker (Continued)",
@@ -38984,7 +38998,7 @@
     {
       "oldWorkshopId": "3310630233",
       "oldName": "Justice for melee specialist",
-      "oldAuthor": "76561199656207870",
+      "oldAuthor": "ARCA-12",
       "oldPackageId": "ARCA.J4.MeleeSpecialist",
       "newWorkshopId": "3578630947",
       "newName": "Justice For Melee Specialist [Forked]",
@@ -39005,7 +39019,7 @@
     {
       "oldWorkshopId": "3314697429",
       "oldName": "Bill Doors' No Auto Hairstyle Change",
-      "oldAuthor": "76561198295907124",
+      "oldAuthor": "3HST有限公司",
       "oldPackageId": "3HSTltd.NoHairChange",
       "newWorkshopId": "3555259148",
       "newName": "Bill Door's No Hair Style Change (Continued)",
@@ -39022,7 +39036,7 @@
     {
       "oldWorkshopId": "3315866314",
       "oldName": "MoeLotl Race CE",
-      "oldAuthor": "76561198295907124",
+      "oldAuthor": "3HST有限公司",
       "oldPackageId": "HenTaiLoliTeam.Axolotl.CE",
       "newWorkshopId": "3598807900",
       "newName": "MoeLotl CE 1.6(Forked)",
@@ -39054,7 +39068,7 @@
     {
       "oldWorkshopId": "3317712737",
       "oldName": "Rim of Madness - Vampires - Unofficial 1.5 Update",
-      "oldAuthor": "76561198084195609",
+      "oldAuthor": "ano0bis",
       "oldPackageId": "RimOfMadness.Vampires",
       "newWorkshopId": "3599360002",
       "newName": "Rim of Madness - Vampires (Continued)",
@@ -39075,7 +39089,7 @@
     {
       "oldWorkshopId": "3319808046",
       "oldName": "Rim of Madness - Werewolves - Unofficial 1.5 Update",
-      "oldAuthor": "76561198084195609",
+      "oldAuthor": "ano0bis",
       "oldPackageId": "RimofMadness.Werewolves",
       "newWorkshopId": "3599330356",
       "newName": "Rim of Madness - Werewolves (Continued)",
@@ -39096,7 +39110,7 @@
     {
       "oldWorkshopId": "3321667104",
       "oldName": "Invisible Display Case (Decorative Display Spot)",
-      "oldAuthor": "76561198042099130",
+      "oldAuthor": "Rod Mclain27",
       "oldPackageId": "Icepickgma.InvisibleDisplayCase",
       "newWorkshopId": "3546566196",
       "newName": "Invisible Display Case Continued",
@@ -39113,7 +39127,7 @@
     {
       "oldWorkshopId": "3328743204",
       "oldName": "Path Avoid (Continued) 1.5",
-      "oldAuthor": "76561198055653645",
+      "oldAuthor": "missionz3r0",
       "oldPackageId": "missionz3r0.PathAvoid",
       "newWorkshopId": "3530140490",
       "newName": "Pathfinding Avoidance",
@@ -39324,7 +39338,7 @@
     {
       "oldWorkshopId": "3375604242",
       "oldName": "Reading Bill (Continued)",
-      "oldAuthor": "76561198014120972",
+      "oldAuthor": "UpsilonSigmaEta",
       "oldPackageId": "USE.ReadingBill",
       "newWorkshopId": "3559185722",
       "newName": "Reading Bill (Continued)",
@@ -39414,7 +39428,7 @@
     {
       "oldWorkshopId": "3383095382",
       "oldName": "Lord of the Rims - Dwarves Continued",
-      "oldAuthor": "76561198147260756",
+      "oldAuthor": "Sans",
       "oldPackageId": "LordOfTheRims.Dwarves.Reupload",
       "newWorkshopId": "3548257505",
       "newName": "Lord of the Rims - Dwarves (Continued)",
@@ -39435,7 +39449,7 @@
     {
       "oldWorkshopId": "3383096916",
       "oldName": "Lord of the Rims - Elves Continued",
-      "oldAuthor": "76561198147260756",
+      "oldAuthor": "Sans",
       "oldPackageId": "LordOfTheRims.Elves.Continued",
       "newWorkshopId": "3548255064",
       "newName": "Lord of the Rims - Elves (Continued)",
@@ -39456,7 +39470,7 @@
     {
       "oldWorkshopId": "3383097575",
       "oldName": "Lord of the Rims - Hobbits Continued",
-      "oldAuthor": "76561198147260756",
+      "oldAuthor": "Sans",
       "oldPackageId": "LordOfTheRims.Hobbits.Continued",
       "newWorkshopId": "3548253473",
       "newName": "Lord of the Rims - Hobbits (Continued)",
@@ -39496,7 +39510,7 @@
     {
       "oldWorkshopId": "3392711886",
       "oldName": "Pyro-No-Maniac",
-      "oldAuthor": "76561199804056576",
+      "oldAuthor": "SilkCircuit",
       "oldPackageId": "silkcircuit.pyronomaniac",
       "newWorkshopId": "3579661795",
       "newName": "Pyro-No-Maniac [Forked]",
@@ -39585,7 +39599,7 @@
     {
       "oldWorkshopId": "3406457135",
       "oldName": "Terraforming Devices",
-      "oldAuthor": "76561199804056576",
+      "oldAuthor": "SilkCircuit",
       "oldPackageId": "silkcircuit.terraformerpumps",
       "newWorkshopId": "3550923479",
       "newName": "Terraforming Devices (1.6)",
@@ -39618,7 +39632,7 @@
     {
       "oldWorkshopId": "3415618239",
       "oldName": "Copyprint",
-      "oldAuthor": "76561198358321286",
+      "oldAuthor": "Wagh⁧⁧  gish⁧⁧  Pluto•",
       "oldPackageId": "Solaris.Copyprint",
       "newWorkshopId": "3584651982",
       "newName": "Copyprint (1.6)",
@@ -39703,7 +39717,7 @@
     {
       "oldWorkshopId": "3434403034",
       "oldName": "Prisoner Restraints",
-      "oldAuthor": "76561199804056576",
+      "oldAuthor": "SilkCircuit",
       "oldPackageId": "silkcircuit.resistancerestraintsmod",
       "newWorkshopId": "3549564292",
       "newName": "Prisoner Restraints (Reupload for 1.6)",
@@ -39758,7 +39772,7 @@
     {
       "oldWorkshopId": "3451656353",
       "oldName": "Inherit Parent Traits",
-      "oldAuthor": "76561198373679545",
+      "oldAuthor": "magsan",
       "oldPackageId": "magsan.InheritParentTraits",
       "newWorkshopId": "3574241845",
       "newName": "Inherit Parent Traits (Continued)",
@@ -39775,7 +39789,7 @@
     {
       "oldWorkshopId": "3454809174",
       "oldName": "Outfitted Continued",
-      "oldAuthor": "76561197960343082",
+      "oldAuthor": "Amoebanana",
       "oldPackageId": "homiru.Outfitted",
       "newWorkshopId": "3546414006",
       "newName": "Outfitted 1.6",
@@ -39830,7 +39844,7 @@
     {
       "oldWorkshopId": "3473020764",
       "oldName": "Emancipate",
-      "oldAuthor": "76561198003514714",
+      "oldAuthor": "xgropo",
       "oldPackageId": "xgropo.emancipate",
       "newWorkshopId": "3548548674",
       "newName": "Get Off My Gravship!",
@@ -39846,7 +39860,7 @@
     {
       "oldWorkshopId": "3474403869",
       "oldName": "Perfect Pathfinding (1.5 Update)",
-      "oldAuthor": "76561198004728778",
+      "oldAuthor": "Mantazzo",
       "oldPackageId": "jp.perfectpathing.updated",
       "newWorkshopId": "3530140490",
       "newName": "Pathfinding Avoidance",
@@ -39881,7 +39895,7 @@
     {
       "oldWorkshopId": "3477198668",
       "oldName": "Ancient Arsenal: Warcaskets (1.5)",
-      "oldAuthor": "76561198013307354",
+      "oldAuthor": "Wiggy",
       "oldPackageId": "aa.warcaskets.rw",
       "newWorkshopId": "3576420572",
       "newName": "Ancient Arsenal: Warcaskets (Continued)",
@@ -40596,8 +40610,6 @@
         "1.6"
       ],
       "newVersions": [
-        "1.3",
-        "1.4",
         "1.5",
         "1.6"
       ]
@@ -40609,7 +40621,7 @@
       "oldPackageId": "MartinCat.BeltFlashlight",
       "newWorkshopId": "3403230282",
       "newName": "Belt Flashlight",
-      "newAuthor": "76561198150389121",
+      "newAuthor": "MartinCat",
       "newPackageId": "MartinCat.BeltFlashlight",
       "oldVersions": [
         "1.5",
@@ -40627,19 +40639,20 @@
       "oldPackageId": "prisonerhitching.XanderNirpow",
       "newWorkshopId": "3487304844",
       "newName": "Prisoner Hitching",
-      "newAuthor": "76561198050938294",
+      "newAuthor": "colin",
       "newPackageId": "prishitching.prisonerhitching",
       "oldVersions": [
         "1.6"
       ],
       "newVersions": [
+        "1.5",
         "1.6"
       ]
     },
     {
       "oldWorkshopId": "3554676828",
       "oldName": "Xenobionic Patcher (1.6 Unofficial)",
-      "oldAuthor": "76561198113231914",
+      "oldAuthor": "SmithsonianDSP",
       "oldPackageId": "SineSwiper.XenobionicPatcher.16unofficial",
       "newWorkshopId": "3602394289",
       "newName": "Xenobionic Patcher (Continued)",
@@ -40691,7 +40704,7 @@
       "oldPackageId": "Elktor31.terrapumps",
       "newWorkshopId": "2811424412",
       "newName": "TerraPumps",
-      "newAuthor": "76561198079915390",
+      "newAuthor": "Hobbes",
       "newPackageId": "Hobbes.terrapumps",
       "oldVersions": [
         "1.3",
@@ -40703,22 +40716,6 @@
         "1.3",
         "1.4",
         "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "3583736063",
-      "oldName": "Save Our Ship 2 Advanced Salvage Bay(1.6)(SOS2高级回收港1.6)",
-      "oldAuthor": "xiaorui",
-      "oldPackageId": "xiaorui.SaveOurShip2AdvancedSalvageBay1.6",
-      "newWorkshopId": "3299678733",
-      "newName": "Save Our Ship 2 Advanced Salvage Bay",
-      "newAuthor": "76561198997040910",
-      "newPackageId": "Fang.SaveOurShip2AdvancedSalvageBay",
-      "oldVersions": [
-        "1.6"
-      ],
-      "newVersions": [
         "1.6"
       ]
     },
@@ -40765,7 +40762,7 @@
     {
       "oldWorkshopId": "709317151",
       "oldName": "Relations Tab",
-      "oldAuthor": "76561198007004451",
+      "oldAuthor": "Fluffy",
       "oldPackageId": "Fluffy.FluffyRelations",
       "newWorkshopId": "3575145343",
       "newName": "Relations Tab (Continued)",
@@ -40786,7 +40783,7 @@
     {
       "oldWorkshopId": "712141500",
       "oldName": "Animal Tab",
-      "oldAuthor": "76561198007004451",
+      "oldAuthor": "Fluffy",
       "oldPackageId": "Fluffy.AnimalTab",
       "newWorkshopId": "3575480305",
       "newName": "Animal Tab (Continued 1.6)",
@@ -40863,11 +40860,10 @@
       "oldWorkshopId": "2570228927",
       "oldName": "[Abandoned] ED-Laser-Drill (Continued)",
       "newVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3"
-      ]
+        "1.6"
+      ],
+      "newAuthor": "Jaxxa",
+      "newPackageId": "Jaxxa.EnhancedDevelopment.LaserDrill"
     },
     {
       "oldWorkshopId": "722090464",
@@ -41082,7 +41078,7 @@
       "oldWorkshopId": "729908976",
       "oldName": "Colonist Bar KF 1.1",
       "oldAuthor": "Killface",
-      "oldPackageId": "",
+      "oldPackageId": "killface.colonistbarkf",
       "newWorkshopId": "2270454746",
       "newName": "Colonist Bar KF (Continued)",
       "newAuthor": "Mlie",
@@ -41140,7 +41136,7 @@
     {
       "oldWorkshopId": "730854291",
       "oldName": "Prisoner Harvesting",
-      "oldAuthor": "76561198026769288",
+      "oldAuthor": "GassyTaco",
       "oldPackageId": "Extracting.Organs",
       "newWorkshopId": "3347850851",
       "newName": "Prisoner Harvesting 1.5",
@@ -41589,7 +41585,7 @@
     {
       "oldWorkshopId": "751049133",
       "oldName": "The Birds and the Bees",
-      "oldAuthor": "76561198007004451",
+      "oldAuthor": "Fluffy",
       "oldPackageId": "fluffy.thebirdsandthebees",
       "newWorkshopId": "2821429175",
       "newName": "The Birds and the Bees (UNOFFICIAL 1.6)",
@@ -42184,7 +42180,7 @@
     {
       "oldWorkshopId": "775578146",
       "oldName": "Halloween Special Edition",
-      "oldAuthor": "76561198014191924",
+      "oldAuthor": "witchyspoon",
       "oldPackageId": "spoonshortage.halloweense",
       "newWorkshopId": "3593434506",
       "newName": "Pan-Halloweenie Integration Mod II (Continued) (TSP)",
@@ -42520,7 +42516,7 @@
     {
       "oldWorkshopId": "815039373",
       "oldName": "[Outdated] Call of Cthulhu - Cults [Deprecated]",
-      "oldAuthor": "76561197969850661",
+      "oldAuthor": "Ryoma",
       "oldPackageId": "rimofmadness.CallofCthulhuCults",
       "newWorkshopId": "3588548484",
       "newName": "Call of Cthulhu - Cults (Continued)",
@@ -42900,7 +42896,7 @@
     {
       "oldWorkshopId": "846222458",
       "oldName": "More Mechanoids",
-      "oldAuthor": "76561197962445032",
+      "oldAuthor": "Orion",
       "oldPackageId": "Orion.MoreMechanoids",
       "newWorkshopId": "3557972474",
       "newName": "More Mechanoids (Continued)",
@@ -43091,7 +43087,7 @@
     {
       "oldWorkshopId": "858414010",
       "oldName": "Exotic Armory",
-      "oldAuthor": "76561197964575630",
+      "oldAuthor": "ChJees",
       "oldPackageId": "",
       "newWorkshopId": "3588913772",
       "newName": "Exotic Armory (Continued)",
@@ -43478,7 +43474,7 @@
     {
       "oldWorkshopId": "928376710",
       "oldName": "Zombieland",
-      "oldAuthor": "76561197973010050",
+      "oldAuthor": "Brrainz",
       "oldPackageId": "brrainz.zombieland",
       "newWorkshopId": "3577005360",
       "newName": "Zombieland 1.6",
@@ -43863,7 +43859,7 @@
     {
       "oldWorkshopId": "947972722",
       "oldName": "Heat Map",
-      "oldAuthor": "76561198012077806",
+      "oldAuthor": "falconne",
       "oldPackageId": "falconne.HeatMap",
       "newWorkshopId": "2552838384",
       "newName": "Heat Map (Continued)",
@@ -44131,7 +44127,7 @@
         "1.3",
         "1.4"
       ],
-      "oldAuthor": "76561198004365253",
+      "oldAuthor": "Bathtub Goblin",
       "newName": "CE Custom Ammo",
       "oldName": "( NEW VERSION IN DESCRIPTION) CE Custom Ammo",
       "newPackageId": "bg.customloads",
@@ -44149,7 +44145,7 @@
         "1.3",
         "1.4"
       ],
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "newName": "Psionic Space Mice 1.6",
       "oldName": "[S'Riss] Psionic Space Mice of HiguerasRimworld (Continued)",
       "newPackageId": "Higuera.PsionicSpaceMice",
@@ -44162,7 +44158,7 @@
       "oldPackageId": "Choosechee.AnomalyAllies",
       "newName": "Chimera Creation (Continued)",
       "oldWorkshopId": "3331963520",
-      "oldAuthor": "76561198121778064",
+      "oldAuthor": "Choosechee",
       "newWorkshopId": "3615540204",
       "oldVersions": [
         "1.5"
@@ -44178,7 +44174,7 @@
       "oldPackageId": "KYD.RapidFireTurrets",
       "newName": "[KYD] Rapid-Fire Turrets (Continued)",
       "oldWorkshopId": "2593681752",
-      "oldAuthor": "76561198006218910",
+      "oldAuthor": "Kayedon",
       "newWorkshopId": "3615348281",
       "oldVersions": [
         "1.3",
@@ -44198,7 +44194,7 @@
       "oldPackageId": "Extracting.Organs",
       "newName": "Prisoner Harvesting 1.5",
       "oldWorkshopId": "2879759244",
-      "oldAuthor": "76561198141981596",
+      "oldAuthor": "Paypl",
       "newWorkshopId": "3347850851",
       "oldVersions": [
         "1.1",
@@ -44218,7 +44214,7 @@
       "oldPackageId": "rimofmadness.CallofCthulhuCosmicHorrors",
       "newName": "Call of Cthulhu - Cosmic Horrors (Continued)",
       "oldWorkshopId": "3319844548",
-      "oldAuthor": "76561198084195609",
+      "oldAuthor": "ano0bis",
       "newWorkshopId": "3615542371",
       "oldVersions": [
         "1.0",
@@ -44248,7 +44244,7 @@
       "oldWorkshopId": "1679934065",
       "newPackageId": "Sneaks.CrazyCatLady",
       "newName": "Crazy Cat Lady (Cont.)",
-      "oldAuthor": "76561197985330738",
+      "oldAuthor": "Uuugggg",
       "newVersions": [
         "1.1",
         "1.2",
@@ -44260,7 +44256,7 @@
       "newWorkshopId": "3598246442"
     },
     {
-      "oldAuthor": "76561198007889439",
+      "oldAuthor": "Evil Tactician",
       "oldName": "Practical Pemmican",
       "newName": "Practical Pemmican",
       "newWorkshopId": "3618195343",
@@ -44300,7 +44296,7 @@
       ]
     },
     {
-      "oldAuthor": "76561198027957889",
+      "oldAuthor": "SFLegion",
       "oldName": "Genomics",
       "newName": "Genomics (Continued)",
       "newWorkshopId": "3619147320",
@@ -44327,7 +44323,7 @@
         "1.5",
         "1.6"
       ],
-      "oldAuthor": "76561199275410099",
+      "oldAuthor": "Airo",
       "oldVersions": [
         "1.5"
       ],
@@ -44345,7 +44341,7 @@
         "1.4"
       ],
       "newWorkshopId": "3620545124",
-      "oldAuthor": "76561198318370263",
+      "oldAuthor": "Bara CoMiGo",
       "oldName": "Comigo's Greater Swamps",
       "newVersions": [
         "1.6"
@@ -44363,7 +44359,7 @@
         "1.4"
       ],
       "newWorkshopId": "3531452178",
-      "oldAuthor": "76561198082506418",
+      "oldAuthor": "Chance2000w",
       "oldName": "Gumball Machine",
       "newVersions": [
         "1.6"
@@ -44374,7 +44370,7 @@
       "newName": "Extended Bioengineering for VFE Insectoids (Continued)",
       "newAuthor": "Zaljerem",
       "newWorkshopId": "3621508730",
-      "oldAuthor": "76561198155413701",
+      "oldAuthor": "Turnovus",
       "newPackageId": "zal.extendedbioengineering",
       "newVersions": [
         "1.5",
@@ -44392,7 +44388,7 @@
       "newName": "Pawnmorpher: Insectoids (Continued)",
       "newAuthor": "Zaljerem",
       "newWorkshopId": "3621510076",
-      "oldAuthor": "76561198121400420",
+      "oldAuthor": "Yap",
       "newPackageId": "zal.pawnmorpherinsects",
       "newVersions": [
         "1.5",
@@ -44412,7 +44408,7 @@
       "newName": "Infused - Continued",
       "newAuthor": "notfood",
       "newWorkshopId": "3621773655",
-      "oldAuthor": "76561198031500205",
+      "oldAuthor": "Charlotte",
       "newPackageId": "notfood.Infused",
       "newVersions": [
         "1.1",
@@ -44437,7 +44433,7 @@
       "oldPackageId": "booty.DMS.EPOE.CompatPatch",
       "newPackageId": "booty.DMS.EPOE.CompatPatch.Odyssey",
       "newWorkshopId": "3622254924",
-      "oldAuthor": "76561198039279651",
+      "oldAuthor": "궁둥이",
       "oldVersions": [
         "1.5"
       ],
@@ -44456,7 +44452,7 @@
       "newVersions": [
         "1.6"
       ],
-      "oldAuthor": "76561198006218910",
+      "oldAuthor": "Kayedon",
       "oldVersions": [
         "1.3"
       ],
@@ -44478,7 +44474,7 @@
         "1.5",
         "1.6"
       ],
-      "oldAuthor": "76561197981740422",
+      "oldAuthor": "Gasch",
       "oldVersions": [
         "1.0",
         "1.1",
@@ -44498,7 +44494,7 @@
       "newVersions": [
         "1.6"
       ],
-      "oldAuthor": "76561198137962746",
+      "oldAuthor": "Phantom",
       "oldVersions": [
         "1.3",
         "1.4"
@@ -44513,7 +44509,7 @@
       "newWorkshopId": "3625886335",
       "newPackageId": "Memegoddess.PrisonersAreNotSwines",
       "newAuthor": "MemeGoddess",
-      "oldAuthor": "76561198030481505",
+      "oldAuthor": "Hate me",
       "oldPackageId": "bustedbunny.PrisonersAreNotSwines",
       "newVersions": [
         "1.3",
@@ -44536,7 +44532,7 @@
       "newName": "Armored Up(continue)",
       "newAuthor": "wu0yin",
       "oldWorkshopId": "3367866155",
-      "oldAuthor": "76561197997051685",
+      "oldAuthor": "Darkone",
       "oldPackageId": "HIMPDahak.ArmoredUp",
       "newPackageId": "wu0yin.ArmoredUp",
       "oldName": "Armored Up",
@@ -44554,7 +44550,7 @@
       "newName": "Hopper accepts kibble - Continued",
       "newAuthor": "ibnk7x",
       "oldWorkshopId": "1869807934",
-      "oldAuthor": "76561198098124954",
+      "oldAuthor": "q308744928",
       "oldPackageId": "Bowen.NutrientPasteAll",
       "newPackageId": "ibnk7x.NutrientPasteAllContinued",
       "oldName": "Hopper accepts pemmican and kibble",
@@ -44563,7 +44559,7 @@
       ]
     },
     {
-      "oldAuthor": "76561198002872756",
+      "oldAuthor": "pphhyy",
       "newVersions": [
         "1.6"
       ],
@@ -44592,7 +44588,7 @@
         "1.5",
         "1.6"
       ],
-      "oldAuthor": "76561197992399296",
+      "oldAuthor": "Xen",
       "newAuthor": "Zaljerem"
     },
     {
@@ -44609,7 +44605,7 @@
       "newVersions": [
         "1.6"
       ],
-      "oldAuthor": "76561198318370263",
+      "oldAuthor": "Bara CoMiGo",
       "newAuthor": "Zaljerem"
     },
     {
@@ -44626,7 +44622,7 @@
       "newVersions": [
         "1.6"
       ],
-      "oldAuthor": "76561197970537389",
+      "oldAuthor": "Daemon976",
       "newAuthor": "ibnk7x"
     },
     {
@@ -44642,7 +44638,7 @@
       "newVersions": [
         "1.6"
       ],
-      "oldAuthor": "76561198352598647",
+      "oldAuthor": "Soareverix",
       "newAuthor": "Soareverix"
     },
     {
@@ -44667,12 +44663,12 @@
         "1.4"
       ],
       "newName": "Dual Wield - Continued",
-      "oldAuthor": "76561198042626816",
+      "oldAuthor": "roolo",
       "newAuthor": "Meme Goddess",
       "newWorkshopId": "3630049419"
     },
     {
-      "oldAuthor": "76561197972393937",
+      "oldAuthor": "UdderlyEvelyn",
       "oldPackageId": "UdderlyEvelyn.FlammableTorches",
       "newAuthor": null,
       "oldVersions": [
@@ -44691,7 +44687,7 @@
       "oldWorkshopId": "2658198797"
     },
     {
-      "oldAuthor": "76561198262509287",
+      "oldAuthor": "jonny02",
       "oldPackageId": "jonny02.MBI",
       "newAuthor": "jonny02 and explodoboy",
       "oldVersions": [
@@ -44710,7 +44706,7 @@
       "oldWorkshopId": "1766307828"
     },
     {
-      "oldAuthor": "76561198045819121",
+      "oldAuthor": "Po210",
       "oldPackageId": "polonium.RorenRaceMod",
       "newAuthor": "Po210",
       "oldVersions": [
@@ -44736,7 +44732,7 @@
         "1.5"
       ],
       "newName": "Facial Animations Xenotype Compatibility [Reupload]",
-      "oldAuthor": "76561198022860089",
+      "oldAuthor": "Leaguenet",
       "oldPackageId": "Hawkwood.FacialAnimationsXenotypeCompatibility",
       "newVersions": [
         "1.4",
@@ -44753,7 +44749,7 @@
         "1.3",
         "1.4"
       ],
-      "oldAuthor": "76561198015379119",
+      "oldAuthor": "zzz",
       "oldWorkshopId": "1190379390",
       "oldName": "Miniature Nuclear Generator",
       "newWorkshopId": "3634386902",
@@ -44777,7 +44773,7 @@
         "1.4"
       ],
       "oldName": "The Great War",
-      "oldAuthor": "76561198038630036",
+      "oldAuthor": "Feels",
       "newAuthor": "Echo the Nomad",
       "newPackageId": "Echo.The.Great.War",
       "newName": "The Great War Forked",
@@ -44789,7 +44785,7 @@
         "0.19"
       ],
       "oldName": "Lost Joy Objects - Books",
-      "oldAuthor": "76561197975673361",
+      "oldAuthor": "dracoix 🐉",
       "newName": "Lost Joy Objects - Books (Continued)",
       "newWorkshopId": "2657878164",
       "oldWorkshopId": "1507423712",
@@ -44806,7 +44802,7 @@
         "1.2"
       ],
       "oldName": "Royalty Empire Rework",
-      "oldAuthor": "76561198326072051",
+      "oldAuthor": "MadeThrone11206",
       "newName": "Royalty Empire Rework (Continued)",
       "newWorkshopId": "2806440089",
       "oldWorkshopId": "2201933633",
@@ -44851,7 +44847,7 @@
       ],
       "oldPackageId": "Azazellz.TransportShuttleStandalone",
       "newWorkshopId": "3640979439",
-      "oldAuthor": "76561198003138450",
+      "oldAuthor": "Azazellz",
       "newPackageId": "zal.transportshuttlestandalone",
       "oldWorkshopId": "2834132683",
       "newName": "Transport Shuttle Standalone (Continued)"
@@ -44867,7 +44863,7 @@
       ],
       "oldPackageId": "sandevistan.implant.3",
       "newWorkshopId": "3641185555",
-      "oldAuthor": "76561198076835631",
+      "oldAuthor": "ELF SLAYER",
       "newPackageId": "sandevistan.implant.reupload",
       "oldWorkshopId": "3229896323",
       "newName": "Sandevistan Implant Re-Upload"
@@ -44885,7 +44881,7 @@
       ],
       "oldPackageId": "HC.Creatures.1",
       "newWorkshopId": "3641332277",
-      "oldAuthor": "76561198005623257",
+      "oldAuthor": "[Kor]HellCrossH",
       "newPackageId": "HC.Creatures.1",
       "oldWorkshopId": "2589837522",
       "newName": "HC Creatures Continued"
@@ -44904,7 +44900,7 @@
       "newWorkshopId": "3641786544",
       "newName": "Contractor's Arsenal (Continued)",
       "oldPackageId": "zerophoenix.contractorsarsenalfaction",
-      "oldAuthor": "76561198038797853",
+      "oldAuthor": "ZeroPhoenix",
       "newPackageId": "zal.contractorsarsenal",
       "newVersions": [
         "1.6"
@@ -44923,7 +44919,7 @@
       "newWorkshopId": "3641787299",
       "newName": "Contractor's Arsenal - Factionless (Continued)",
       "oldPackageId": "zerophoenix.arsenalfactionless",
-      "oldAuthor": "76561198038797853",
+      "oldAuthor": "ZeroPhoenix",
       "newPackageId": "zal.contarsenalfactionless",
       "newVersions": [
         "1.4",
@@ -44942,7 +44938,7 @@
       "newWorkshopId": "3641803038",
       "newName": "Dispenser Extended (Continued)",
       "oldPackageId": "localghost.dispenser",
-      "oldAuthor": "76561198325952994",
+      "oldAuthor": "zeus",
       "newPackageId": "localghost.dispenser",
       "newVersions": [
         "1.4",
@@ -44981,7 +44977,7 @@
       "newVersions": [
         "1.6"
       ],
-      "oldAuthor": "76561198295907124",
+      "oldAuthor": "3HST有限公司",
       "oldName": "Bill Doors' Framework",
       "oldPackageId": "3HSTltd.Framework",
       "newWorkshopId": "3642977893",
@@ -45003,7 +44999,7 @@
       ],
       "oldName": "Bill Doors' Plasma Weapons",
       "newWorkshopId": "3643309973",
-      "oldAuthor": "76561198295907124"
+      "oldAuthor": "3HST有限公司"
     },
     {
       "newAuthor": "3HST Limited",
@@ -45021,7 +45017,7 @@
       ],
       "oldName": "Bill Doors' Glitterworld Weapon Pack: 3HST limited corporation",
       "newWorkshopId": "3643638527",
-      "oldAuthor": "76561198295907124"
+      "oldAuthor": "3HST有限公司"
     },
     {
       "newAuthor": "Zaltys",
@@ -45038,7 +45034,7 @@
       ],
       "oldName": "Wild Pokémon",
       "newWorkshopId": "3643078559",
-      "oldAuthor": "76561198056225990"
+      "oldAuthor": "Tigerblut"
     },
     {
       "oldPackageId": "3HSTltd.Weapons.Jam",
@@ -45046,7 +45042,7 @@
       "newVersions": [
         "1.6"
       ],
-      "oldAuthor": "76561198295907124",
+      "oldAuthor": "3HST有限公司",
       "oldName": "Bill Doors' Weapon Jams!",
       "newPackageId": "3HSTltd.Weapons.Jam",
       "newWorkshopId": "3644149297",
@@ -45080,7 +45076,7 @@
     {
       "oldPackageId": "PetarChernev.HarderGearLooting",
       "newWorkshopId": "3645193411",
-      "oldAuthor": "76561198263208835",
+      "oldAuthor": "Pruchr",
       "newVersions": [
         "1.6"
       ],
@@ -45120,7 +45116,7 @@
       "oldName": "Raptor Race (1.3 Compatible)",
       "newName": "Raptor Race (Continued)",
       "oldPackageId": null,
-      "oldAuthor": "76561198085444664",
+      "oldAuthor": "HyphenTorpedo",
       "newWorkshopId": "3645657993",
       "newPackageId": "Zaltys.RaptorRaceUpdated",
       "newVersions": [
@@ -45160,7 +45156,7 @@
         "1.4"
       ],
       "oldPackageId": "KubaMar.CovenantOfHir",
-      "oldAuthor": "76561198081333758",
+      "oldAuthor": "kuba_mar",
       "oldName": "Covenant Of Hir",
       "newVersions": [
         "1.4",
@@ -45184,7 +45180,7 @@
         "1.5",
         "1.6"
       ],
-      "oldAuthor": "76561198060167374",
+      "oldAuthor": "Dumbs",
       "oldWorkshopId": "2603863207",
       "newAuthor": "Zaljerem",
       "oldName": "Dumbs' Dachshunds",
@@ -45210,7 +45206,7 @@
         "1.2",
         "1.4"
       ],
-      "oldAuthor": "76561198007004451"
+      "oldAuthor": "Fluffy"
     },
     {
       "newPackageId": "rimfridge.kv.rw",
@@ -45228,10 +45224,10 @@
       "oldVersions": [
         "1.4"
       ],
-      "oldAuthor": "76561198055429098"
+      "oldAuthor": "Augur"
     },
     {
-      "oldAuthor": "76561198102708672",
+      "oldAuthor": "Kirby",
       "oldName": "[KIR]Playable Outlander Settlers [V1.2]",
       "newAuthor": "Kirby (Original) / Luved (Continued)",
       "oldPackageId": "Kirby.PlayableOutlandersSettlers",
@@ -45253,7 +45249,7 @@
     {
       "newName": "EvolvedOrgansRedux 1.6",
       "newAuthor": "LateralBoi",
-      "oldAuthor": "76561198095135827",
+      "oldAuthor": "StatistNo1",
       "oldPackageId": "StatistNo1.EvolvedOrgansRedux",
       "oldName": "EvolvedOrgansRedux",
       "oldVersions": [
@@ -45277,7 +45273,7 @@
     {
       "newName": "Bill Doors' Landmines - 1.6 Temporary",
       "newAuthor": "3HST Limited",
-      "oldAuthor": "76561198295907124",
+      "oldAuthor": "3HST有限公司",
       "oldPackageId": "3HSTltd.landmines",
       "oldName": "Bill Doors' Landmines",
       "oldVersions": [
@@ -45294,7 +45290,7 @@
     {
       "newName": "Bill Doors' MedEvac - 1.6 Temporary",
       "newAuthor": "3HST Limited",
-      "oldAuthor": "76561198295907124",
+      "oldAuthor": "3HST有限公司",
       "oldPackageId": "3HSTltd.MedEvac",
       "oldName": "Bill Doors' MedEvac",
       "oldVersions": [
@@ -45311,7 +45307,7 @@
     {
       "newName": "Mrd Living Wire 1.6",
       "newAuthor": "Original Author:283k Update:MrDeliberto",
-      "oldAuthor": "76561198305348794",
+      "oldAuthor": "382K！",
       "oldPackageId": "283.LivingWire",
       "oldName": "活铁网 Living Wire",
       "oldVersions": [
@@ -45327,7 +45323,7 @@
     {
       "newName": "[AV] Mechanoid Spots 1.6",
       "newAuthor": "Veltaris",
-      "oldAuthor": "76561198056586103",
+      "oldAuthor": "Veltaris",
       "oldPackageId": "Veltaris.MechStations",
       "oldName": "[AV] Mechanoid Spots",
       "oldVersions": [
@@ -45344,7 +45340,7 @@
     {
       "newName": "[RF] Archipelagos (Continued)",
       "newAuthor": "Zaljerem",
-      "oldAuthor": "76561197993690125",
+      "oldAuthor": "Mlie",
       "oldPackageId": "Mlie.RFArchipelagos",
       "oldName": "[Abandoned] [RF] Archipelagos (Continued)",
       "oldVersions": [
@@ -45365,7 +45361,7 @@
     {
       "newName": "Enhanced Battery 1.6",
       "newAuthor": "Yokai",
-      "oldAuthor": "76561198006135120",
+      "oldAuthor": "NukaFrog",
       "oldPackageId": "Solaris.EnhancedBattery",
       "oldName": "Enhanced Battery",
       "oldVersions": [
@@ -45385,7 +45381,7 @@
     {
       "newName": "SheathYourSword 1.6(fork)",
       "newAuthor": "綠菇",
-      "oldAuthor": "76561198006135120",
+      "oldAuthor": "NukaFrog",
       "oldPackageId": "Solaris.SYS",
       "oldName": "SheathYourSword",
       "oldVersions": [
@@ -45406,7 +45402,7 @@
     {
       "newName": "Sleep in My Crib(Continued)",
       "newAuthor": "要敢于探寻未知的可能",
-      "oldAuthor": "76561199122815759",
+      "oldAuthor": "HRG164hjo",
       "newPackageId": "HRG164hjo.KidSleepInCrib",
       "oldVersions": [
         "1.4",
@@ -45425,7 +45421,7 @@
     {
       "newName": "Vehicles - Skyranger 1.6 (Nexus-Modified)",
       "newAuthor": "grimwolf",
-      "oldAuthor": "76561198083014327",
+      "oldAuthor": "Ogam",
       "newPackageId": "Nexus.xcomSkyranger",
       "oldVersions": [
         "1.4",
@@ -45454,7 +45450,7 @@
         "1.5",
         "1.6"
       ],
-      "oldAuthor": "76561198064112792",
+      "oldAuthor": "PraetorianJ",
       "oldPackageId": "VFESecurity.ExpandedArtillery.shells"
     },
     {
@@ -45471,7 +45467,7 @@
         "1.5",
         "1.6"
       ],
-      "oldAuthor": "76561198072766415",
+      "oldAuthor": "Arisher",
       "oldPackageId": "Arisher.Medieval.Bowyer"
     },
     {
@@ -45499,7 +45495,7 @@
       "newAuthor": "Mlie",
       "oldPackageId": "CaptainMuscles.PartyYourAssOff",
       "newPackageId": "Mlie.PartyYourFAssOff",
-      "oldName": "Party Your F****** Ass Off",
+      "oldName": "Discontinued - Party Your F****** Ass Off",
       "newWorkshopId": "3656819555",
       "oldVersions": [
         "1.2",
@@ -45517,7 +45513,175 @@
         "1.6"
       ],
       "oldAuthor": "Captain Muscles (Nathan Harbour)"
+    },
+    {
+      "oldName": "Coordinate Readout",
+      "oldAuthor": "Noquiem",
+      "oldPackageId": "noquiem.coordread",
+      "newPackageId": "Vita.coordread",
+      "oldVersions": [
+        "1.1",
+        "1.3",
+        "1.4"
+      ],
+      "newAuthor": "Noquiem",
+      "oldWorkshopId": "2605167683",
+      "newVersions": [
+        "1.1",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3656521665",
+      "newName": "Coordinate Readout (Continued)"
+    },
+    {
+      "oldName": "Bill Doors' Frostnova Expanded",
+      "oldAuthor": "3HST有限公司",
+      "oldPackageId": "3HSTltd.WhiteBunny",
+      "newPackageId": "3HSTltd.WhiteBunny.Unofficial",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newAuthor": "3HST Limited，Haqimi",
+      "oldWorkshopId": "3391355842",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3656575228",
+      "newName": "Bill Doors' Frostnova Expanded Unofficial by Haqimi"
+    },
+    {
+      "oldName": "Jade floors for Jewelry",
+      "oldAuthor": "Simmin",
+      "oldPackageId": "Simmin.JadeFloors",
+      "newPackageId": "CaffeinatedSloth.JadeFloors",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ],
+      "newAuthor": "Simmin, CaffeinatedSloth",
+      "oldWorkshopId": "2367214546",
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3656734628",
+      "newName": "Jade floors for Jewelry (1.6)"
+    },
+    {
+      "oldName": "Monster Hunter RimWorld",
+      "oldAuthor": "AsG_Alligator",
+      "oldPackageId": "AsGAlligator.MHRW",
+      "newPackageId": "BigBone87.MHRW",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newAuthor": "BigBone87",
+      "oldWorkshopId": "2798478679",
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3656798567",
+      "newName": "Monster Hunter RimWorld - Continued"
+    },
+    {
+      "newWorkshopId": "3658303543",
+      "newName": "Torches and Braziers (Continued)",
+      "oldAuthor": "Sovereign,Elseud",
+      "oldName": "Torches and Braziers",
+      "newAuthor": "Mlie",
+      "oldPackageId": "Sov.BBrazier",
+      "newPackageId": "Mlie.TorchesAndBraziers",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "3030814279"
+    },
+    {
+      "oldPackageId": "tofudriver.MedicalTabForked",
+      "oldAuthor": "tofu driver",
+      "newPackageId": "MemeGoddess.MedicalTab",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldName": "Medical Tab - Forked",
+      "oldWorkshopId": "3228889251",
+      "newWorkshopId": "3658588582",
+      "newVersions": [
+        "1.6"
+      ],
+      "newName": "Medical Tab - Continued",
+      "newAuthor": "Meme Goddess"
+    },
+    {
+      "oldWorkshopId": "2348148745",
+      "newName": "Rim Flood (Continued)",
+      "newWorkshopId": "3659401908",
+      "oldName": "Rim Flood",
+      "oldAuthor": "Fenndragon",
+      "newPackageId": "zal.floodrace",
+      "oldPackageId": "Fenn.floodrace",
+      "newAuthor": "Zaljerem",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Terra Project Core (Continued)",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "[Abandoned] Terra Project Core (Continued)",
+      "oldWorkshopId": "2797366085",
+      "oldPackageId": "Mlie.TerraProjectCore",
+      "newAuthor": "Zaljerem",
+      "oldAuthor": "Mlie",
+      "newWorkshopId": "3660225021",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newPackageId": "zal.terraprojectcore"
+    },
+    {
+      "oldAuthor": "John Rimworld",
+      "oldVersions": [
+        "1.0",
+        "1.1"
+      ],
+      "newWorkshopId": "3662127417",
+      "newPackageId": "kp.Glassdrumrifle",
+      "oldPackageId": "Chowdurr.Glassdrumrifle",
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Glass-Drum Bullpup Rifle (Continued)",
+      "oldWorkshopId": "1967130419",
+      "newAuthor": "KarbonPanzer",
+      "oldName": "Glass-Drum Bullpup Rifle"
     }
-  ],
-  "version": "2026-01-30T19:30:02Z"
+  ]
 }
