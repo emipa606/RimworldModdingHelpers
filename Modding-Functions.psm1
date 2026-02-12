@@ -3612,8 +3612,15 @@ function Get-ModInfo {
 
 	$idsToFetch = @()
 	$returnArray = @()
+	$inform = $false
+	if ($idsToFetch.Count -gt 1) {
+		$inform = $true
+	}
 
 	if (-not $forceRefresh) {
+		if ($inform) {
+			WriteMessage -progress "Checking cache for mod details for $($steamIds.Count) mods"
+		}
 		foreach ($id in $steamIds) {
 			if ($Global:ModInfoCache.ContainsKey($id)) {
 				$cacheEntry = $Global:ModInfoCache[$id]
@@ -3625,148 +3632,168 @@ function Get-ModInfo {
 			}
 			$idsToFetch += $id
 		}
+		if ($returnArray.Count -gt 0 -and $inform) {
+			WriteMessage -progress "Found $($returnArray.Count) mod details from cache"
+		}
 	} else {
 		Write-Verbose "Force refresh enabled, fetching all mod details"
 		$idsToFetch = $steamIds
 	}
 
 	if ($idsToFetch.Count -gt 0) {
-		# Calculate the number of items to fetch
-		$itemCount = $idsToFetch.Count
-
-		# API endpoint for fetching published file details
-		$uri = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
-
-		# Build the POST parameters as a hashtable. Note that itemcount is sent as a string.
-		$postParams = @{
-			"itemcount" = "$itemCount"
-		}
-		# Add each mod ID in the proper key format expected by the API.
-		for ($i = 0; $i -lt $itemCount; $i++) {
-			$postParams["publishedfileids[$i]"] = $idsToFetch[$i]
+		if ($inform) {
+			WriteMessage -progress "Fetching details for $($idsToFetch.Count) mods from Steam API"
 		}
 
-		# Convert the hashtable to URL-encoded form data
-		$encodedEntries = $postParams.GetEnumerator() | ForEach-Object {
-			[System.Net.WebUtility]::UrlEncode($_.Key) + "=" + [System.Net.WebUtility]::UrlEncode($_.Value)
-		}
-		$encodedBody = $encodedEntries -join "&"
+		$progressObject = WriteProgress -initiate -title "Fetching info about $($idsToFetch.Count) mods from Steam API" -totalActions $idsToFetch.Count
 
-		# Make the POST request and parse the JSON response
-		Write-Verbose "Fetching mod details for IDs: $($idsToFetch -join ', ')"
-		Write-Debug "Calling url: $uri with body: $encodedBody, itemcount: $itemCount, expandAuthor: $expandAuthor"
-		$response = Invoke-SteamApi -uri $uri -method Post -body $encodedBody
+		# Only do max 500 at a time due to Steam API limits
+		for ($i = 0; $i -lt $idsToFetch.Count; $i += 500) {
+			$iterationAmount = ([math]::Min($i + 499, $idsToFetch.Count - 1))
+			$batchIds = $idsToFetch[$i..$iterationAmount]
+			Write-Verbose "Fetching batch of mod details for IDs: $($batchIds -join ', ')"
 
-		# Loop over each mod's details in the response
-		foreach ($details in $response.response.publishedfiledetails) {
-			if ($null -eq $details) {
-				WriteMessage -warning "No details found for mod ID $($details.publishedfileid)"
-				$modInfo = @{
-					SteamId       = "$($details.publishedfileid)"
-					Exists        = $false
-					Name          = "Unknown"
-					Author        = "Unknown"
-					PreviewUrl    = ""
-					Subscriptions = 0
-					Visibility    = "Unknown"
-					Tags          = ""
-					Description   = ""
-					Created       = ""
-					Updated       = ""
-					Size          = 0
-				}
-			} elseif ($details.result -eq 9) {
-				if ($apiOnly) {
-					WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, skipping manual fetch"
+			# Calculate the number of items to fetch
+			$itemCount = $batchIds.Count
+
+			WriteProgress -progressObject $progressObject
+			$progressObject.current = $progressObject.current + $itemCount - 1
+
+			# API endpoint for fetching published file details
+			$uri = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
+
+			# Build the POST parameters as a hashtable. Note that itemcount is sent as a string.
+			$postParams = @{
+				"itemcount" = "$itemCount"
+			}
+			# Add each mod ID in the proper key format expected by the API.
+			for ($j = 0; $j -lt $itemCount; $j++) {
+				$postParams["publishedfileids[$j]"] = $batchIds[$j]
+			}
+
+			# Convert the hashtable to URL-encoded form data
+			$encodedEntries = $postParams.GetEnumerator() | ForEach-Object {
+				[System.Net.WebUtility]::UrlEncode($_.Key) + "=" + [System.Net.WebUtility]::UrlEncode($_.Value)
+			}
+			$encodedBody = $encodedEntries -join "&"
+
+			# Make the POST request and parse the JSON response
+			Write-Verbose "Fetching mod details for IDs: $($batchIds -join ', ')"
+			Write-Debug "Calling url: $uri with body: $encodedBody, itemcount: $itemCount, expandAuthor: $expandAuthor"
+			$response = Invoke-SteamApi -uri $uri -method Post -body $encodedBody
+
+			# Loop over each mod's details in the response
+			foreach ($details in $response.response.publishedfiledetails) {
+				if ($null -eq $details) {
+					WriteMessage -warning "No details found for mod ID $($details.publishedfileid)"
 					$modInfo = @{
 						SteamId       = "$($details.publishedfileid)"
-						Exists        = $true
+						Exists        = $false
 						Name          = "Unknown"
 						Author        = "Unknown"
 						PreviewUrl    = ""
 						Subscriptions = 0
-						Visibility    = "Unlisted"
+						Visibility    = "Unknown"
 						Tags          = ""
 						Description   = ""
 						Created       = ""
 						Updated       = ""
 						Size          = 0
 					}
-					$returnArray += $modInfo
-					continue
-				}
+				} elseif ($details.result -eq 9) {
+					if ($apiOnly) {
+						WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, skipping manual fetch"
+						$modInfo = @{
+							SteamId       = "$($details.publishedfileid)"
+							Exists        = $true
+							Name          = "Unknown"
+							Author        = "Unknown"
+							PreviewUrl    = ""
+							Subscriptions = 0
+							Visibility    = "Unlisted"
+							Tags          = ""
+							Description   = ""
+							Created       = ""
+							Updated       = ""
+							Size          = 0
+						}
+						$returnArray += $modInfo
+						continue
+					}
 
-				WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
-				$modInfo = Get-SteamWorkshopModInfo -modId $details.publishedfileid
-			} elseif ($details.result -eq 1) {
-				Write-Debug "Found details for mod ID $($details.publishedfileid): $($details | ConvertTo-Json -Depth 5)"
-				$modName = $details.title
-				$author = $details.creator
-				$previewUrl = $details.preview_url
-				$subscriptions = $details.subscriptions
-				$visibility = $details.visibility
-				$tags = $details.tags | ForEach-Object { $_.tag } | Where-Object { $_ -match "^[0-9]+\.[0-9]+$" } | Sort-Object
-				$visibility = switch ($visibility) {
-					0 {
-						"Public"
+					WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
+					$modInfo = Get-SteamWorkshopModInfo -modId $details.publishedfileid
+				} elseif ($details.result -eq 1) {
+					Write-Debug "Found details for mod ID $($details.publishedfileid): $($details | ConvertTo-Json -Depth 5)"
+					$modName = $details.title
+					$author = $details.creator
+					$previewUrl = $details.preview_url
+					$subscriptions = $details.subscriptions
+					$visibility = $details.visibility
+					$tags = $details.tags | ForEach-Object { $_.tag } | Where-Object { $_ -match "^[0-9]+\.[0-9]+$" } | Sort-Object
+					$visibility = switch ($visibility) {
+						0 {
+							"Public"
+						}
+						1 {
+							"Friends"
+						}
+						2 {
+							"Private"
+						}
+						3 {
+							"Unlisted"
+						}
+						default {
+							"Unknown"
+						}
 					}
-					1 {
-						"Friends"
-					}
-					2 {
-						"Private"
-					}
-					3 {
-						"Unlisted"
-					}
-					default {
-						"Unknown"
-					}
-				}
 
-				$modInfo = @{
-					SteamId       = "$($details.publishedfileid)"
-					Exists        = $true
-					Name          = $modName
-					Author        = $author
-					PreviewUrl    = $previewUrl
-					Subscriptions = $subscriptions
-					Visibility    = $visibility
-					Tags          = $tags
-					Description   = $details.description
-					Created       = (Get-Date "1970-01-01").AddSeconds($details.time_created).ToLocalTime()
-					Updated       = (Get-Date "1970-01-01").AddSeconds($details.time_updated).ToLocalTime()
-					Size          = $details.file_size
-				}
-			} else {
-				$modInfo = @{
-					SteamId       = "$($details.publishedfileid)"
-					Exists        = $false
-					Name          = "Unknown"
-					Author        = "Unknown"
-					PreviewUrl    = ""
-					Subscriptions = 0
-					Visibility    = "Unknown"
-					Tags          = ""
-					Description   = ""
-					Created       = ""
-					Updated       = ""
-					Size          = 0
-				}
-				WriteMessage -warning "Failed to fetch details for mod ID $($details.publishedfileid)"
-				Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
-				Write-Debug "Response body: $($response | ConvertTo-Json -Depth 5)"
+					$modInfo = @{
+						SteamId       = "$($details.publishedfileid)"
+						Exists        = $true
+						Name          = $modName
+						Author        = $author
+						PreviewUrl    = $previewUrl
+						Subscriptions = $subscriptions
+						Visibility    = $visibility
+						Tags          = $tags
+						Description   = $details.description
+						Created       = (Get-Date "1970-01-01").AddSeconds($details.time_created).ToLocalTime()
+						Updated       = (Get-Date "1970-01-01").AddSeconds($details.time_updated).ToLocalTime()
+						Size          = $details.file_size
+					}
+				} else {
+					$modInfo = @{
+						SteamId       = "$($details.publishedfileid)"
+						Exists        = $false
+						Name          = "Unknown"
+						Author        = "Unknown"
+						PreviewUrl    = ""
+						Subscriptions = 0
+						Visibility    = "Unknown"
+						Tags          = ""
+						Description   = ""
+						Created       = ""
+						Updated       = ""
+						Size          = 0
+					}
+					WriteMessage -warning "Failed to fetch details for mod ID $($details.publishedfileid)"
+					Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
+					Write-Debug "Response body: $($response | ConvertTo-Json -Depth 5)"
 
+				}
+				if ($expandAuthor -and $modInfo.Author -and $modInfo.Author -ne "Unknown") {
+					$modInfo.Author = Get-AuthorInformation -authorId $modInfo.Author
+				}
+				$Global:ModInfoCache[$modInfo.SteamId] = @{
+					Timestamp = $now
+					ModInfo   = $modInfo
+				}
+				$returnArray += $modInfo
 			}
-			if ($expandAuthor -and $modInfo.Author -and $modInfo.Author -ne "Unknown") {
-				$modInfo.Author = Get-AuthorInformation -authorId $modInfo.Author
-			}
-			$Global:ModInfoCache[$modInfo.SteamId] = @{
-				Timestamp = $now
-				ModInfo   = $modInfo
-			}
-			$returnArray += $modInfo
 		}
+		WriteProgress -progressObject $progressObject -finished
 	}
 	return $returnArray
 }

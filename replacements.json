@@ -1,5 +1,4 @@
 {
-  "version": "2026-02-09T07:48:04Z",
   "rules": [
     {
       "oldWorkshopId": "1076950211",
@@ -35281,9 +35280,11 @@
         "1.5",
         "1.6"
       ],
-      "newName": "Connected Bed (Continued)",
+      "newName": "Connected Bed",
       "oldWorkshopId": "3259209078",
-      "newWorkshopId": "2957904090"
+      "newWorkshopId": "2957904090",
+      "newAuthor": "Zed",
+      "newPackageId": "zed.0xff.VNPE.ConnectedBed"
     },
     {
       "oldWorkshopId": "2958123079",
@@ -45682,6 +45683,107 @@
       "oldWorkshopId": "1967130419",
       "newAuthor": "KarbonPanzer",
       "oldName": "Glass-Drum Bullpup Rifle"
+    },
+    {
+      "oldAuthor": "tau.psl",
+      "newPackageId": "zal.buildablemechanoidstructures",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldVersions": [
+        "1.5"
+      ],
+      "newWorkshopId": "3664073276",
+      "oldName": "BuildableMechanoidsStructures",
+      "oldWorkshopId": "3134760778",
+      "oldPackageId": "VolksLieBling.BuildableMechanoidsStructures",
+      "newName": "Buildable Mechanoid Structures (Continued)",
+      "newAuthor": "Zaljerem"
+    },
+    {
+      "newPackageId": "HaiLuan.MapSize",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "What is this?? A MapSize for ants?!? (Map Size on Entry) [1.6 update]",
+      "oldPackageId": "HaiLuan.MapSize",
+      "newWorkshopId": "3664189266",
+      "oldName": "What is this?? A MapSize for ants?!?",
+      "newAuthor": "HaiLuan,KazTheMercenary,yahay",
+      "oldAuthor": "76561198378875464",
+      "oldWorkshopId": "3003527121",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ]
+    },
+    {
+      "oldWorkshopId": "3301381349",
+      "oldAuthor": "76561198251732544",
+      "newVersions": [
+        "1.6"
+      ],
+      "newPackageId": "Lewkah0.wl.IMissMyLimbs",
+      "oldName": "I Miss My Limbs",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newWorkshopId": "3664751334",
+      "newAuthor": "Lewkah0, White Light",
+      "newName": "I Miss My Limbs (Continued)",
+      "oldPackageId": "Lewkah0.IMissMyLimbs"
+    },
+    {
+      "newName": "Nutrient Paste Expanded - Nutrient Pellets",
+      "newAuthor": "ThatHitmann.kotobike",
+      "oldWorkshopId": "3285099404",
+      "oldName": "Nutrient Paste Expanded - Nutrient Pellets",
+      "oldAuthor": "76561198144995406",
+      "newWorkshopId": "3638864404",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldPackageId": "Moxie.NutrientPellets",
+      "newVersions": [
+        "1.6"
+      ],
+      "newPackageId": "Moxie.NutrientPellets.kotobike"
+    },
+    {
+      "newName": "MorrowRim - Dunmer Lamp Pack",
+      "newAuthor": "SirMashedPotato",
+      "oldWorkshopId": "2873806552",
+      "oldName": "MorrowRim - Dunmer Lamp Pack",
+      "oldAuthor": "76561198047031781",
+      "newWorkshopId": "3654943384",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldPackageId": "SirMashedPotato.MorrowRim.DunmerLampPack",
+      "newVersions": [
+        "1.6"
+      ],
+      "newPackageId": "SirMashedPotato.MorrowRim.DunmerLampPack"
+    },
+    {
+      "newName": "速射机枪塔",
+      "newAuthor": "Zyzx",
+      "oldWorkshopId": "2882967545",
+      "oldName": "速射机枪塔",
+      "oldAuthor": "76561198320755777",
+      "newWorkshopId": "3661725715",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldPackageId": "ra.TurretForMinigun",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "Zyzx.A.16"
     }
-  ]
+  ],
+  "version": "2026-02-12T10:43:18Z"
 }
