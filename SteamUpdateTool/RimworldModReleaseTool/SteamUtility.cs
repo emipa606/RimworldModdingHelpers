@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Steamworks;
@@ -10,6 +11,7 @@ namespace RimworldModReleaseTool
     public static class SteamUtility
     {
         private const int RIMWORLD_APP_INT = 294100;
+        private const uint ATTACH_PARENT_PROCESS = 0xFFFFFFFF;
         private static readonly AppId_t RIMWORLD = new AppId_t(RIMWORLD_APP_INT);
         private static readonly AutoResetEvent ready = new AutoResetEvent(false);
         private static CallResult<SubmitItemUpdateResult_t> submitResultCallback;
@@ -31,13 +33,19 @@ namespace RimworldModReleaseTool
 
         private static CreateItemResult_t createResult;
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool FreeConsole();
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool AttachConsole(uint dwProcessId);
+
         public static void Init()
         {
             Console.ForegroundColor = ConsoleColor.Gray;
             Environment.SetEnvironmentVariable("SteamAppId", RIMWORLD_APP_INT.ToString());
             try
             {
-                _initialized = SteamAPI.Init();
+                _initialized = InitSteamApiSilently();
                 if (!_initialized)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkRed;
@@ -45,7 +53,7 @@ namespace RimworldModReleaseTool
                 }
                 else
                 {
-                    SteamClient.SetWarningMessageHook((severity, text) => Console.WriteLine(text.ToString()));
+                    SteamClient.SetWarningMessageHook((severity, text) => { });
                 }
             }
             catch (Exception e)
@@ -53,6 +61,28 @@ namespace RimworldModReleaseTool
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine("Error: ");
                 Console.Write(e.Message);
+            }
+        }
+
+        private static bool InitSteamApiSilently()
+        {
+            var originalOut = Console.Out;
+            var originalError = Console.Error;
+            var detached = false;
+            try
+            {
+                detached = FreeConsole();
+                return SteamAPI.Init();
+            }
+            finally
+            {
+                if (detached)
+                {
+                    AttachConsole(ATTACH_PARENT_PROCESS);
+                }
+
+                Console.SetOut(originalOut);
+                Console.SetError(originalError);
             }
         }
 

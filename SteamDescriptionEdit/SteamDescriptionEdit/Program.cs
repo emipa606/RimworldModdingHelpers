@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Steamworks;
 using Steamworks.Ugc;
@@ -10,8 +11,15 @@ namespace SteamUpdateTool
     internal class Program
     {
         private const uint RimworldId = 294100;
+        private const int AttachParentProcess = -1;
         private static uint workshopId;
         private static Item workshopItem;
+
+        [DllImport("kernel32.dll")]
+        private static extern bool FreeConsole();
+
+        [DllImport("kernel32.dll")]
+        private static extern bool AttachConsole(int dwProcessId);
 
         private static async Task Main(string[] args)
         {
@@ -38,7 +46,7 @@ namespace SteamUpdateTool
 
             try
             {
-                SteamClient.Init(RimworldId);
+                InitSteamClientSilently();
             }
             catch (Exception exception)
             {
@@ -213,6 +221,26 @@ namespace SteamUpdateTool
 
             Console.SetOut(TextWriter.Null);
             SteamClient.Shutdown();
+        }
+
+        private static void InitSteamClientSilently()
+        {
+            var detached = FreeConsole();
+            try
+            {
+                SteamClient.Init(RimworldId);
+            }
+            finally
+            {
+                if (detached)
+                {
+                    AttachConsole(AttachParentProcess);
+                    var standardOut = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+                    var standardError = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+                    Console.SetOut(standardOut);
+                    Console.SetError(standardError);
+                }
+            }
         }
 
         private static async Task LoadModInfoAsync()

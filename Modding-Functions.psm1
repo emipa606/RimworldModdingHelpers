@@ -46,13 +46,18 @@ function SetTerminalProgress {
 }
 
 function ReadHost {
-	[cmdletbinding()]
+	[CmdletBinding()]
 	param (
-		$query
+		[string]$Query
 	)
 
-	Write-Host "`a"
-	return Read-Host -Prompt $query
+	Write-Host "`a" -NoNewline
+	if ($Query) {
+		$answer = Read-Host -Prompt $Query
+	} else {
+		$answer = Read-Host
+	}
+	return $answer
 }
 
 # Write progress to the terminal as well as the progress bar
@@ -72,16 +77,23 @@ function WriteProgress {
 			Write-Error "Need a title for the progress"
 			return
 		}
+
+		# Create progress object (same as before, plus we tag that we set region)
 		$progressObject = New-Object -TypeName psobject
 		$progressObject | Add-Member NoteProperty title $title
+
 		if ($totalActions) {
 			$progressObject | Add-Member NoteProperty total $totalActions
 		}
+
 		$progressObject | Add-Member NoteProperty current 0
 		$timer = [System.Diagnostics.Stopwatch]::StartNew()
 		$progressObject | Add-Member NoteProperty time $timer
 		$progressObject | Add-Member NoteProperty lastsecond 0
 		$progressObject | Add-Member NoteProperty updatefrequency $updateFrequencySeconds
+		$progressObject | Add-Member NoteProperty scrollRegionSet $true
+		$progressObject | Add-Member NoteProperty callingFunction ([Math]::Abs((Get-PSCallStack)[1].Command.GetHashCode()))
+
 		return $progressObject
 	}
 
@@ -91,41 +103,79 @@ function WriteProgress {
 	}
 
 	if ($finished) {
+		Write-Progress -Activity $progressObject.title -Completed -Id $progressObject.callingFunction
 		SetTerminalProgress
 		return
 	}
 
-	$progressObject.current = $progressObject.current + 1
+	$progressObject.current++
 	$elapsedSeconds = $progressObject.time.Elapsed.TotalSeconds
-	if ($progressObject.lastsecond -gt 0 -and $elapsedSeconds - $progressObject.lastsecond -lt $progressObject.updatefrequency) {
-		return
-	}
 
+	#
+	# ---- UNKNOWN TOTAL ----
+	#
 	if (-not $progressObject.total) {
-		Write-Progress -Activity $progressObject.title -Status "$($progressObject.current) processed"
+		Write-Progress -Activity $progressObject.title -Status "Elapsed: {0:N1}s" -f $elapsedSeconds -Id $progressObject.callingFunction
+		# Keep your window/tab icon in "unknown" mode
 		SetTerminalProgress -unknown
 		return
 	}
 
-	$progressObject.lastsecond = $elapsedSeconds
-	$percent = (($progressObject.current / $progressObject.total) * 100)
-	$status = "($($progressObject.current)/$($progressObject.total))"
-	$secondsLeft = New-TimeSpan -Seconds ([decimal]::round($elapsedSeconds / $percent * (100 - $percent)))
+	#
+	# ---- KNOWN TOTAL ----
+	#
+	$total = [double]$progressObject.total
+	$current = [double]$progressObject.current
+	$percent = ($current / $total) * 100
+
+	if ($percent -lt 0) {
+		$percent = 0
+	}
+	if ($percent -gt 100) {
+		$percent = 100
+	}
+
+	# ETA calculation
+	$eta = [TimeSpan]::Zero
+	if ($current -gt 0) {
+		$ratio = $current / ($total + 1)
+		$totalEstimate = $elapsedSeconds / $ratio
+		$remainingSec = [math]::Max(0, $totalEstimate - $elapsedSeconds)
+		$eta = [TimeSpan]::FromSeconds([math]::Round($remainingSec))
+	}
+
+	$percentInt = [int][math]::Round($percent)
+	$etaStr = if ($eta -ne [TimeSpan]::Zero) {
+		$eta.ToString("hh\:mm\:ss")
+	} else {
+		"?"
+	}
+	Write-Progress -Activity $progressObject.title -Status "$current/$total ($etaStr)" -PercentComplete $percentInt -Id $progressObject.callingFunction
+
+	# Keep your existing window/tab icon progress call
 	SetTerminalProgress -progressPercent $percent
-	Write-Progress -Activity $progressObject.title -Status "$status - $secondsLeft remaining" -PercentComplete $percent
 }
+
 
 function Start-SleepWithProgress {
 	param(
 		$totalSeconds
 	)
 
-	$progressObject = WriteProgress -initiate -title "Sleeping for $totalSeconds seconds" -totalActions $totalSeconds
-	for ($i = 1; $i -le $totalSeconds; $i++) {
-		WriteProgress -progressObject $progressObject
+	$sleepProgress = WriteProgress -initiate -title "Sleeping for $totalSeconds seconds" -totalActions $totalSeconds
+
+	for ($elapsed = 0; $elapsed -lt $totalSeconds; $elapsed++) {
+		WriteProgress -progressObject $sleepProgress
 		Start-Sleep -Seconds 1
 	}
-	WriteProgress -progressObject $progressObject -finished
+
+	WriteProgress -progressObject $sleepProgress -finished
+}
+
+
+function Clear-CurrentConsoleLine {
+	$esc = [char]27
+	Write-Host "$esc[2K`r" -NoNewline
 }
 
 
@@ -147,7 +197,7 @@ function Add-MemberIfMissing {
 			$Value = $DefaultValue
 		}
 		$Object | Add-Member -NotePropertyName $Name -NotePropertyValue $Value
-		WriteMessage -message "Added missing property '$Name' to object" -progress
+		Write-Verbose "Added missing property '$Name' to object"
 	}
 }
 
@@ -203,6 +253,7 @@ $Global:autoModsConfig = "$PSScriptRoot\ModsConfig_Auto.xml"
 $Global:bareModsConfig = "$PSScriptRoot\ModsConfig_Bare.xml"
 $Global:replacementsFile = "$PSScriptRoot\ReplaceRules.txt"
 $Global:fundingFile = $settings.funding_path
+$Global:issuesFolder = $settings.issue_path
 $Global:openAIApiKey = $settings.openai_api_key
 $Global:openAIModel = $settings.openai_model
 $Global:openAIChatModel = $settings.openai_chat_model
@@ -267,7 +318,7 @@ $Global:faqText = $settings.faq_text
 $Global:faqTextPrivate = $settings.faq_text_private
 $Global:globalRequestLog = @()
 if (-not $Global:ModInfoCache) {
- $Global:ModInfoCache = @{}
+	$Global:ModInfoCache = @{}
 }
 
 Add-Type -TypeDefinition @"
@@ -1128,7 +1179,7 @@ function Merge-GitPullRequest {
 	Set-Location $originalLocation
 
 	if ($openAfter) {
-		Start-Process -FilePath $settings.browser_path -ArgumentList "https://github.com/$($settings.github_username)/$repoName/pull/$pullRequestNumber"
+		Start-Process -FilePath $settings.browser_path -ArgumentList "https://github.com/$($settings.github_username)/$repoName/pull/$pullRequestNumber" | Out-Null
 	}
 	return $true
 }
@@ -1475,7 +1526,7 @@ function Merge-GitRepositories {
 	Set-Location $currentDirectory
 	Set-DefaultGithubRepoValues -modObject $modObject
 	Set-Clipboard "$($modObject.ModFolderPath)\About\Preview.png"
-	Start-Process -FilePath $settings.browser_path -ArgumentList "https://github.com/$($settings.github_username)/$($modObject.NameClean)/settings"
+	Start-Process -FilePath $settings.browser_path -ArgumentList "https://github.com/$($settings.github_username)/$($modObject.NameClean)/settings" | Out-Null
 }
 
 function Set-DefaultGithubRepoValues {
@@ -2178,7 +2229,7 @@ function Get-SteamModContent {
 	Start-Process -FilePath $7zipPath -ArgumentList $arguments -Wait -NoNewWindow | Out-Null
 
 	if (-not $subscribed) {
-		Set-ModSubscription -modId $modId -subscribe $false	| Out-Null
+		Set-ModSubscription -modId $modId -subscribe $false | Out-Null
 	}
 
 	return $true
@@ -3380,6 +3431,8 @@ function Get-SteamWorkshopModInfo {
 		Visibility    = $null
 		PreviewUrl    = $null
 		Description   = $null
+		Updated       = $null
+		Created       = $null
 	}
 	$url = "https://steamcommunity.com/sharedfiles/filedetails/?id=$modId"
 	Import-Module -ErrorAction Stop PowerHTML -Verbose:$false
@@ -3422,7 +3475,7 @@ function Get-SteamWorkshopModInfo {
 	$downloadedAt = $null
 	$maxAttempts = 10
 	if (-not $useCache) {
-		WriteMessage -progress "Fetching data from $url"
+		WriteMessage -progress "Manually fetching id $modId from Steam"
 		$downloaded = $false
 		for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
 			Invoke-SteamWaitTime
@@ -3457,7 +3510,7 @@ function Get-SteamWorkshopModInfo {
 		Update-SteamRequest -success $false
 		$pendingSuccessUpdate = $false
 		WriteMessage -progress "Steam rate limit hit, subscribing instead of fetching data"
-		Set-ModSubscription -modId $modId -subscribe $true -noCheck
+		Set-ModSubscription -modId $modId -subscribe $true -noCheck | Out-Null
 		$modData = Get-Mod -modPath "E:\SteamLibrary\steamapps\workshop\content\294100\$modId"
 		if ($modData.PublishedId) {
 			$result.Name = $modData.DisplayName
@@ -3535,6 +3588,21 @@ function Get-SteamWorkshopModInfo {
 		$result.Subscriptions = $html.SelectNodes("//table").SelectNodes("//td")[2].InnerText.Replace(",", "")
 
 		$result.AuthorName = $html.SelectNodes("//div[@class='breadcrumbs']").Nodes().InnerText[-2].Replace("'s Workshop", "")
+
+		# Fetch created date from the side panel:
+		# <div class="detailsStatsContainerRight">
+		#										<div class="detailsStatRight">81.789 KB</div>
+		#										<div class="detailsStatRight">25 Feb @ 3:26pm</div>
+		# </div>
+		$dateNodes = $html.SelectNodes("//div[contains(@class, 'detailsStatsContainerRight')]/div[contains(@class, 'detailsStatRight')]") | Where-Object { $_.InnerText -match "\d{1,2} \w{3} @ \d{1,2}:\d{2}(am|pm)" }
+
+		$result.Created = $dateNodes | Select-Object -First 1 | ForEach-Object { [datetime]::ParseExact($_.InnerText.Trim(), "d MMM @ h:mmtt", $null) }
+
+		if ($dateNodes.Count -gt 1) {
+			$result.Updated = $dateNodes | Select-Object -Skip 1 -First 1 | ForEach-Object { [datetime]::ParseExact($_.InnerText.Trim(), "d MMM @ h:mmtt", $null) }
+		}	else {
+			$result.Updated = $result.Created
+		}
 
 		$imgSrc = $html.SelectNodes("//img[contains(@id, 'previewImageMain')]")
 		if (-not $imgSrc) {
@@ -3656,9 +3724,6 @@ function Get-ModInfo {
 			# Calculate the number of items to fetch
 			$itemCount = $batchIds.Count
 
-			WriteProgress -progressObject $progressObject
-			$progressObject.current = $progressObject.current + $itemCount - 1
-
 			# API endpoint for fetching published file details
 			$uri = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
 
@@ -3684,6 +3749,7 @@ function Get-ModInfo {
 
 			# Loop over each mod's details in the response
 			foreach ($details in $response.response.publishedfiledetails) {
+				WriteProgress -progressObject $progressObject
 				if ($null -eq $details) {
 					WriteMessage -warning "No details found for mod ID $($details.publishedfileid)"
 					$modInfo = @{
@@ -3702,7 +3768,7 @@ function Get-ModInfo {
 					}
 				} elseif ($details.result -eq 9) {
 					if ($apiOnly) {
-						WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, skipping manual fetch"
+						Write-Verbose "Mod ID $($details.publishedfileid) is not found via API, skipping manual fetch"
 						$modInfo = @{
 							SteamId       = "$($details.publishedfileid)"
 							Exists        = $true
@@ -3721,7 +3787,7 @@ function Get-ModInfo {
 						continue
 					}
 
-					WriteMessage -warning "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
+					Write-Verbose "Mod ID $($details.publishedfileid) is not found via API, scraping manually"
 					$modInfo = Get-SteamWorkshopModInfo -modId $details.publishedfileid
 				} elseif ($details.result -eq 1) {
 					Write-Debug "Found details for mod ID $($details.publishedfileid): $($details | ConvertTo-Json -Depth 5)"
@@ -3963,15 +4029,18 @@ function Get-ModLink {
 	}
 
 	$counter = 1
+	# Max count should be terminal height - 2
+	$maxCount = [console]::WindowHeight - 2
 	foreach ($title in $html.SelectNodes("//div[contains(@class, 'workshopItemTitle')]").InnerText) {
 		$titleDecoded = [System.Web.HTTPUtility]::HtmlDecode($title)
 		$authorName = $html.SelectNodes("//a[contains(@class, 'workshop_author_link')]")[$counter - 1].InnerText
 		Write-Host "$counter - $titleDecoded ($authorName)"
 		$counter++
-		if ($counter -gt 24) {
+		if ($counter -gt $maxCount) {
 			break
 		}
 	}
+	Write-Host
 	$answer = [int](ReadHost "Select matching, or empty for exit")
 	if ($answer) {
 		$answer--
@@ -3998,7 +4067,78 @@ function Get-ModLink {
 		return $link
 	} else {
 		WriteMessage -message "No selection made, exiting"
+		return -1
 	}
+}
+
+
+function Update-AllWorkshopMods {
+	param (	)
+
+	$reqHeaders =
+	@{
+		"User-Agent"      = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+		"Accept"          = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+		"Accept-Language" = "en-US,en;q=0.9"
+	}
+
+	$searchString = "https://steamcommunity.com/workshop/browse/?appid=294100&browsesort=mostrecent&excludedtags%5B%5D=Translation&excludedtags%5B%5D=Scenario&p="
+
+	$modIdsToFetch = @()
+	$progressObject = WriteProgress -initiate -title "Fetching all workshop mods" -totalActions 1100
+	for ($page = 0; $page -le 1100; $page++) {
+		WriteProgress -progressObject $progressObject
+		$hasResults = $true
+		while ($hasResults) {
+			try {
+				$resp = Invoke-WebRequest -Uri "$searchString$page"  -Headers $reqHeaders -ErrorAction Stop
+			} catch {
+				Update-SteamRequest -success $false
+				WriteMessage -failure "Failed to fetch page $page, waiting before retrying"
+				Invoke-SteamWaitTime
+				continue
+			}
+			if ($resp.Content -match "An error was encountered while processing your request:" `
+					-or $resp.Content -match "Please wait and try your request again later" `
+					-or $resp.Content -match "Please try again later") {
+				Update-SteamRequest -success $false
+				WriteMessage -failure "Steam returned an error for page $page, waiting before retrying"
+				Invoke-SteamWaitTime
+				continue
+			}
+			if ($resp.Content -match "No items matching your search criteria were found.") {
+				WriteMessage -failure "No more mods found, ending fetch"
+				$hasResults = $false
+				break
+			}
+			Update-SteamRequest -success $true
+			break
+		}
+		if (-not $hasResults) {
+			break
+		}
+		# Fetch all mod IDs on the page using regex
+		$regex = [regex]::Matches($resp.Links.href, "https://steamcommunity.com/sharedfiles/filedetails/\?id=(\d+)")
+		$modIds = $regex | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+		# For each mod ID, check if it's already in the fetch list, and if not, add it to the list of mods to fetch
+		foreach ($modId in $modIds) {
+			if (-not ($modIdsToFetch -contains $modId)) {
+				$modIdsToFetch += $modId
+			}
+		}
+		WriteMessage -progress "Found $($modIds.Count) mod IDs on page $page, total found: $($modIdsToFetch.Count + $modIds.Count)"
+
+	}
+	WriteProgress -progressObject $progressObject -finished
+	WriteMessage -progress "Fetching details for $($modIdsToFetch.Count) mods from Steam API"
+	$modInfo = Get-ModInfo -steamIds $modIdsToFetch -apiOnly
+	$progressObject = WriteProgress -initiate -title "Updating database with mod info" -totalActions $modInfo.Count
+	foreach ($info in $modInfo) {
+		# Update the database with the new mod info
+		WriteProgress -progressObject $progressObject
+		Update-ModBaseDataToDatabase -modInfo $info
+	}
+	WriteProgress -progressObject $progressObject -finished
 }
 
 
@@ -4036,7 +4176,7 @@ function Start-RimworldSave {
 		Write-Host "$($counter): $($save.BaseName) ($($save.LastWriteTime))"
 		if ($counter % 5 -eq 0) {
 			$answer = ReadHost "Select save to start or empty to list five more"
-			if ($answer -and (([int]$counter - 5)..[int]$counter) -contains $answer) {
+			if ($answer -and (([int]1)..[int]$counter) -contains $answer) {
 				$selectedSave = $allSaves[$answer - 1]
 				WriteMessage -progress "Selected $($selectedSave.BaseName), parsing"
 				$modFileXml = [xml](Get-Content $modFile -Encoding UTF8)
@@ -4607,6 +4747,10 @@ function Test-Mod {
 				$mlieMod = $modName
 			} else {
 				$modLink = Get-ModLink -modName $modName -chooseIfNotFound -lastVersion:$lastVersion
+				if ($modLink -eq -1) {
+					WriteMessage -failure "Aborting test"
+					return
+				}
 				if (-not $modLink -and -not $lastVersion) {
 					WriteMessage -progress "Could not find other mod named $modName, trying to find the last version"
 					$modLink = Get-ModLink -modName $modName -chooseIfNotFound -lastVersion:$true
@@ -5316,6 +5460,18 @@ function Publish-Mod {
 		Copy-Item -Path $gitignoreTemplate $modObject.GitIgnorePath -Force | Out-Null
 		$reapplyGitignore = $true
 	}
+	if (Test-Path $issuesFolder) {
+		if (-not (Test-Path "$($modObject.ModFolderPath)\.github\ISSUE_TEMPLATE")) {
+			Copy-Item -Path $issuesFolder "$($modObject.ModFolderPath)\.github\ISSUE_TEMPLATE" -Recurse -Force | Out-Null
+		} else {
+			Get-ChildItem -Path $issuesFolder -Recurse | ForEach-Object {
+				$destination = "$($modObject.ModFolderPath)\.github\ISSUE_TEMPLATE\$($_.Name)"
+				if (-not (Test-Path $destination) -or (Get-Item $_.FullName).LastWriteTime -gt (Get-Item $destination).LastWriteTime) {
+					Copy-Item -Path $_.FullName $destination -Force | Out-Null
+				}
+			}
+		}
+	}
 	if ((Test-Path $modSyncTemplate) -and -not $modObject.ModSyncFilePath) {
 		$modObject.ModSyncFilePath = "$($modObject.ModFolderPath)\About\ModSync.xml"
 		New-ModSyncFile -modObject $modObject -version $version.ToString()
@@ -5522,7 +5678,6 @@ function Publish-Mod {
 		}
 		$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("logos/Notice.png", "logos/Abandoned.png")
 		if ($ReplacedBy) {
-			logos
 			$modObject.AboutFileXml.ModMetaData.description = $modObject.AboutFileXml.ModMetaData.description.Replace("logos/Abandoned.png[/img]", "logos/Abandoned.png[/img]`n`nThis mod has been replaced by $replacedByLink")
 			New-ModReplacement -localName $modObject.Name -replacementSteamId $ReplacedBy -silent
 		}
@@ -7259,9 +7414,9 @@ function Get-TrelloCardsForMod {
 		}
 	}
 
-	WriteMessage -progress "Searching for Trello cards for mod $($modObject.Name) using Steam link"
+	WriteMessage -progress "Searching Trello for mod $($modObject.Name) using Steam link"
 	$cardsFromSteamUrl = Find-TrelloCardByCustomField -text $modObject.ModUrl -fieldId $trelloLinkId
-	WriteMessage -progress "Searching for Trello cards for mod $($modObject.Name) using Github link"
+	WriteMessage -progress "Searching Trello for mod $($modObject.Name) using Github link"
 	$cardsFromGithubUrl = Find-TrelloCardByCustomField -text $modObject.Repository -fieldId $trelloLinkId
 	WriteMessage -progress "Found $($cardsFromGithubUrl.Count + $cardsFromSteamUrl.Count) Trello cards for mod $($modObject.Name)"
 

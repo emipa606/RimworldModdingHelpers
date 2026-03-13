@@ -29,6 +29,8 @@ namespace SteamCollectionManager
             // Otherwise, we'll end up with a lot of garbage in the target file.
             if (!Console.IsOutputRedirected)
             {
+                // Clear the current line
+                Console.Write("\r" + new string(' ', 80) + "\r");
                 ResetTimer();
             }
         }

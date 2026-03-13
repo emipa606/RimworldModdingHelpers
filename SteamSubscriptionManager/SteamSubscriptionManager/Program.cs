@@ -39,11 +39,6 @@ namespace SteamCollectionManager
 
             var subscribe = actionToTake == "true";
 
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(subscribe ? $"Will subscribe to modId {modId}" : $"Will unsubscribe to modId {modId}");
-
-            Console.ForegroundColor = ConsoleColor.Gray;
-
             SteamUtility.SetSubscription(modId, subscribe, fast);
         }
 
@@ -62,7 +57,7 @@ namespace SteamCollectionManager
                     }
 
                     var assemblyData = new byte[stream.Length];
-                    stream.Read(assemblyData, 0, assemblyData.Length);
+                    _ = stream.Read(assemblyData, 0, assemblyData.Length);
                     return Assembly.Load(assemblyData);
                 }
             };
