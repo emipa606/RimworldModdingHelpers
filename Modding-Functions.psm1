@@ -782,7 +782,10 @@ function Get-Mod {
 		$modObject.RimWorldBaseId = $databaseObject.rimworld_base_id
 	}
 	if ($null -ne $databaseObject.continued) {
-		$modObject.Continued = $databaseObject.continued
+		if ($databaseObject.continued -ne $modObject.Continued) {
+			WriteMessage -warning "Mod has different continued value in database ($($databaseObject.continued)) than in about file ($($modObject.Continued)), updating database value"
+			Update-ModInfoToDatabase -modObject $modObject
+		}
 	}
 	if ($null -ne $databaseObject.funding_set) {
 		$modObject.FundingSet = $databaseObject.funding_set
@@ -4293,7 +4296,7 @@ function Get-ModsInBlob {
 function Set-RimworldRunMode {
 	param (
 		$prefsFile = "$env:LOCALAPPDATA\..\LocalLow\Ludeon Studios\RimWorld by Ludeon Studios\Config\Prefs.xml",
-		[Parameter()][ValidateSet('None', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
+		[Parameter()][ValidateSet('None', 'All', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
 		[string]$skipDLC,
 		[switch]$testing,
 		[switch]$autoTesting
@@ -4342,12 +4345,22 @@ function Set-RimworldRunMode {
 			Move-Item $_.FullName "$activeDlcFolder\$dlcName" -Force
 		}
 	} else {
-		# Test if the DLC is in the active folder, if so, move it to inactive
-		if (Test-Path "$activeDlcFolder\$skipDLC") {
-			WriteMessage -progress "Moving DLC $skipDLC to inactive folder"
-			Move-Item "$activeDlcFolder\$skipDLC" $inactiveDlcFolder -Force
+		if ($skipDLC -eq "All") {
+			$skipDLCs = Get-ChildItem $activeDlcFolder -Directory | Select-Object -ExpandProperty Name
 		} else {
-			WriteMessage -warning "DLC $skipDLC not found in active folder, skipping"
+			$skipDLCs = @($skipDLC)
+		}
+		# Test if the DLC is in the active folder, if so, move it to inactive
+		foreach ($dlc in $skipDLCs) {
+			if ($dlc -eq "Core") {
+				continue
+			}
+			if (Test-Path "$activeDlcFolder\$dlc") {
+				WriteMessage -progress "Moving DLC $dlc to inactive folder"
+				Move-Item "$activeDlcFolder\$dlc" $inactiveDlcFolder -Force
+			} else {
+				WriteMessage -warning "DLC $dlc not found in active folder, skipping"
+			}
 		}
 	}
 }
@@ -4392,7 +4405,7 @@ function Start-RimWorld {
 		[Parameter()][ValidateSet('1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6', 'beta', 'speed')]$version,
 		$otherModid,
 		$mlieMod,
-		[Parameter()][ValidateSet('None', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
+		[Parameter()][ValidateSet('None', 'All', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
 		[string]$skipDLC,
 		[switch]$autotest,
 		[switch]$force,
@@ -4716,8 +4729,8 @@ function Test-Mod {
 		[string] $version,
 		$otherModid,
 		$otherModName,
-		[string] [Parameter()][ValidateSet('None', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
-		$skipDLC,
+		[Parameter()][ValidateSet('None', 'All', 'Royalty', 'Ideology', 'Biotech', 'Anomaly', 'Odyssey')]
+		[string]$skipDLC,
 		[switch] $alsoLoadBefore,
 		[switch] $autotest,
 		[switch] $force,
@@ -5176,6 +5189,11 @@ function Update-ModCopilotMetadata {
 	# Define paths
 	$sourcePath = Join-Path $modObject.ModFolderPath "Source"
 	$xmlSourcePath = Join-Path $modObject.ModFolderPath "Defs"
+	$footerPath = $settings.github_footer_path
+	if (-not (Test-Path $footerPath)) {
+		WriteMessage -warning "Footer file not found at $footerPath, cannot continue."
+		return
+	}
 	if (-not (Test-Path $xmlSourcePath)) {
 		$xmlSourcePath = Join-Path $modObject.ModFolderPath $modObject.HighestSupportedVersion "Defs"
 	}
@@ -5183,10 +5201,10 @@ function Update-ModCopilotMetadata {
 	$instructionsPath = Join-Path $githubPath "copilot-instructions.md"
 
 	if (-not $force -and (Test-Path $instructionsPath)) {
-		if (-not (Get-Content -Raw $instructionsPath).Contains($modObject.DisplayName)) {
-			WriteMessage -progress "copilot-instructions.md exists but does not contain the required content, updating"
-		} else {
-			WriteMessage -progress "copilot-instructions.md already exists, skipping update"
+		$lastEditTime = (Get-Item $instructionsPath).LastWriteTime
+		$footerTemplateEditTime = (Get-Item $footerPath).LastWriteTime
+		if ($lastEditTime -gt $footerTemplateEditTime) {
+			WriteMessage -progress "copilot-instructions.md was updated since the footer template was last modified, skipping update"
 			return
 		}
 	}
@@ -5243,6 +5261,8 @@ $csSummary
 	$instructionsContent = Get-Content -Path $instructionsPath -Raw
 	$instructionsContent = $instructionsContent -replace '```markdown', '' -replace '```', ''
 	$instructionsContent = $instructionsContent.Trim()
+	$footerContent = Get-Content -Path $footerPath -Raw
+	$instructionsContent += "`n`n$footerContent"
 	$instructionsContent | Set-Content -Path $instructionsPath -Encoding UTF8
 
 	WriteMessage -success "copilot-instructions.md created at $instructionsPath"
@@ -5482,6 +5502,11 @@ function Publish-Mod {
 		((Get-Content -path $modObject.ModPublisherPath -Raw -Encoding UTF8).Replace("[modpath]", $modObject.ModFolderPath)) | Set-Content -Path $modObject.ModPublisherPath
 	}
 	Update-ModAssetBundle -modObject $modObject -update
+
+	$slnFiles = Get-ChildItem -Recurse -Path $($modObject.ModFolderPath) -Include *.slnx
+	foreach ($slnFile in $slnFiles) {
+		Sync-SolutionDecompiledFolderStructure -SolutionFile $slnFile.FullName -Remove
+	}
 
 	# Create repo if does not exists
 	if ((Get-RepositoryStatus -repositoryName $modObject.NameClean) -eq $true) {

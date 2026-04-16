@@ -5537,10 +5537,10 @@
       "oldName": "CaravanOptions",
       "oldAuthor": "Torann",
       "oldPackageId": "torann.CaravanOptions",
-      "newWorkshopId": "3537224386",
-      "newName": "CaravanOptions(Temp 1.6)",
-      "newAuthor": "Oldasur",
-      "newPackageId": "Oldasur.CaravanOptions",
+      "newWorkshopId": "3697920307",
+      "newName": "CaravanOptions (Continued)",
+      "newAuthor": "Zaljerem",
+      "newPackageId": "zal.caravanoptions",
       "oldVersions": [
         "1.0",
         "1.1",
@@ -6807,7 +6807,7 @@
       "oldAuthor": "tammybee",
       "oldPackageId": "tammybee.raiderinfo",
       "newWorkshopId": "3241731953",
-      "newName": "RaiderInfo[1.5] - Forked",
+      "newName": "RaiderInfo - Forked",
       "newAuthor": "Blue Bird",
       "newPackageId": "bluebird.com.tammybee.raiderinfo",
       "oldVersions": [
@@ -6818,7 +6818,8 @@
         "1.4"
       ],
       "newVersions": [
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -13069,33 +13070,6 @@
       ]
     },
     {
-      "oldWorkshopId": "1855069167",
-      "oldName": "Metals Trader",
-      "oldAuthor": "Big Veech",
-      "oldPackageId": "BigVeech.MetalsTrader",
-      "newWorkshopId": "3542353210",
-      "newName": "Metals Trader for 1.6",
-      "newAuthor": "Gold Star Puppy",
-      "newPackageId": "GSP.MetalsTrader1.6",
-      "oldVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5"
-      ],
-      "newVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
       "oldWorkshopId": "1856891243",
       "oldName": "19th Century Weaponry",
       "oldAuthor": "Captain Nemo",
@@ -15298,7 +15272,7 @@
       "oldAuthor": "Saakra",
       "oldPackageId": "Saakra.Empire",
       "newWorkshopId": "3542975872",
-      "newName": "Empire (Continued)",
+      "newName": "[DEPRECATED] Empire (Continued)",
       "newAuthor": "Saakra",
       "newPackageId": "Saakra.Empire.dev",
       "oldVersions": [
@@ -16409,27 +16383,6 @@
         "1.3",
         "1.4",
         "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "2018570327",
-      "oldName": "Smokeleaf Industry Reborn [Adopted]",
-      "oldAuthor": "Ogliss",
-      "oldPackageId": "Ogliss.bishop.SmokeleafIndustryReborn",
-      "newWorkshopId": "3541184622",
-      "newName": "Smokeleaf Industry Reborn (Continued)",
-      "newAuthor": "ShadowRon",
-      "newPackageId": "Shadowron.Ogliss.bishop.SmokeleafIndustryReborn",
-      "oldVersions": [
-        "1.0",
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5"
-      ],
-      "newVersions": [
         "1.6"
       ]
     },
@@ -18401,7 +18354,7 @@
       "oldAuthor": "tammybee",
       "oldPackageId": "tammybee.restocknotification",
       "newWorkshopId": "3241844246",
-      "newName": "Restock Notification[1.5]",
+      "newName": "Restock Notification (Continued)",
       "newAuthor": "Blue Bird",
       "newPackageId": "bluebird.tammybee.restocknotification",
       "oldVersions": [
@@ -18411,7 +18364,8 @@
         "1.4"
       ],
       "newVersions": [
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -19809,7 +19763,7 @@
       "oldAuthor": "RedstoneRevolution",
       "oldPackageId": "redstonerev.novanmusiconeone",
       "newWorkshopId": "3227740148",
-      "newName": "No Vanilla Music 1.5",
+      "newName": "No Vanilla Music",
       "newAuthor": "GodlyAnnihilator",
       "newPackageId": "godlyannihilator.novanillamusic",
       "oldVersions": [
@@ -19821,7 +19775,8 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -35392,7 +35347,7 @@
       "oldAuthor": "空曜",
       "oldPackageId": "MYDE.AerocraftFramework",
       "newWorkshopId": "3611555958",
-      "newName": "飞行器框架 Aerocraft Framework[1.6]",
+      "newName": "飞行器框架 Aerocraft Framework[Unofficial]",
       "newAuthor": "skylon",
       "newPackageId": "MYDE.AerocraftFramework",
       "oldVersions": [
@@ -35775,20 +35730,19 @@
       ]
     },
     {
-      "oldWorkshopId": "2973780726",
-      "oldName": "Euglena Expanded - Implantor",
-      "oldAuthor": "Demon 2016",
-      "oldPackageId": "EuglenaExpanded.EuglenaImplantor",
-      "newWorkshopId": "3605856960",
-      "newName": "Euglena Expanded - Implantor (Continued)",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.euglenaimplantor",
+      "newWorkshopId": "2973780726",
+      "oldName": "Euglena Expanded - Implantor (Continued)",
+      "oldWorkshopId": "3605856960",
       "oldVersions": [
-        "1.4"
+        "1.6"
       ],
       "newVersions": [
         "1.6"
-      ]
+      ],
+      "newName": "Euglena Expanded - Implantor",
+      "newAuthor": "Demon 2016",
+      "newPackageId": "EuglenaExpanded.EuglenaImplantor",
+      "oldPackageId": "zal.euglenaimplantor"
     },
     {
       "oldWorkshopId": "2973786903",
@@ -35860,21 +35814,20 @@
       ]
     },
     {
-      "oldWorkshopId": "2975005239",
-      "oldName": "Euglena Expanded - Euglena Xenotype",
-      "oldAuthor": "Demon 2016",
-      "oldPackageId": "EuglenaExpanded.EuglenaXenotype",
-      "newWorkshopId": "3605855667",
-      "newName": "Euglena Expanded - Euglena Xenotype (Continued)",
-      "newAuthor": "Zaljerem",
-      "newPackageId": "zal.euglenaxenotype",
+      "newName": "Euglena Expanded - Euglena Xenotype Core",
+      "oldName": "Euglena Expanded - Euglena Xenotype (Continued)",
+      "newWorkshopId": "2975005239",
       "oldVersions": [
-        "1.4",
-        "1.5"
+        "1.6"
       ],
       "newVersions": [
         "1.6"
-      ]
+      ],
+      "oldWorkshopId": "3605855667",
+      "oldAuthor": "Zaljerem",
+      "oldPackageId": "zal.euglenaxenotype",
+      "newAuthor": "Demon 2016",
+      "newPackageId": "EuglenaExpanded.EuglenaXenotype"
     },
     {
       "oldWorkshopId": "2975250797",
@@ -37940,7 +37893,7 @@
       "oldAuthor": "Khadgarion",
       "oldPackageId": "Saakra.Empire.Test",
       "newWorkshopId": "3542975872",
-      "newName": "Empire (Continued)",
+      "newName": "[DEPRECATED] Empire (Continued)",
       "newAuthor": "Saakra",
       "newPackageId": "Saakra.Empire.dev",
       "oldVersions": [
@@ -38080,20 +38033,21 @@
       ]
     },
     {
-      "oldWorkshopId": "3241731953",
-      "oldName": "RaiderInfo[1.5] - Forked",
-      "oldAuthor": "Blue Bird",
-      "oldPackageId": "bluebird.com.tammybee.raiderinfo",
-      "newWorkshopId": "3532072446",
-      "newName": "RaiderInfo[1.6] - Forked",
-      "newAuthor": "pluralled",
-      "newPackageId": "pluralled.raiderinfo",
+      "newName": "RaiderInfo - Forked",
+      "newWorkshopId": "3241731953",
       "oldVersions": [
-        "1.5"
-      ],
-      "newVersions": [
         "1.6"
-      ]
+      ],
+      "oldName": "RaiderInfo[1.6] - Forked",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "3532072446",
+      "oldAuthor": "Pluralled",
+      "oldPackageId": "pluralled.raiderinfo",
+      "newAuthor": "Blue Bird",
+      "newPackageId": "bluebird.com.tammybee.raiderinfo"
     },
     {
       "oldWorkshopId": "3243233522",
@@ -38499,21 +38453,22 @@
       ]
     },
     {
-      "oldWorkshopId": "3269174665",
-      "oldName": "Spacer Shields",
-      "oldAuthor": "LTS",
-      "oldPackageId": "LTS.PS",
-      "newWorkshopId": "3536995307",
-      "newName": "Spacer Shields 1.6",
-      "newAuthor": "LTS",
-      "newPackageId": "LTS.PS",
+      "newWorkshopId": "3269174665",
       "oldVersions": [
-        "1.5"
+        "1.5",
+        "1.6"
       ],
+      "oldWorkshopId": "3536995307",
+      "oldName": "Spacer Shields 1.6",
       "newVersions": [
         "1.5",
         "1.6"
-      ]
+      ],
+      "newName": "Spacer Shields",
+      "oldAuthor": "Willaby_Neko",
+      "oldPackageId": "LTS.PS",
+      "newAuthor": "LTS",
+      "newPackageId": "LTS.PS"
     },
     {
       "oldWorkshopId": "3269986597",
@@ -39866,23 +39821,6 @@
       ]
     },
     {
-      "oldWorkshopId": "3484842408",
-      "oldName": "Gilded Knight Armor",
-      "oldAuthor": "nichiren_1",
-      "oldPackageId": "Nechron.GiltedKnightArmor",
-      "newWorkshopId": "3535713200",
-      "newName": "Gilded Knight Armor 1.6 (Temp)",
-      "newAuthor": "Nechron",
-      "newPackageId": "Nechron.GiltedKnightArmor",
-      "oldVersions": [
-        "1.5"
-      ],
-      "newVersions": [
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
       "oldWorkshopId": "3500985533",
       "oldName": "Pick Up And Haul Unoffical (1.6)",
       "oldAuthor": "Eoral Milk",
@@ -40988,7 +40926,8 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -41316,14 +41255,9 @@
       ]
     },
     {
-      "oldWorkshopId": "735241897",
-      "oldName": "MendAndRecycle",
-      "oldAuthor": "Charlotte",
-      "oldPackageId": "notfood.MendAndRecycle",
-      "newWorkshopId": "3226161877",
+      "oldWorkshopId": "3226161877",
+      "newWorkshopId": "735241897",
       "newName": "MendAndRecycle",
-      "newAuthor": "DocMDeath",
-      "newPackageId": "dd.unofficial.notfood.MendAndRecycle",
       "oldVersions": [
         "1.1",
         "1.2",
@@ -41332,6 +41266,7 @@
         "1.5",
         "1.6"
       ],
+      "oldName": "MendAndRecycle",
       "newVersions": [
         "1.1",
         "1.2",
@@ -41339,7 +41274,11 @@
         "1.4",
         "1.5",
         "1.6"
-      ]
+      ],
+      "oldAuthor": "Dr Buer",
+      "oldPackageId": "dd.unofficial.notfood.MendAndRecycle",
+      "newAuthor": "Charlotte",
+      "newPackageId": "notfood.MendAndRecycle"
     },
     {
       "oldWorkshopId": "738403419",
@@ -44275,21 +44214,22 @@
       ]
     },
     {
-      "newPackageId": "CheeserupdateAiro.UltimateTrashMod",
-      "newAuthor": "CeasarCheeser",
-      "oldPackageId": "Airo.UltimateTrashMod",
-      "oldName": "Ultimate Trash Mod",
+      "oldName": "Ultimate Trash Mod Unofficial 1.6 Update",
+      "oldVersions": [
+        "1.5",
+        "1.6"
+      ],
       "newVersions": [
         "1.5",
         "1.6"
       ],
-      "oldAuthor": "Airo",
-      "oldVersions": [
-        "1.5"
-      ],
-      "oldWorkshopId": "3456577653",
-      "newName": "Ultimate Trash Mod Unofficial 1.6 Update",
-      "newWorkshopId": "3619787706"
+      "oldWorkshopId": "3619787706",
+      "newName": "Ultimate Trash Mod",
+      "newWorkshopId": "3456577653",
+      "oldAuthor": "CeasarCheeser",
+      "oldPackageId": "CheeserupdateAiro.UltimateTrashMod",
+      "newAuthor": "Airo",
+      "newPackageId": "Airo.UltimateTrashMod"
     },
     {
       "oldWorkshopId": "2548444243",
@@ -44569,21 +44509,23 @@
       "newAuthor": "Zaljerem"
     },
     {
-      "oldVersions": [
-        "1.3",
-        "1.4"
-      ],
-      "newWorkshopId": "3628800386",
-      "newName": "Blended Wool - Continued",
-      "oldName": "Blended Wool",
-      "newPackageId": "ibnk7x.blendedwoolcontinued",
-      "oldWorkshopId": "2404525576",
-      "oldPackageId": "Daemon976.blendedwool",
       "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
         "1.6"
       ],
-      "oldAuthor": "Daemon976",
-      "newAuthor": "ibnk7x"
+      "newWorkshopId": "2404525576",
+      "oldWorkshopId": "3628800386",
+      "newName": "Blended Wool",
+      "oldVersions": [
+        "1.6"
+      ],
+      "oldName": "Blended Wool - Continued",
+      "oldAuthor": "ibnk7x",
+      "oldPackageId": "ibnk7x.blendedwoolcontinued",
+      "newAuthor": "Daemon976",
+      "newPackageId": "Daemon976.blendedwool"
     },
     {
       "oldVersions": [
@@ -45727,23 +45669,6 @@
       "newPackageId": "SirMashedPotato.MorrowRim.DunmerLampPack"
     },
     {
-      "newName": "Rapid-Fire Machine Gun Turret",
-      "newAuthor": "Zyzx",
-      "oldWorkshopId": "2882967545",
-      "oldName": "速射机枪塔",
-      "oldAuthor": "rararara",
-      "newWorkshopId": "3661725715",
-      "oldVersions": [
-        "1.5"
-      ],
-      "oldPackageId": "ra.TurretForMinigun",
-      "newVersions": [
-        "1.5",
-        "1.6"
-      ],
-      "newPackageId": "Zyzx.A.16"
-    },
-    {
       "newName": "鼠族眼镜佩戴部位为眼部1.6",
       "newAuthor": "ZuiYue_uu",
       "oldWorkshopId": "2786701891",
@@ -46547,7 +46472,7 @@
       ]
     },
     {
-      "newName": "DDA Security and More",
+      "newName": "DDA Security and More (Continued)",
       "oldPackageId": "james76543.DDASecurity",
       "newVersions": [
         "1.3",
@@ -49046,7 +48971,7 @@
         "1.5",
         "1.6"
       ],
-      "newName": "No Vanilla Music 1.6",
+      "newName": "No Rimworld Music 1.6",
       "oldVersions": [
         "1.0"
       ],
@@ -49740,10 +49665,6 @@
       "oldName": "Traders Have Money",
       "oldWorkshopId": "2022959333",
       "newVersions": [
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
         "1.5",
         "1.6"
       ],
@@ -50411,7 +50332,512 @@
         "1.3",
         "1.4"
       ]
+    },
+    {
+      "newPackageId": "tiger.boingo.box",
+      "oldName": "[1.5] Tiger",
+      "oldPackageId": "pz6.RUS",
+      "newWorkshopId": "3684007477",
+      "oldAuthor": "Nix²",
+      "oldWorkshopId": "3425289679",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "boingo.box",
+      "newName": "Tiger 1.6 Continued",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ]
+    },
+    {
+      "newPackageId": "panther.boingo.box",
+      "oldName": "[1.5] Panther",
+      "oldPackageId": "pz5.RUS",
+      "newWorkshopId": "3684007227",
+      "oldAuthor": "Nix²",
+      "oldWorkshopId": "3166688902",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "boingo.box",
+      "newName": "Panther 1.6 Continued",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ]
+    },
+    {
+      "newPackageId": "panzer4.boingo.box",
+      "oldName": "[1.5] Panzer",
+      "oldPackageId": "pz4.RUS",
+      "newWorkshopId": "3684007086",
+      "oldAuthor": "Nix²",
+      "oldWorkshopId": "3046871998",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "boingo.box",
+      "newName": "Panzer",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ]
+    },
+    {
+      "newPackageId": "warhorse.boingo.box",
+      "oldName": "RimThunder - Warhorse of Reich",
+      "oldPackageId": "RimThunderTeams.RimThunder.WarhorseofReich",
+      "newWorkshopId": "3684006785",
+      "oldAuthor": "Cannon Mutton",
+      "oldWorkshopId": "3241310837",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "boingo.box",
+      "newName": "RimThunder - Warhorse of Reich 1.6 Continued",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ]
+    },
+    {
+      "newName": "AssignedWorkbenches (Continued)",
+      "oldName": "AssignedWorkbenches",
+      "oldWorkshopId": "2973942644",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "maarx.assignedworkbenches",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldAuthor": "Maarx",
+      "newWorkshopId": "3684973164",
+      "newAuthor": "nakamura",
+      "newPackageId": "maarx.assignedworkbenches.Continued"
+    },
+    {
+      "newName": "Cleansweeper & Paramedic Retexture: Wall-E and Eve [Forked]",
+      "oldName": "[TW1.4]将扫地机贴图替换成瓦力，护理机贴图替换成伊芙 Wall-E~And~Eve",
+      "oldWorkshopId": "2962532140",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldPackageId": "TW.WallEAndEve",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldAuthor": "堂丸",
+      "newWorkshopId": "3685283474",
+      "newAuthor": "EchoTideFish",
+      "newPackageId": "TW.WallEAndEve"
+    },
+    {
+      "newName": "No Anty beauty penalty 1.6",
+      "oldName": "No Anty beauty penalty",
+      "oldWorkshopId": "3149709250",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "AntyBeautyPatch",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldAuthor": "SLB_chocolat",
+      "newWorkshopId": "3685382289",
+      "newAuthor": "SLB_chocolat, Amaxiros",
+      "newPackageId": "AntyBeautyPatch.1.6"
+    },
+    {
+      "newWorkshopId": "3685783503",
+      "oldAuthor": "SilkCircuit",
+      "newAuthor": "Gabri",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldPackageId": "silkcircuit.fastercaravansmod",
+      "newPackageId": "silkcircuit.fastercaravansmod",
+      "newName": "Caravan Speed Upgrades (1.6)",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldName": "Caravan Speed Upgrades",
+      "oldWorkshopId": "3417013377"
+    },
+    {
+      "newWorkshopId": "3686411720",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldName": "Project Rimfactory - Training System (1.4)",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "daemon976.prftrainingV2",
+      "newAuthor": "Daemon976",
+      "newName": "Project Rimfactory - Training System",
+      "oldPackageId": "daemon976.prftrainingV2",
+      "oldAuthor": "Daemon976",
+      "oldWorkshopId": "2879588341"
+    },
+    {
+      "newWorkshopId": "3686411720",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ],
+      "oldName": "Project Rimfactory - Training System",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "daemon976.prftrainingV2",
+      "newAuthor": "Daemon976",
+      "newName": "Project Rimfactory - Training System",
+      "oldPackageId": "daemon976.prftraining",
+      "oldAuthor": "Daemon976",
+      "oldWorkshopId": "2344173398"
+    },
+    {
+      "newWorkshopId": "3686411332",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldName": "Project RimFactory - Persona Core Crafting (1.4)",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "Daemon976.PersonaCoresV3",
+      "newAuthor": "Daemon976",
+      "newName": "Project RimFactory - Persona Core Crafting",
+      "oldPackageId": "Daemon976.PersonaCoresV3",
+      "oldAuthor": "Daemon976",
+      "oldWorkshopId": "2879587891"
+    },
+    {
+      "newWorkshopId": "3686411332",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ],
+      "oldName": "Project RimFactory - Persona Core Crafting",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "Daemon976.PersonaCoresV3",
+      "newAuthor": "Daemon976",
+      "newName": "Project RimFactory - Persona Core Crafting",
+      "oldPackageId": "Daemon976.PersonaCores",
+      "oldAuthor": "Daemon976",
+      "oldWorkshopId": "2344182360"
+    },
+    {
+      "newName": "Stuffed Security",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldWorkshopId": "2280581106",
+      "newWorkshopId": "3686756161",
+      "newAuthor": "Daemon976",
+      "oldPackageId": "Daemon976.StuffedSecurity",
+      "newPackageId": "D976.StuffedSecurity",
+      "oldAuthor": "Daemon976",
+      "oldName": "Stuffed Security"
+    },
+    {
+      "newName": "CCRT temp",
+      "newVersions": [
+        "1.4",
+        "1.6"
+      ],
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldWorkshopId": "2879583413",
+      "newWorkshopId": "3688919031",
+      "newAuthor": "CC",
+      "oldPackageId": "chiefcurtains.itemTags",
+      "newPackageId": "CC.Rimworld.CCRTtemp",
+      "oldAuthor": "Chief_Curtains",
+      "oldName": "CCRT Item Tags"
+    },
+    {
+      "oldName": "Flexible Xenogerms",
+      "oldAuthor": "iivar",
+      "newName": "Flexible Xenogerms (continued)",
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "Gulp1n",
+      "newPackageId": "Gulp1n.FlexibleXenogerms",
+      "newWorkshopId": "3689931012",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldWorkshopId": "2891689783",
+      "oldPackageId": "PorousBoat.Flexible_Xenogerms"
+    },
+    {
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newAuthor": "GodlyAnnihilator",
+      "newName": "Quicker Anesthetic Continued",
+      "newWorkshopId": "3694212095",
+      "oldName": "Quicker Anesthetic",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "2982042302",
+      "newPackageId": "GodlyAnnihilator.quickeranesthetic",
+      "oldPackageId": "temmie3754.quickeranesthetic.1",
+      "oldAuthor": "Temmie"
+    },
+    {
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "GodlyAnnihilator",
+      "newName": "Flak don't have to suck Continued",
+      "newWorkshopId": "3694812039",
+      "oldName": "Flak don't have to suck",
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "1905785762",
+      "newPackageId": "GodlyAnnihilator.flaksdonthavetosuck",
+      "oldPackageId": "Aspirrator.MAFA",
+      "oldAuthor": "Stoat"
+    },
+    {
+      "oldAuthor": "kd8lvt",
+      "oldName": "Math! (Forked)",
+      "newName": "[1.6] Math! (Forked)",
+      "newAuthor": "CrunchyDuck, kd8lvt, valzietine",
+      "oldWorkshopId": "2961564012",
+      "oldPackageId": "CrunchyDuck.Math",
+      "newWorkshopId": "3695478922",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newPackageId": "crunchyduck.math",
+      "newVersions": [
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Treasure Hunter: The Forbidden Caravan (Continued)",
+      "oldAuthor": "velcroboy333",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "TreasureHunter.velcroboy333",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldWorkshopId": "2653963772",
+      "newPackageId": "zal.treasurehunter",
+      "newWorkshopId": "3697918032",
+      "oldName": "Treasure Hunter: The Forbidden Caravan",
+      "newAuthor": "Zaljerem"
+    },
+    {
+      "newName": "CaravanOptions (Continued)",
+      "oldAuthor": "Oldasur",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "Oldasur.CaravanOptions",
+      "oldVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "3537224386",
+      "newPackageId": "zal.caravanoptions",
+      "newWorkshopId": "3697920307",
+      "oldName": "CaravanOptions(Temp 1.6)",
+      "newAuthor": "Zaljerem"
+    },
+    {
+      "newName": "Caravan Activities Framework (Continued)",
+      "oldAuthor": "Bambaryła",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "temmie3754.caravanactivities",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldWorkshopId": "3056702430",
+      "newPackageId": "zal.caravanactivities",
+      "newWorkshopId": "3697922952",
+      "oldName": "Caravan Activities Framework [Discontinued]",
+      "newAuthor": "Zaljerem"
+    },
+    {
+      "newName": "Immersive Main Menu (Continued)",
+      "oldAuthor": "El Perico",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "elperico.immersiveplanet",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldWorkshopId": "3409148337",
+      "newPackageId": "benjaminbarrels.immersiveplanetmenu",
+      "newWorkshopId": "3698198587",
+      "oldName": "Immersive Main Menu",
+      "newAuthor": "Benjamin Barrels"
+    },
+    {
+      "newAuthor": "Ilarion",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Colonist Bar Hiding",
+      "newWorkshopId": "3703022348",
+      "newPackageId": "Ilarion.colonistbarhidingreloaded",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2"
+      ],
+      "oldAuthor": "Saucy_Pigeon",
+      "newName": "Colonist Bar Hiding Reloaded",
+      "oldPackageId": "SaucyPigeon.ColonistBarHiding",
+      "oldWorkshopId": "1969824437"
+    },
+    {
+      "newAuthor": "boingo.box",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "RimThunder - Ardennes Assault",
+      "newWorkshopId": "3703267895",
+      "newPackageId": "boingo.box.ardennes",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldAuthor": "Cannon Mutton",
+      "newName": "RimThunder - Ardennes Assault 1.6 Continued",
+      "oldPackageId": "RimThunderTeams.RimThunder.ArdennesAssault",
+      "oldWorkshopId": "3143158800"
+    },
+    {
+      "oldWorkshopId": "3470075068",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldAuthor": "PIaceholder",
+      "newPackageId": "PI.MHRWOverhualCont",
+      "newAuthor": "Cresuna",
+      "newName": "Monster Hunter RimWorld Overhaul [Continued]",
+      "newWorkshopId": "3704160775",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Monster Hunter RimWorld Overhual",
+      "oldPackageId": "PI.MHRWOverhual"
+    },
+    {
+      "oldWorkshopId": "3413688260",
+      "oldVersions": [
+        "1.5"
+      ],
+      "oldAuthor": "Saruman",
+      "newPackageId": "Nephilim.HelltakerFactions",
+      "newAuthor": "Nephilim",
+      "newName": "Helltaker Factions (continued)",
+      "newWorkshopId": "3704623847",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldName": "Helltaker Factions",
+      "oldPackageId": "Saruman.HelltakerFactions"
+    },
+    {
+      "oldWorkshopId": "2993743513",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldAuthor": "Noisy Koi",
+      "newPackageId": "quatch.Mechandroids",
+      "newAuthor": "Zazquatch",
+      "newName": "Koi's Mech-Androids for 1.6",
+      "newWorkshopId": "3704669419",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Koi's Mech-Androids",
+      "oldPackageId": "NoisyKoi.Mechandroids"
+    },
+    {
+      "oldPackageId": "MYDE.EarthsplitterOrdnance",
+      "newAuthor": "SilkLily",
+      "newName": "Earthsplitter Ordnance (Continued)",
+      "newPackageId": "MYDE.EarthsplitterOrdnanceForked",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldAuthor": "空曜",
+      "oldWorkshopId": "2926826183",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldName": "Earthsplitter Ordnance",
+      "newWorkshopId": "3705210490"
     }
   ],
-  "version": "2026-03-13T09:23:37Z"
+  "version": "2026-04-15T21:20:15Z"
 }
