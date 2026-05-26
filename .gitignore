@@ -16,3 +16,4 @@ MigrationBackup
 *.nupkg
 replacements.json.gz
 replacements.json
+.venv

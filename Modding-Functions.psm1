@@ -102,6 +102,10 @@ function WriteProgress {
 		return
 	}
 
+	if ($title) {
+		$progressObject.title = $title
+	}
+
 	if ($finished) {
 		Write-Progress -Activity $progressObject.title -Completed -Id $progressObject.callingFunction
 		SetTerminalProgress
@@ -115,7 +119,7 @@ function WriteProgress {
 	# ---- UNKNOWN TOTAL ----
 	#
 	if (-not $progressObject.total) {
-		Write-Progress -Activity $progressObject.title -Status "Elapsed: {0:N1}s" -f $elapsedSeconds -Id $progressObject.callingFunction
+		Write-Progress -Activity $progressObject.title -Status "Elapsed: $([math]::Round($elapsedSeconds, 1))s" -Id $progressObject.callingFunction
 		# Keep your window/tab icon in "unknown" mode
 		SetTerminalProgress -unknown
 		return
@@ -6003,6 +6007,131 @@ function Push-UpdateNotification {
 	}
 }
 
+function Get-RimWorldBaseMods {
+	[CmdletBinding()]
+	param(
+		[string]$Title
+	)
+
+	if (-not $rimworldBaseApiKey) {
+		WriteMessage -failure "No RimWorldBase API key defined, cannot query"
+		return
+	}
+
+	$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($rimWorldBaseApiUser):$($rimworldBaseApiKey)"))
+	$headers = @{
+		"Authorization" = "Basic $base64AuthInfo"
+	}
+
+	$allPosts = @()
+	$page = 1
+	$progressObject = WriteProgress -initiate -title "Fetching mods from RimWorldBase"
+	do {
+		WriteProgress -progressObject $progressObject -title "Fetching mods from RimWorldBase (found $($allPosts.Count) so far)"
+		$url = "$($rimWorldBaseApiUrl)?per_page=100&page=$page"
+		if ($Title) {
+			$url += "&search=$([uri]::EscapeDataString($Title))"
+		}
+		try {
+			$webResponse = Invoke-WebRequest -Uri $url -Method Get -Headers $headers
+			$items = @($webResponse.Content | ConvertFrom-Json -AsHashtable)
+		} catch {
+			if ($_.Exception.Response.StatusCode.value__ -eq 400) {
+				break
+			}
+			WriteMessage -failure "Failed to fetch posts from RimWorldBase: $_"
+			return $allPosts
+		}
+		$allPosts += $items
+		Write-Verbose "Fetched page $page, got $($items.Count) posts (total: $($allPosts.Count))"
+		$page++
+	} while ($items.Count -eq 100)
+	WriteProgress -finished -progressObject $progressObject
+
+	$myPosts = @($allPosts | Where-Object { $_.acf.direct_download -and $_.acf.direct_download.StartsWith("https://github.com/emipa606") })
+	WriteMessage -success "Found $($myPosts.Count) of my mods on RimWorldBase (out of $($allPosts.Count) total)"
+	return $myPosts
+}
+
+function Sync-RimWorldBaseToDatabase {
+	[CmdletBinding()]
+	param()
+
+	$allPosts = Get-RimWorldBaseMods
+	if (-not $allPosts -or $allPosts.Count -eq 0) {
+		WriteMessage -failure "No mods found on RimWorldBase"
+		return
+	}
+
+	# Build a lookup of RimWorldBase post IDs (int) to post title
+	$rwBaseIds = @{}
+	foreach ($post in $allPosts) {
+		$rwBaseIds[[int]$post.id] = $post.title.rendered
+	}
+
+	# Get all my mods from the database
+	$sql = "SELECT name, steam_published_id, rimworld_base_id, identifier FROM rimworld.mods WHERE mine = true AND archived = false;"
+	$dbMods = Invoke-DatabaseCommand -command $sql -getResult
+	if (-not $dbMods) {
+		WriteMessage -failure "Could not fetch mods from database"
+		return
+	}
+
+	$missingInDatabase = @()
+	$notOnRimWorldBase = @()
+
+	# Build a set of rimworld_base_ids that exist in the database
+	$dbRwBaseIds = @{}
+
+	foreach ($dbMod in $dbMods) {
+		$dbRwBaseId = if ($dbMod.rimworld_base_id -is [DBNull] -or $null -eq $dbMod.rimworld_base_id) {
+			$null
+		} else {
+			[int]$dbMod.rimworld_base_id
+		}
+
+		if ($dbRwBaseId) {
+			$dbRwBaseIds[$dbRwBaseId] = $dbMod.name
+		} else {
+			# Mod in database has no rimworld_base_id - check if it should have one
+			$notOnRimWorldBase += @{ Name = $dbMod.name; PublishedId = $dbMod.steam_published_id; Identifier = $dbMod.identifier }
+		}
+	}
+
+	# Find RimWorldBase posts that are not referenced by any database mod
+	foreach ($post in $allPosts) {
+		$postId = [int]$post.id
+		if (-not $dbRwBaseIds.ContainsKey($postId)) {
+			$title = $post.acf.direct_download.Replace('https://github.com/emipa606/', '').Split('/')[0]
+			WriteMessage -warning "RimWorldBase post '$($title)' (ID: $postId) has no matching mod in database"
+			$missingInDatabase += @{ Title = $title; RimWorldBaseId = $postId }
+		}
+	}
+
+	WriteMessage -success "Validated $($dbMods.Count) database mods against $($allPosts.Count) RimWorldBase posts"
+	if ($missingInDatabase.Count -gt 0) {
+		WriteMessage -warning "$($missingInDatabase.Count) RimWorldBase posts have no matching rimworld_base_id in the database"
+		$reply = ReadHost -Query "Create rimworld_base_id for missing entries? (y/n)"
+		if ($reply -eq "y") {
+			foreach ($entry in $missingInDatabase) {
+				$modObject = Get-Mod -modName $entry.Title
+				if ($modObject -and $modObject.ModFolderPath) {
+					Add-MemberIfMissing -Object $modObject -Name "RimWorldBaseId" -Value $entry.RimWorldBaseId
+					Update-ModInfoToDatabase -modObject $modObject
+					WriteMessage -success "Fixed: Set RimWorldBaseId=$($entry.RimWorldBaseId) for $($entry.Title)"
+				} else {
+					WriteMessage -warning "Could not load mod object for $($entry.Title) to fix"
+				}
+			}
+		}
+	}
+	if ($notOnRimWorldBase.Count -gt 0) {
+		WriteMessage -progress "$($notOnRimWorldBase.Count) database mods have no RimWorldBaseId (not published to RimWorldBase)"
+	}
+
+	return @{ MissingInDatabase = $missingInDatabase; NotOnRimWorldBase = $notOnRimWorldBase }
+}
+
 function Publish-ModToRimWorldBase {
 	[CmdletBinding()]
 	param(
@@ -7328,6 +7457,105 @@ function Set-Translation {
 #endregion
 
 #region Trello functions
+
+# Upserts a Trello card returned from the API into the local database cache
+function Sync-TrelloCardToDatabase {
+	param($card)
+	if (-not $card -or -not $card.id) {
+		return
+ }
+
+	$labelsJson = if ($card.labels) {
+		($card.labels | ConvertTo-Json -Compress -Depth 5)
+	} else {
+		'[]'
+ }
+
+	$customFieldItemsJson = if ($card.customFieldItems) {
+		($card.customFieldItems | ConvertTo-Json -Compress -Depth 5)
+	} else {
+		'[]'
+ }
+
+	$closed = if ($card.closed) {
+		'true'
+ } else {
+		'false'
+ }
+	$dateLastActivity = if ($card.dateLastActivity) {
+		Get-EscapedSqlLiteral $card.dateLastActivity
+ } else {
+		'NULL'
+ }
+
+	$sql = @"
+INSERT INTO workshop.trello_cards (id, name, id_list, description, closed, short_url, url, labels, custom_field_items, date_last_activity)
+VALUES ($(Get-EscapedSqlLiteral $card.id), $(Get-EscapedSqlLiteral $card.name), $(Get-EscapedSqlLiteral "$($card.idList)"),
+        $(Get-EscapedSqlLiteral "$($card.desc)"), $closed, $(Get-EscapedSqlLiteral "$($card.shortUrl)"), $(Get-EscapedSqlLiteral "$($card.url)"),
+        $(Get-EscapedSqlLiteral $labelsJson)::jsonb, $(Get-EscapedSqlLiteral $customFieldItemsJson)::jsonb, $dateLastActivity)
+ON CONFLICT (id) DO UPDATE SET
+    name               = EXCLUDED.name,
+    id_list            = EXCLUDED.id_list,
+    description        = EXCLUDED.description,
+    closed             = EXCLUDED.closed,
+    short_url          = EXCLUDED.short_url,
+    url                = EXCLUDED.url,
+    labels             = EXCLUDED.labels,
+    custom_field_items = EXCLUDED.custom_field_items,
+    date_last_activity = EXCLUDED.date_last_activity,
+    synced_at          = now();
+"@
+	Invoke-DatabaseCommand -command $sql | Out-Null
+}
+
+# Converts a trello_cards database row back into a Trello API-shaped object
+function ConvertFrom-TrelloDbRow {
+	param($row)
+	if (-not $row) {
+		return $null
+ }
+
+	$labels = @()
+	if ($row.labels) {
+		try {
+			$parsed = if ($row.labels -is [string]) {
+				$row.labels | ConvertFrom-Json
+   } else {
+				$row.labels
+   }
+			$labels = @($parsed)
+		} catch {
+  }
+	}
+
+	$customFieldItems = @()
+	if ($row.custom_field_items) {
+		try {
+			$parsed = if ($row.custom_field_items -is [string]) {
+				$row.custom_field_items | ConvertFrom-Json
+   } else {
+				$row.custom_field_items
+   }
+			$customFieldItems = @($parsed)
+		} catch {
+  }
+	}
+
+	return [PSCustomObject]@{
+		id               = $row.id
+		name             = $row.name
+		idList           = $row.id_list
+		desc             = $row.description
+		closed           = $row.closed
+		shortUrl         = $row.short_url
+		url              = $row.url
+		labels           = $labels
+		idLabels         = @($labels | ForEach-Object { $_.id } | Where-Object { $_ })
+		customFieldItems = $customFieldItems
+		dateLastActivity = $row.date_last_activity
+	}
+}
+
 function Get-TrelloBoards {
 	$boards = Invoke-RestMethod -Uri "https://api.trello.com/1/members/me/boards?key=$trelloKey&token=$trelloToken" -Verbose:$false
 	return $boards
@@ -7341,23 +7569,40 @@ function Get-TrelloCards {
 	if (-not $boardId) {
 		$boardId = $trelloBoardId
 	}
+	$sql = if ($listId) {
+		"SELECT * FROM workshop.trello_cards WHERE id_list = $(Get-EscapedSqlLiteral $listId) AND closed = false ORDER BY date_last_activity DESC"
+	} else {
+		"SELECT * FROM workshop.trello_cards WHERE closed = false ORDER BY date_last_activity DESC"
+	}
+	$rows = Invoke-DatabaseCommand -command $sql -getResult
+	if ($rows -and $rows.Count -gt 0 -and $rows[0]) {
+		return $rows | ForEach-Object { ConvertFrom-TrelloDbRow $_ }
+	}
 	if ($listId) {
 		$cards = Invoke-RestMethod -Uri "https://api.trello.com/1/lists/$($listId)/cards?key=$trelloKey&token=$trelloToken&customFieldItems=true" -Verbose:$false
-		return $cards
+	} else {
+		$cards = Invoke-RestMethod -Uri "https://api.trello.com/1/boards/$boardId/cards/open?key=$trelloKey&token=$trelloToken&customFieldItems=true" -Verbose:$false
 	}
-	$cards = Invoke-RestMethod -Uri "https://api.trello.com/1/boards/$boardId/cards/open?key=$trelloKey&token=$trelloToken&customFieldItems=true" -Verbose:$false
+	$cards | ForEach-Object { Sync-TrelloCardToDatabase -card $_ }
 	return $cards
 }
 
 function Get-TrelloCard {
 	param($cardId)
+	$sql = "SELECT * FROM workshop.trello_cards WHERE id = $(Get-EscapedSqlLiteral $cardId)"
+	$row = Invoke-DatabaseCommand -command $sql -getResult | Select-Object -First 1
+	if ($row -and $row.id) {
+		return ConvertFrom-TrelloDbRow $row
+	}
 	$card = Invoke-RestMethod -Uri "https://api.trello.com/1/cards/$($cardId)?key=$trelloKey&token=$trelloToken&customFieldItems=true" -Verbose:$false
+	Sync-TrelloCardToDatabase -card $card
 	return $card
 }
 
 function New-TrelloCard {
 	param($cardName, $listId)
 	$card = Invoke-RestMethod -Uri "https://api.trello.com/1/cards?name=$cardName&idList=$listId&key=$trelloKey&token=$trelloToken" -Method Post -Verbose:$false
+	Sync-TrelloCardToDatabase -card $card
 	return $card
 }
 
@@ -7394,6 +7639,8 @@ function Add-TrelloCardLabel {
 }
 "@
 	Invoke-RestMethod -Method Post -Body $body -ContentType 'application/json' -Uri "https://api.trello.com/1/cards/$($cardId)/idLabels?key=$trelloKey&token=$trelloToken" -Verbose:$false | Out-Null
+	$freshCard = Invoke-RestMethod -Uri "https://api.trello.com/1/cards/$($cardId)?key=$trelloKey&token=$trelloToken&customFieldItems=true" -Verbose:$false
+	Sync-TrelloCardToDatabase -card $freshCard
 }
 
 function Set-TrelloCardToArchived {
@@ -7405,14 +7652,19 @@ function Set-TrelloCardToArchived {
 }
 "@
 	Invoke-RestMethod -Method Put -Body $body -ContentType 'application/json' -Uri "https://api.trello.com/1/cards/$($cardId)?key=$trelloKey&token=$trelloToken" -Verbose:$false | Out-Null
+	$sql = "UPDATE workshop.trello_cards SET closed = true, synced_at = now() WHERE id = $(Get-EscapedSqlLiteral $cardId)"
+	Invoke-DatabaseCommand -command $sql | Out-Null
 }
 
 function Find-TrelloCardByName {
 	param ($text)
+	$sql = "SELECT * FROM workshop.trello_cards WHERE name ILIKE $(Get-EscapedSqlLiteral "%$text%") AND closed = false"
+	$rows = Invoke-DatabaseCommand -command $sql -getResult
+	if ($rows -and $rows.Count -gt 0 -and $rows[0]) {
+		return $rows | ForEach-Object { ConvertFrom-TrelloDbRow $_ }
+	}
 	$cards = Get-TrelloCards -boardId $trelloBoardId
-	$cards | ForEach-Object { if ($_.name.contains($text)) {
-			return $_
-		} }
+	return $cards | Where-Object { $_.name.contains($text) }
 }
 
 function Find-TrelloCardByCustomField {
@@ -7420,12 +7672,24 @@ function Find-TrelloCardByCustomField {
 		$text,
 		$fieldId
 	)
+	$sql = @"
+SELECT * FROM workshop.trello_cards
+WHERE closed = false
+AND EXISTS (
+    SELECT 1 FROM jsonb_array_elements(custom_field_items) AS elem
+    WHERE elem->>'idCustomField' = $(Get-EscapedSqlLiteral $fieldId)
+    AND elem->'value'->>'text' LIKE $(Get-EscapedSqlLiteral "$text%")
+)
+"@
+	$rows = Invoke-DatabaseCommand -command $sql -getResult
+	if ($rows -and $rows.Count -gt 0 -and $rows[0]) {
+		return $rows | ForEach-Object { ConvertFrom-TrelloDbRow $_ }
+	}
 	$cards = Get-TrelloCards -boardId $trelloBoardId
-	$cards | ForEach-Object { if ($_.customFieldItems -and $_.customFieldItems.idCustomField.contains($fieldId)) {
-			if (($_.customFieldItems | Where-Object { $_.idCustomField -eq $fieldId }).value.text.StartsWith($text) ) {
-				return $_
-			}
-		}
+	return $cards | Where-Object {
+		$_.customFieldItems -and
+		$_.customFieldItems.idCustomField -contains $fieldId -and
+		($_.customFieldItems | Where-Object { $_.idCustomField -eq $fieldId }).value.text.StartsWith($text)
 	}
 }
 
@@ -7477,6 +7741,39 @@ function Get-ModIssues {
 		Write-Host "`n$($lastUpdated.ToString("yyyy-MM-dd HH:mm:ss")) ( $($_.shortUrl) )"
 		Write-Host -ForegroundColor DarkGray "$($_.desc)`n"
 	}
+}
+
+function Close-ModIssue {
+	param($modObject)
+
+	if (-not $modObject) {
+		$modObject = Get-Mod
+		if (-not $modObject) {
+			return
+		}
+	}
+
+	$foundCards = Get-TrelloCardsForMod -modObject $modObject
+
+	if (-not $foundCards) {
+		WriteMessage -progress "No active Trello cards found for mod"
+		return
+	}
+
+	WriteMessage -progress "Found $($foundCards.Count) active Trello cards for $($modObject.Name), select which one to close:"
+	$counter = 1
+	foreach ($card in $foundCards) {
+		Write-Host -ForegroundColor Green "`n$counter - $($card.name) ( $($card.shortUrl) )`n$($card.desc)`n"
+		$counter++
+	}
+	$selection = ReadHost "What card do you want to close?"
+	if (-not $selection) {
+		WriteMessage -progress "No card chosen"
+		return
+	}
+	$card = $foundCards[$selection - 1]
+	WriteMessage -progress "Closing $($selection) - $($card.name) ($($card.dateLastActivity))"
+	Set-TrelloCardToArchived -cardId $card.id
 }
 
 function Close-TrelloCardsForMod {
