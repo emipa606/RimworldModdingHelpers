@@ -3514,7 +3514,7 @@ function Get-SteamWorkshopModInfo {
 		return $result
 	}
 	if ((Test-Path $filePath) -and (Get-Content -Path $filePath) -match "Please wait and try your request again later") {
-		Update-SteamRequest -success $false
+		Update-SteamRequest -success $false -rateLimitTriggered
 		$pendingSuccessUpdate = $false
 		WriteMessage -progress "Steam rate limit hit, subscribing instead of fetching data"
 		Set-ModSubscription -modId $modId -subscribe $true -noCheck | Out-Null
@@ -4007,14 +4007,61 @@ function Get-ModLink {
 	$searchString = "https://steamcommunity.com/workshop/browse/?appid=294100&browsesort=textsearch&section=items&requiredtags%5B%5D=Mod&requiredtags%5B%5D=$modVersion&searchtext=$modNameUrlEncoded"
 	$html = ConvertFrom-Html -URI $searchString
 
-	$counter = 0
-	foreach ($title in $html.SelectNodes("//div[contains(@class, 'workshopItemTitle')]").InnerText) {
-		$titleDecoded = [System.Web.HTTPUtility]::HtmlDecode($title)
-		if ($titleDecoded -eq $modName) {
+	$entries = @()
+
+	# New workshop layout: title anchors point directly to sharedfiles links.
+	$titleLinkNodes = @($html.SelectNodes("//a[contains(@href, '/sharedfiles/filedetails/?id=') and normalize-space(text()) != '']"))
+	$authorNodes = @($html.SelectNodes("//a[contains(@href, '/myworkshopfiles/?appid=294100') or starts-with(normalize-space(text()), 'By ')]"))
+
+	if ($titleLinkNodes.Count -gt 0) {
+		for ($i = 0; $i -lt $titleLinkNodes.Count; $i++) {
+			$node = $titleLinkNodes[$i]
+			$link = $node.GetAttributeValue("href", "")
+			if (-not $link) {
+				continue
+			}
+			$titleDecoded = [System.Web.HTTPUtility]::HtmlDecode($node.InnerText).Trim()
+			if (-not $titleDecoded) {
+				continue
+			}
+
+			$authorName = "Unknown"
+			if ($authorNodes.Count -gt $i -and $authorNodes[$i]) {
+				$authorName = [System.Web.HTTPUtility]::HtmlDecode($authorNodes[$i].InnerText).Trim()
+			}
+
+			$entries += [PSCustomObject]@{
+				Title  = $titleDecoded
+				Link   = $link.Split("&")[0]
+				Author = $authorName
+			}
+		}
+	}
+
+	# Fallback for old workshop layout.
+	if ($entries.Count -eq 0) {
+		$legacyTitles = @($html.SelectNodes("//div[contains(@class, 'workshopItemTitle')]") | ForEach-Object { [System.Web.HTTPUtility]::HtmlDecode($_.InnerText).Trim() })
+		$legacyAuthors = @($html.SelectNodes("//a[contains(@class, 'workshop_author_link')]") | ForEach-Object { [System.Web.HTTPUtility]::HtmlDecode($_.InnerText).Trim() })
+		$legacyLinks = @($html.SelectNodes("//a[contains(@href, '/sharedfiles/filedetails/?id=') and normalize-space(@href) != '']") | ForEach-Object { $_.GetAttributeValue("href", "").Split("&")[0] } | Select-Object -Unique)
+
+		$max = [Math]::Min($legacyTitles.Count, $legacyLinks.Count)
+		for ($i = 0; $i -lt $max; $i++) {
+			$authorName = "Unknown"
+			if ($legacyAuthors.Count -gt $i -and $legacyAuthors[$i]) {
+				$authorName = $legacyAuthors[$i]
+			}
+			$entries += [PSCustomObject]@{
+				Title  = $legacyTitles[$i]
+				Link   = $legacyLinks[$i]
+				Author = $authorName
+			}
+		}
+	}
+
+	foreach ($entry in $entries) {
+		if ($entry.Title -ieq $modName) {
 			WriteMessage -success "Found mod named $modName"
-			$item = $html.SelectNodes("//div[contains(@class, 'workshopItem')]")
-			$linkNode = $item.ChildNodes | Where-Object -Property Name -eq a | Where-Object -Property InnerText -eq $title
-			$link = $linkNode.GetAttributeValue("href", "").Split("&")[0]
+			$link = $entry.Link
 			if ($openFolder) {
 				$modId = $link.Split("=")[1]
 				$modFolder = "$localModFolder\..\..\..\workshop\content\294100\$modId"
@@ -4027,7 +4074,6 @@ function Get-ModLink {
 			}
 			return $link
 		}
-		$counter++
 	}
 
 	WriteMessage -warning "No mod named $modName found"
@@ -4038,10 +4084,8 @@ function Get-ModLink {
 	$counter = 1
 	# Max count should be terminal height - 2
 	$maxCount = [console]::WindowHeight - 2
-	foreach ($title in $html.SelectNodes("//div[contains(@class, 'workshopItemTitle')]").InnerText) {
-		$titleDecoded = [System.Web.HTTPUtility]::HtmlDecode($title)
-		$authorName = $html.SelectNodes("//a[contains(@class, 'workshop_author_link')]")[$counter - 1].InnerText
-		Write-Host "$counter - $titleDecoded ($authorName)"
+	foreach ($entry in $entries) {
+		Write-Host "$counter - $($entry.Title) ($($entry.Author))"
 		$counter++
 		if ($counter -gt $maxCount) {
 			break
@@ -4051,15 +4095,11 @@ function Get-ModLink {
 	$answer = [int](ReadHost "Select matching, or empty for exit")
 	if ($answer) {
 		$answer--
-		$title = $html.SelectNodes("//div[contains(@class, 'workshopItemTitle')]")[$answer].InnerText
-		$titleDecoded = [System.Web.HTTPUtility]::HtmlDecode($title)
-		$items = $html.SelectNodes("//div[contains(@class, 'workshopItem')]")
-		$linkNode = $items.ChildNodes | Where-Object -Property Name -eq a | Where-Object -Property InnerText -eq $title
-		if (-not $linkNode) {
-			WriteMessage -failure "Could not find the link for $title"
+		if ($answer -lt 0 -or $answer -ge $entries.Count) {
+			WriteMessage -failure "Invalid selection"
 			return
 		}
-		$link = $linkNode.GetAttributeValue("href", "").Split("&")[0]
+		$link = $entries[$answer].Link
 		WriteMessage -success "Found link for mod named $modName"
 		if ($openFolder) {
 			$modId = $link.Split("=")[1]
@@ -4105,9 +4145,14 @@ function Update-AllWorkshopMods {
 				Invoke-SteamWaitTime
 				continue
 			}
-			if ($resp.Content -match "An error was encountered while processing your request:" `
-					-or $resp.Content -match "Please wait and try your request again later" `
+			if ($resp.Content -match "Please wait and try your request again later" `
 					-or $resp.Content -match "Please try again later") {
+				Update-SteamRequest -success $false -rateLimitTriggered
+				WriteMessage -failure "Steam returned an error for page $page, waiting before retrying"
+				Invoke-SteamWaitTime
+				continue
+			}
+			if ($resp.Content -match "An error was encountered while processing your request:") {
 				Update-SteamRequest -success $false
 				WriteMessage -failure "Steam returned an error for page $page, waiting before retrying"
 				Invoke-SteamWaitTime
@@ -4364,6 +4409,13 @@ function Set-RimworldRunMode {
 				Move-Item "$activeDlcFolder\$dlc" $inactiveDlcFolder -Force
 			} else {
 				WriteMessage -warning "DLC $dlc not found in active folder, skipping"
+			}
+		}
+		Get-ChildItem $inactiveDlcFolder -Directory | ForEach-Object {
+			$dlcName = $_.Name
+			if ($skipDLCs -notcontains $dlcName) {
+				WriteMessage -progress "Moving DLC $dlcName to active folder"
+				Move-Item $_.FullName "$activeDlcFolder\$dlcName" -Force
 			}
 		}
 	}
@@ -5107,8 +5159,9 @@ function Update-ModDescriptionTags {
 Generate up to five search tags for the following Rimworld mod description.
 These should make it easier for users to find the mod in the workshop and should not be too generic.
 They should not contain the words: Rimworld, Update, Game, Mod, Discord, Forum, Translation, Version, Steam, Workshop, Ludeon, Studios, Author, Name, Description, Features, Research
-They should not contain any of the words in the description itself.
-Return them in a comma-separated list.
+Avoid copying full phrases from the description or the mod name; short descriptive words or phrases are allowed.
+Use natural readable words with spaces when needed (good: "colonist decor", bad: "colonistdecor").
+Return only a comma-separated list with no extra commentary.
 
 Description: $($modObject.Name)
 $($modObject.DescriptionClean)
@@ -5116,20 +5169,77 @@ $($modObject.DescriptionClean)
 Tags:
 "@
 
+	$modelToUse = if ($openAIChatModel) {
+		$openAIChatModel
+ } else {
+		$openAIModel
+ }
+
 	$body = @{
-		"model"      = $openAIModel
-		"prompt"     = $prompt
-		"max_tokens" = 50
-	} | ConvertTo-Json
+		"model"                 = $modelToUse
+		"messages"              = @(
+			@{ role = "system"; content = "You generate concise Steam Workshop search tags for RimWorld mods." },
+			@{ role = "user"; content = $prompt }
+		)
+		"max_completion_tokens" = 60
+		"temperature"           = 0.4
+	} | ConvertTo-Json -Depth 10
 
 	$headers = @{
 		"Content-Type"  = "application/json"
 		"Authorization" = "Bearer $openAIApiKey"
 	}
+	$parseTags = {
+		param($rawText)
+		if (-not $rawText) {
+			return @()
+		}
+
+		return [regex]::Split($rawText, ",|;|\r?\n") |
+		ForEach-Object {
+			$cleaned = $_.Trim().ToLowerInvariant().Replace('"', "")
+			$cleaned = $cleaned -replace '^[\-\*\d\.)\s]+', ''
+			$cleaned = $cleaned -replace '\s+', ' '
+			$cleaned
+		} |
+		Where-Object { $_ -and $_ -match '[a-z0-9]' } |
+		Select-Object -Unique |
+		Select-Object -First 5
+	}
 	$tags = @()
 	try {
-		$response = Invoke-RestMethod -Uri "https://api.openai.com/v1/completions" -Method Post -Headers $headers -Body $body
-		$tags = $response.choices.text.ToLower().Trim().Replace('"', "") -split ","
+		$response = Invoke-RestMethod -Uri "https://api.openai.com/v1/chat/completions" -Method Post -Headers $headers -Body $body
+		$rawTagText = $response.choices[0].message.content
+		if (-not $rawTagText -and $response.choices[0].text) {
+			$rawTagText = $response.choices[0].text
+		}
+
+		if ($rawTagText) {
+			$tags = & $parseTags $rawTagText
+		}
+
+		# Retry once if the model appears to return concatenated single-word tags.
+		$suspiciousTags = @($tags | Where-Object { $_ -match '^[a-z]{12,}$' })
+		if ($tags.Count -gt 0 -and $suspiciousTags.Count -ge [Math]::Ceiling($tags.Count / 2)) {
+			$retryBody = @{
+				"model"                 = $modelToUse
+				"messages"              = @(
+					@{ role = "system"; content = "Return readable Steam Workshop tags as natural words. Never merge words together." },
+					@{ role = "user"; content = "Regenerate the tags below using spaces between words where appropriate. Keep up to five concise tags, comma-separated, lowercase, no commentary.`n`nOriginal tags: $($tags -join ', ')" }
+				)
+				"max_completion_tokens" = 60
+				"temperature"           = 0.3
+			} | ConvertTo-Json -Depth 10
+
+			$retryResponse = Invoke-RestMethod -Uri "https://api.openai.com/v1/chat/completions" -Method Post -Headers $headers -Body $retryBody
+			$retryRawTagText = $retryResponse.choices[0].message.content
+			if (-not $retryRawTagText -and $retryResponse.choices[0].text) {
+				$retryRawTagText = $retryResponse.choices[0].text
+			}
+			if ($retryRawTagText) {
+				$tags = & $parseTags $retryRawTagText
+			}
+		}
 	} catch {
 		WriteMessage -failure "Failed to generate search-tags for $($modObject.Name)`nError: $_"
 		if ($silent) {
@@ -5185,11 +5295,6 @@ function Update-ModCopilotMetadata {
 		return
 	}
 
-	if (-not $modObject.HasAssemblies) {
-		WriteMessage -progress "Mod has no assemblies $($modObject.Name)"
-		return
-	}
-
 	# Define paths
 	$sourcePath = Join-Path $modObject.ModFolderPath "Source"
 	$xmlSourcePath = Join-Path $modObject.ModFolderPath "Defs"
@@ -5214,17 +5319,47 @@ function Update-ModCopilotMetadata {
 	}
 
 	WriteMessage -progress "Generating copilot-instructions.md for $($modObject.Name)"
-	# Summarize C# files
-	$csSummary = Get-ChildItem -Path $sourcePath -Recurse -Include *.cs -ErrorAction SilentlyContinue | ForEach-Object {
-		$content = Get-Content $_.FullName -Raw
-		$classes = ($content -split "`n") | Where-Object { $_ -match 'class\s+\w+' }
-		$methods = ($content -split "`n") | Where-Object { $_ -match '\b(public|private|protected|internal)\s+\w+\s+\w+\(' }
-		"File: $($_.Name)`nClasses:`n$($classes -join "`n")`nMethods:`n$($methods -join "`n")`n"
+	$semanticSummary = $null
+	if (Get-Command -Name Get-ModSemanticReasoningSummary -ErrorAction SilentlyContinue) {
+		$semanticSummary = Get-ModSemanticReasoningSummary -modObject $modObject
 	}
+	if ($semanticSummary) {
+		$semanticSummaryText = Convert-ModSemanticReasoningToPromptText -semanticSummary $semanticSummary.summary_json
+	} else {
+		if ($modObject.HasAssemblies) {
+			# Summarize C# files
+			$csSummary = Get-ChildItem -Path $sourcePath -Recurse -Include *.cs -ErrorAction SilentlyContinue | ForEach-Object {
+				$content = Get-Content $_.FullName -Raw
+				$classes = ($content -split "`n") | Where-Object { $_ -match 'class\s+\w+' }
+				$methods = ($content -split "`n") | Where-Object { $_ -match '\b(public|private|protected|internal)\s+\w+\s+\w+\(' }
+				"File: $($_.Name)`nClasses:`n$($classes -join "`n")`nMethods:`n$($methods -join "`n")`n"
+			}
+		} else {
+			$csSummary = "Mod does not use C#."
+		}
+		# Summarize XML files
+		if (Test-Path $xmlSourcePath) {
+			$xmlSummary = Get-ChildItem -Path $xmlSourcePath -Recurse -Include *.xml -ErrorAction SilentlyContinue | ForEach-Object {
+				$content = Get-Content $_.FullName -Raw
+				$defs = ($content -split "`n") | Where-Object { $_ -match '<\w+Def\b' }
+				"File: $($_.Name)`nDefs:`n$($defs -join "`n")`n"
+			}
+		} else {
+			$xmlSummary = "No XML defs folder found."
+		}
+		$semanticSummaryText = @"
+Legacy summary only:
 
+XML Summary:
+$xmlSummary
+
+C# Summary:
+$csSummary
+"@
+	}
 	# Construct prompt
 	$prompt = @"
-You are an assistant that generates GitHub Copilot instruction files for RimWorld modding projects in C#.
+You are an assistant that generates GitHub Copilot instruction files for RimWorld modding projects in XML and C#.
 Based on the following summarized content from a mod project, generate a detailed .github/copilot-instructions.md file that includes:
 
 - Mod overview and purpose
@@ -5237,8 +5372,8 @@ Based on the following summarized content from a mod project, generate a detaile
 Mod Name: $($modObject.DisplayName)
 Mod Description: $($modObject.DescriptionClean)
 
-C# Summary:
-$csSummary
+Semantic Summary:
+$semanticSummaryText
 "@
 
 	# Prepare request
@@ -5882,6 +6017,13 @@ function Publish-Mod {
 		$modObject = Publish-ModToRimWorldBase -modObject $modObject
 		Update-ModInfoToDatabase -modObject $modObject
 		Set-PublishLogRow -identifier $modObject.ModId -version $newVersion -comment $message
+		if (Get-Command -Name Update-ModSemanticReasoning -ErrorAction SilentlyContinue) {
+			WriteMessage -progress "Updating semantic reasoning for $($modObject.Name)"
+			$semanticRefresh = Update-ModSemanticReasoning -modObject $modObject -force
+			if (-not $semanticRefresh) {
+				WriteMessage -warning "Semantic refresh failed for $($modObject.Name)"
+			}
+		}
 	}
 	WriteMessage -success "Published $($modObject.Name) - $($modObject.ModUrl)"
 }

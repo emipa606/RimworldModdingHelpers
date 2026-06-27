@@ -1,4 +1,5 @@
 {
+  "version": "2026-06-13T20:02:11Z",
   "rules": [
     {
       "oldWorkshopId": "1076950211",
@@ -14537,7 +14538,8 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -18817,7 +18819,8 @@
         "1.2",
         "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -19477,7 +19480,8 @@
         "1.1",
         "1.2",
         "1.3",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -24951,7 +24955,7 @@
       "oldAuthor": "VanillaSky",
       "oldPackageId": "VanillaSky.OrassansFA",
       "newWorkshopId": "3342276805",
-      "newName": "Facial Animation Orassans Patch(Continued)",
+      "newName": "[1.6]Facial Animation Orassans Patch(Continued)",
       "newAuthor": "㋰",
       "newPackageId": "funamusea.OrassansFA",
       "oldVersions": [
@@ -24959,7 +24963,8 @@
         "1.3"
       ],
       "newVersions": [
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -28471,16 +28476,16 @@
       "oldAuthor": "Hohen - https://gofund.me/681dfe",
       "oldPackageId": "HH.RimKenshi.Addons",
       "newWorkshopId": "3324678049",
-      "newName": "Rim-Fogmen Continued! (1.5)",
+      "newName": "Rim-Fogmen Continued! (1.6) (Biotech)",
       "newAuthor": "mayonnaise",
       "newPackageId": "HH.RimKenshi.Addons",
       "oldVersions": [
         "1.3"
       ],
       "newVersions": [
-        "1.3",
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -34768,7 +34773,7 @@
     },
     {
       "oldWorkshopId": "2934090958",
-      "oldName": "Anime Mech Retexture (WIP)",
+      "oldName": "Anime Mech Retexture [Legacy]",
       "oldAuthor": "Unknown Author",
       "oldPackageId": "JesterRomut.AnimeMech.Mod",
       "newWorkshopId": "3503705013",
@@ -34777,7 +34782,11 @@
       "newPackageId": "JesterRomut.AnimeMech.Mod",
       "oldVersions": [
         "1.4",
-        "1.5"
+        "1.5",
+        "1.6",
+        "1.7",
+        "1.8",
+        "1.9"
       ],
       "newVersions": [
         "1.4",
@@ -38582,22 +38591,6 @@
       "newName": "Universal Trade Hub (continued)",
       "newAuthor": "alt4s",
       "newPackageId": "alt4s.UniversalTradeHub",
-      "oldVersions": [
-        "1.5"
-      ],
-      "newVersions": [
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "3282779636",
-      "oldName": "Vanilla Android Genes Unofficially Expanded",
-      "oldAuthor": "Barry, Aged 63",
-      "oldPackageId": "VanillaAndroidsUnofficialExpansion.Genes",
-      "newWorkshopId": "3582602115",
-      "newName": "Vanilla Android Genes Unofficially Expanded 1.6 error fix",
-      "newAuthor": "Negitive",
-      "newPackageId": "VanillaAndroidsUnofficialExpansion.Genes",
       "oldVersions": [
         "1.5"
       ],
@@ -43300,20 +43293,21 @@
       ]
     },
     {
-      "oldWorkshopId": "928376710",
-      "oldName": "Zombieland",
-      "oldAuthor": "Brrainz",
-      "oldPackageId": "brrainz.zombieland",
-      "newWorkshopId": "3577005360",
-      "newName": "Zombieland 1.6",
-      "newAuthor": "Andreas Pardeike, Louize",
-      "newPackageId": "brrainz.zombieland",
-      "oldVersions": [
-        "1.4"
-      ],
+      "oldWorkshopId": "3577005360",
       "newVersions": [
+        "1.4",
         "1.6"
-      ]
+      ],
+      "newName": "Zombieland",
+      "oldVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "928376710",
+      "oldName": "Zombieland 1.6 (Archived)",
+      "oldAuthor": "Louize",
+      "oldPackageId": "brrainz.zombieland",
+      "newAuthor": "Brrainz",
+      "newPackageId": "brrainz.zombieland"
     },
     {
       "oldWorkshopId": "930647567",
@@ -44067,11 +44061,11 @@
         "1.4",
         "1.5"
       ],
-      "newAuthor": "Sneaks",
+      "newAuthor": "Uuugggg",
       "oldPackageId": "Uuugggg.CrazyCatLady",
       "oldWorkshopId": "1679934065",
-      "newPackageId": "Sneaks.CrazyCatLady",
-      "newName": "Crazy Cat Lady (Cont.)",
+      "newPackageId": "Memegoddess.CrazyCatLady",
+      "newName": "Crazy Cat Lady - Continued",
       "oldAuthor": "Uuugggg",
       "newVersions": [
         "1.1",
@@ -44081,7 +44075,7 @@
         "1.5",
         "1.6"
       ],
-      "newWorkshopId": "3598246442"
+      "newWorkshopId": "3736132171"
     },
     {
       "oldAuthor": "Evil Tactician",
@@ -44143,7 +44137,7 @@
       ]
     },
     {
-      "oldName": "Ultimate Trash Mod Unofficial 1.6 Update",
+      "oldName": "[NO LONGER NEEDED] Ultimate Trash Mod Unofficial 1.6 Update",
       "oldVersions": [
         "1.5",
         "1.6"
@@ -51685,7 +51679,7 @@
       "newName": "Off-Map Caravan Loading (Continued)"
     },
     {
-      "oldName": "UH-144 Falcon",
+      "oldName": "UH-144 Falcon(Discontinued)",
       "oldPackageId": "rabiosus.ACFFalcon",
       "oldVersions": [
         "1.4"
@@ -51717,7 +51711,571 @@
       "newPackageId": "Mlie.ELIFSRTSHelicopters",
       "oldWorkshopId": "2575097304",
       "newName": "[ELIF] SRTS - Helicopters (Continued)"
+    },
+    {
+      "newName": "RaiderEquipmentQualityAdjustment(Continued)",
+      "oldAuthor": "Spark79",
+      "oldPackageId": "Taranchuk.RaiderEquipmentQualityAdjustment",
+      "oldWorkshopId": "3238439531",
+      "newAuthor": "LuLuDoge",
+      "newPackageId": "LuLuDoge.RaiderEquipmentQualityAdjustment",
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3734984706",
+      "oldName": "Raider equipment quality adjustment",
+      "oldVersions": [
+        "1.4"
+      ]
+    },
+    {
+      "newName": "No Caves - Continued",
+      "oldAuthor": "kd8lvt",
+      "oldPackageId": "kd8lvt.NoCaves",
+      "oldWorkshopId": "2898003040",
+      "newAuthor": "sayhiben",
+      "newPackageId": "sayhiben.nocavescontinued",
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3735336239",
+      "oldName": "NoCaves",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ]
+    },
+    {
+      "newName": "Locks 2 (Continued): Lock Them Out!",
+      "oldAuthor": "SubmarineMan",
+      "oldPackageId": "krkr.locks2",
+      "oldWorkshopId": "2285862824",
+      "newAuthor": "daz96050",
+      "newPackageId": "daz96050.locks2",
+      "newVersions": [
+        "1.2",
+        "1.3",
+        "1.6"
+      ],
+      "newWorkshopId": "3735413760",
+      "oldName": "Locks 2: Lock Them Out!",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ]
+    },
+    {
+      "newName": "Manage Weapon Policies",
+      "oldAuthor": "SpoiledInk13",
+      "oldPackageId": "spoiledink.manageweapons",
+      "oldWorkshopId": "3549623721",
+      "newAuthor": "SpoiledInk13",
+      "newPackageId": "spoiledink.manageweapons",
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3735900049",
+      "oldName": "Manage Weapon Policies",
+      "oldVersions": [
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Crazy Cat Lady - Continued",
+      "oldAuthor": "Sneaks",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "Uuugggg",
+      "oldName": "Crazy Cat Lady (Cont.)",
+      "newPackageId": "Memegoddess.CrazyCatLady",
+      "newWorkshopId": "3736132171",
+      "oldWorkshopId": "3598246442",
+      "oldPackageId": "Sneaks.CrazyCatLady"
+    },
+    {
+      "oldPackageId": "com.Kaos.enditmod",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "End It – A Darker RimWorld Choice",
+      "newAuthor": "Sketch_up",
+      "newWorkshopId": "3737267489",
+      "newPackageId": "com.sketchup.enditmod",
+      "newName": "End It Continued",
+      "oldAuthor": "--Kaos--",
+      "oldWorkshopId": "3444951165"
+    },
+    {
+      "oldPackageId": "Jaxxa.ED.EnhancedOptions",
+      "newAuthor": "Jaxxa",
+      "oldAuthor": ".:CHG:. Hope",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "ED-EnhancedOptions",
+      "newPackageId": "Jaxxa.ED.EnhancedOptions",
+      "newName": "ED-EnhancedOptions",
+      "newWorkshopId": "3737533293",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldWorkshopId": "3203992203"
+    },
+    {
+      "oldPackageId": "TheRealLemon.MapReroll",
+      "newWorkshopId": "3737879982",
+      "newName": "Map Re-Reroll (1.6)",
+      "oldAuthor": "TheRealLemon",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldWorkshopId": "2915575236",
+      "oldName": "Map Reroll (1.4/1.5)",
+      "newAuthor": "UnlimitedHugs and TheRealLemon",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newPackageId": "TheRealLemon.MapReroll"
+    },
+    {
+      "oldPackageId": "InertialMage.BeautyStatMod",
+      "newWorkshopId": "3738577207",
+      "newName": "Beauty Matters - Continued",
+      "oldAuthor": "InertialMage",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldWorkshopId": "2896613924",
+      "oldName": "Beauty Matters",
+      "newAuthor": "InertialMage, royallyTipsy",
+      "oldVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "royallyTipsy.BeautyStatMod"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "2604028977",
+      "oldAuthor": "Stardust 🌠",
+      "newWorkshopId": "3739471463",
+      "oldName": "Anima Fruit",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newPackageId": "zal.animafruit",
+      "newVersions": [
+        "1.6"
+      ],
+      "newName": "Anima Fruit (Continued)",
+      "oldPackageId": "bustedbunny.AnimaFruit"
+    },
+    {
+      "oldName": "It's all greek to me",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldWorkshopId": "2926298131",
+      "newName": "It's all greek to me (continued)",
+      "newAuthor": "Timuttie, YAYO, Telardo,TrueTsar",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3740036709",
+      "oldAuthor": "ggfirst_youtube",
+      "oldPackageId": "Timuttie.AllGreekToMe",
+      "newPackageId": "Timuttie.AllGreekToMe"
+    },
+    {
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "Astryl",
+      "oldPackageId": "akreedz346.antiairartillerycontinued",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newPackageId": "astryl.antiairartillery16",
+      "oldName": "Anti-Air Artillery [Unofficial Update]",
+      "newName": "Anti-Air Artillery 1.6",
+      "oldWorkshopId": "2045686960",
+      "newWorkshopId": "3740800859",
+      "oldAuthor": null
+    },
+    {
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newAuthor": "Doctor Worm",
+      "oldPackageId": "TimeRider.RealisticProstheticsExpansion",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newPackageId": "DoctorWorm.RealisticProstheticsExpansion",
+      "oldName": "Realistic Prosthetics Expansion",
+      "newName": "Realistic Prosthetics Expansion (Continued)",
+      "oldWorkshopId": "1498483853",
+      "newWorkshopId": "3740947055",
+      "oldAuthor": "Time Rider"
+    },
+    {
+      "oldAuthor": "Stardust 🌠",
+      "oldName": "Psychic Animals",
+      "newPackageId": "zal.psychicanimals",
+      "oldPackageId": "bustedbunny.psychicanimals",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "Zaljerem",
+      "newWorkshopId": "3741361579",
+      "newName": "Psychic Animals (Continued)",
+      "oldWorkshopId": "2604059573"
+    },
+    {
+      "oldAuthor": "T0rIIGa",
+      "oldName": "Persona Dominator",
+      "newPackageId": "ochiai.dominator",
+      "oldPackageId": "xd.Dominator",
+      "oldVersions": [
+        "1.1",
+        "1.2"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "T0rIIGa, ochiai",
+      "newWorkshopId": "3741427681",
+      "newName": "Persona Dominator 1.6",
+      "oldWorkshopId": "2220917492"
+    },
+    {
+      "newAuthor": "Font",
+      "newName": "Mount Ownership",
+      "newWorkshopId": "3741896357",
+      "oldWorkshopId": "3734707172",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "font.mountownership",
+      "newPackageId": "font.mountownership.core",
+      "oldName": "Mount Ownership (DEPRECATED)",
+      "oldVersions": [
+        "1.6"
+      ],
+      "oldAuthor": "Font"
+    },
+    {
+      "oldName": "Simple Ice blocks",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Simple Ice Reworked Continued",
+      "newWorkshopId": "3742739861",
+      "oldVersions": [
+        "1.3"
+      ],
+      "oldWorkshopId": "2866750203",
+      "oldPackageId": "Sovereign.Iceblocks",
+      "newAuthor": "Sovereign,Alite",
+      "oldAuthor": "Sovereign",
+      "newPackageId": "Sovereign.ReworkedIce"
+    },
+    {
+      "oldWorkshopId": "2863526335",
+      "newWorkshopId": "3467878826",
+      "newPackageId": "Jsin.LaglessLamps",
+      "newName": "Lagless Lamps - C#",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "Jsin.LagFreeTorches",
+      "newAuthor": "Jsin0",
+      "oldName": "Lag Free Torches and More",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldAuthor": "Jsin0"
+    },
+    {
+      "newName": "Blood Animations",
+      "oldAuthor": "Syrchalis",
+      "oldName": "[SYR] Bullet Casings",
+      "newWorkshopId": "3228047321",
+      "newAuthor": "Fuu Chan",
+      "oldWorkshopId": "1508411404",
+      "oldPackageId": "syrchalis.bulletcasings",
+      "newPackageId": "Fuu.BloodAnimations",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "No One Left Behind (1.6)",
+      "oldAuthor": "SaberVS7",
+      "oldName": "No One Left Behind - Continued",
+      "newWorkshopId": "3536586707",
+      "newAuthor": "Nina.Goblin",
+      "oldWorkshopId": "2879457494",
+      "oldPackageId": "CaptainMuscles.NoPawnLeftBehind.Continued",
+      "newPackageId": "NinaGoblin.NoOneLeftBehind",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ]
+    },
+    {
+      "newName": "EndlessGrowth",
+      "oldAuthor": "d4d (Duck for duck)",
+      "oldName": "Ducks' Insane Skills",
+      "newWorkshopId": "2894401734",
+      "newAuthor": "Slime-Senpai",
+      "oldWorkshopId": "2450186578",
+      "oldPackageId": "Ducks.InsaneSkills",
+      "newPackageId": "SlimeSenpai.EndlessGrowth",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ],
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Quality Bionics Remastered",
+      "oldAuthor": "ilyvion",
+      "oldName": "Quality Bionics (Continued)",
+      "newWorkshopId": "3528798857",
+      "newAuthor": "RebelRabbit, Taranchuk, ilyvion, Vectorial1024, AssassinsBro",
+      "oldWorkshopId": "3236892428",
+      "oldPackageId": "ilyvion.QualityBionics",
+      "newPackageId": "assassinsbro.qualitybionicsremastered",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Architecture of the Rim (incl. corners)",
+      "oldAuthor": "AOBA",
+      "oldName": "Architecture of the Rim",
+      "newWorkshopId": "3330807313",
+      "newAuthor": "Evil Eye Guy",
+      "oldWorkshopId": "2493347264",
+      "oldPackageId": "Aoba.Architecture",
+      "newPackageId": "EEG.Architecture",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Sensible Bed Ownership",
+      "oldAuthor": "legodude17",
+      "oldName": "Better Bed Assignment",
+      "newWorkshopId": "3328702448",
+      "newAuthor": "1trickPwnyta",
+      "oldWorkshopId": "2417077360",
+      "oldPackageId": "legodude17.bba",
+      "newPackageId": "sensiblebedownership.1trickPwnyta",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "VPE Skipdoor Pathing Redux",
+      "oldAuthor": "Ender Wiggin",
+      "oldName": "Better VPE Skipdoor Pathing",
+      "newWorkshopId": "3645096243",
+      "newAuthor": "yahvk",
+      "oldWorkshopId": "3011764218",
+      "oldPackageId": "TPABOBAP.bettervpeskipdoorpathing",
+      "newPackageId": "yahvk.vpeskipdoorpathingredux",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Basic Double Doors",
+      "oldAuthor": "Linkolas",
+      "oldName": "LinkableDoors (unofficial)",
+      "newWorkshopId": "3223646936",
+      "newAuthor": "Sam",
+      "oldWorkshopId": "2019849258",
+      "oldPackageId": "Linkolas.LinkableDoors",
+      "newPackageId": "GT.Sam.BasicDoubleDoors",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3"
+      ],
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Dimensions RePocketed",
+      "oldAuthor": "Captain Muscles",
+      "oldName": "Pocket Dimensions",
+      "newWorkshopId": "3554632020",
+      "newAuthor": "Gideon",
+      "oldWorkshopId": "2307817213",
+      "oldPackageId": "CaptainMuscles.PocketDimension",
+      "newPackageId": "KB.PocketDimension",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ],
+      "newVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "[RH2] Hand-To-Hand",
+      "oldAuthor": "Chicken Plucker",
+      "oldName": "[CP] Metal Gear Solid - CQC Takedown",
+      "newWorkshopId": "2556532381",
+      "newAuthor": "Chicken Plucker, Taranchuk",
+      "oldWorkshopId": "1624550064",
+      "oldPackageId": "CP.CQC.Takedown",
+      "newPackageId": "RH2.HandToHand",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2"
+      ],
+      "newVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "[FSF] Vanilla Bionics Expansion",
+      "oldAuthor": "Anonymos",
+      "oldName": "Vanilla Missing Bionics",
+      "newWorkshopId": "1419675146",
+      "newAuthor": "FrozenSnowFox",
+      "oldWorkshopId": "2610405308",
+      "oldPackageId": "Anon.VanillaMissingBionics",
+      "newPackageId": "FrozenSnowFox.VanillaBionicsExpansion",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ],
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ]
+    },
+    {
+      "newName": "Milkwater's Pipe Gun Mod (Continued)",
+      "oldWorkshopId": "3420588766",
+      "oldName": "Milkwater's Pipe Gun Mod",
+      "newPackageId": "Mlie.MilkwatersPipeGunMod",
+      "newWorkshopId": "3744144182",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "oldVersions": [
+        "1.5"
+      ],
+      "newAuthor": "Mlie",
+      "oldPackageId": "Milkwater.PipeGuns",
+      "oldAuthor": "Milkwater"
     }
-  ],
-  "version": "2026-05-25T21:29:37Z"
+  ]
 }
