@@ -304,6 +304,7 @@ $Global:trelloKey = $settings.trello_api_key
 $Global:trelloToken = $settings.trello_api_token
 $Global:trelloBoardId = $settings.trello_board_id
 $Global:steamApiKey = $settings.steam_api_key
+$Global:steam_api_key = $settings.steam_api_key
 $Global:deeplApiKey = $settings.deepl_api_key
 $Global:deeplApiUrl = $settings.deepl_api_url
 $Global:kofiUrl = $settings.kofi_url
@@ -1382,7 +1383,23 @@ function Get-LatestGitVersion {
 			git reset --hard HEAD
 		}
 		WriteMessage -progress "Fetching latest github for mod $($modObject.Name)"
-		git pull origin main --allow-unrelated-histories
+		$conflicts = git pull origin main --allow-unrelated-histories 2>&1
+		if ($conflicts -like "*following files would be overwritten by merge*") {
+			WriteMessage -failure "Conflicts detected for $($modObject.Name):"
+
+			$conflicts | ForEach-Object {
+				if ($_.ToString().StartsWith("`t")) {
+					WriteMessage -failure $_.ToString().Trim()
+				}
+			}
+			$overwriteLocal = ReadHost "Overwrite local changes? (y/n)"
+			if ($overwriteLocal -ne "y") {
+				return
+			}
+			git reset --hard HEAD
+			git pull origin main --allow-unrelated-histories
+		}
+		$conflicts
 		return
 	}
 	WriteMessage -progress "Fetching latest github for mod $($modObject.Name)"
@@ -3365,6 +3382,7 @@ function Invoke-SteamApi {
 				continue
 			} else {
 				WriteMessage -failure "Failed to call Steam API: $($_.Exception.Message)"
+				WriteMessage -progress "Uri: $uri, Method: $method, Body: $body"
 				return
 			}
 		}
@@ -3435,6 +3453,7 @@ function Get-SteamWorkshopModInfo {
 		AuthorName    = $null
 		Subscriptions = $null
 		Tags          = @()
+		Dependencies  = @()
 		Visibility    = $null
 		PreviewUrl    = $null
 		Description   = $null
@@ -3618,10 +3637,43 @@ function Get-SteamWorkshopModInfo {
 		if ($imgSrc) {
 			$result.PreviewUrl = "$($imgSrc.GetAttributeValue('src', '').Split('?')[0])"
 		}
-		$result.Description = $html.SelectNodes("//div[@class='workshopItemDescription']").InnerText.Trim()
+		$descriptionNode = $html.SelectNodes("//div[@class='workshopItemDescription']")
+		if ($descriptionNode -and $descriptionNode.InnerText) {
+			$result.Description = $descriptionNode.InnerText.Trim()
+		} else {
+			$result.Description = ""
+		}
 
-		$versionsHtml = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")[0].InnerText.Trim()
-		$result.Tags = $versionsHtml.Replace("Tags:", ",").Replace(" ", "").Split(",") | Where-Object { $_ -and $_ -match "^[0-9]+\.[0-9]+$" }
+		$dependencyLinkNodes = $html.SelectNodes("//div[contains(@class, 'requiredItemsContainer')]//a[contains(@href, '/sharedfiles/filedetails/?id=')]")
+		if (-not $dependencyLinkNodes) {
+			$dependencyLinkNodes = $html.SelectNodes("//div[contains(@class, 'detailsBlock') and (contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'required items') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'requires'))]//a[contains(@href, '/sharedfiles/filedetails/?id=')]")
+		}
+		if (-not $dependencyLinkNodes) {
+			$dependencyLinkNodes = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]//a[contains(@href, '/sharedfiles/filedetails/?id=')]")
+		}
+
+		$dependencyIds = @()
+		foreach ($dependencyLinkNode in @($dependencyLinkNodes)) {
+			if ($null -eq $dependencyLinkNode) {
+				continue
+			}
+			$href = $dependencyLinkNode.GetAttributeValue('href', '')
+			if ($href -match 'id=(\d+)') {
+				$dependencyId = $matches[1]
+				if ($dependencyId -ne "$modId") {
+					$dependencyIds += $dependencyId
+				}
+			}
+		}
+		$result.Dependencies = $dependencyIds | Sort-Object -Unique
+
+		$rightDetailsBlocks = $html.SelectNodes("//div[contains(@class, 'rightDetailsBlock')]")
+		if ($rightDetailsBlocks -and $rightDetailsBlocks.Count -gt 0 -and $rightDetailsBlocks[0].InnerText) {
+			$versionsHtml = $rightDetailsBlocks[0].InnerText.Trim()
+			$result.Tags = $versionsHtml.Replace("Tags:", ",").Replace(" ", "").Split(",") | Where-Object { $_ -and $_ -match "^[0-9]+\.[0-9]+$" }
+		} else {
+			$result.Tags = @()
+		}
 	} catch {
 		WriteMessage -warning  "Failed to fetch data from $url `n$($_.ScriptStackTrace)`n$_"
 	}
@@ -3700,14 +3752,34 @@ function Get-ModInfo {
 			if ($Global:ModInfoCache.ContainsKey($id)) {
 				$cacheEntry = $Global:ModInfoCache[$id]
 				if ($now - $cacheEntry.Timestamp -lt $cacheDuration) {
-					$returnArray += $cacheEntry.ModInfo
+					$cachedModInfo = $cacheEntry.ModInfo
+					if (
+						$expandAuthor -and
+						$cachedModInfo -and
+						$cachedModInfo.Author -and
+						$cachedModInfo.Author -ne "Unknown" -and
+						"$($cachedModInfo.Author)" -match '^\d+$'
+					) {
+						if ($cachedModInfo -is [System.Collections.IDictionary]) {
+							$expandedCachedModInfo = [ordered]@{}
+							foreach ($cacheKey in $cachedModInfo.Keys) {
+								$expandedCachedModInfo[$cacheKey] = $cachedModInfo[$cacheKey]
+							}
+							$expandedCachedModInfo["Author"] = Get-AuthorInformation -authorId $cachedModInfo.Author
+							$returnArray += $expandedCachedModInfo
+						} else {
+							$returnArray += $cachedModInfo
+						}
+					} else {
+						$returnArray += $cachedModInfo
+					}
 					Write-Verbose "Cache hit for mod ID $id"
 					continue
 				}
 			}
 			$idsToFetch += $id
 		}
-		if ($returnArray.Count -gt 0 -and $inform) {
+		if ($returnArray.Count -gt 0) {
 			WriteMessage -progress "Found $($returnArray.Count) mod details from cache"
 		}
 	} else {
@@ -3722,11 +3794,12 @@ function Get-ModInfo {
 
 		$progressObject = WriteProgress -initiate -title "Fetching info about $($idsToFetch.Count) mods from Steam API" -totalActions $idsToFetch.Count
 
-		# Only do max 500 at a time due to Steam API limits
-		for ($i = 0; $i -lt $idsToFetch.Count; $i += 500) {
-			$iterationAmount = ([math]::Min($i + 499, $idsToFetch.Count - 1))
+		# Keep batch size at 100 to avoid oversized dependency query URLs.
+		for ($i = 0; $i -lt $idsToFetch.Count; $i += 100) {
+			$iterationAmount = ([math]::Min($i + 99, $idsToFetch.Count - 1))
 			$batchIds = $idsToFetch[$i..$iterationAmount]
 			Write-Verbose "Fetching batch of mod details for IDs: $($batchIds -join ', ')"
+			$dependencyMap = @{}
 
 			# Calculate the number of items to fetch
 			$itemCount = $batchIds.Count
@@ -3736,7 +3809,8 @@ function Get-ModInfo {
 
 			# Build the POST parameters as a hashtable. Note that itemcount is sent as a string.
 			$postParams = @{
-				"itemcount" = "$itemCount"
+				"itemcount"       = "$itemCount"
+				"includechildren" = "1"
 			}
 			# Add each mod ID in the proper key format expected by the API.
 			for ($j = 0; $j -lt $itemCount; $j++) {
@@ -3754,9 +3828,36 @@ function Get-ModInfo {
 			Write-Debug "Calling url: $uri with body: $encodedBody, itemcount: $itemCount, expandAuthor: $expandAuthor"
 			$response = Invoke-SteamApi -uri $uri -method Post -body $encodedBody
 
+			$steamKey = $Global:steam_api_key
+			if (-not $steamKey) {
+				$steamKey = $Global:steamApiKey
+			}
+			if ($steamKey) {
+				$dependencyRequestBody = @{
+					itemcount        = $batchIds.Count
+					publishedfileids = @($batchIds)
+					includechildren  = $true
+				}
+				$dependencyInputJson = $dependencyRequestBody | ConvertTo-Json -Compress -Depth 4
+				$dependencyInputJsonEncoded = [System.Net.WebUtility]::UrlEncode($dependencyInputJson)
+				$dependencyUri = "https://api.steampowered.com/IPublishedFileService/GetDetails/v1/?key=$steamKey&input_json=$dependencyInputJsonEncoded"
+				$dependencyResponse = Invoke-SteamApi -uri $dependencyUri -method Get
+				if ($dependencyResponse.response.publishedfiledetails) {
+					foreach ($dependencyDetails in @($dependencyResponse.response.publishedfiledetails)) {
+						if ($null -eq $dependencyDetails -or -not $dependencyDetails.publishedfileid) {
+							continue
+						}
+						$dependencyMap["$($dependencyDetails.publishedfileid)"] = @($dependencyDetails.children | ForEach-Object { "$($_.publishedfileid)" } | Where-Object { $_ -match '^\d+$' } | Sort-Object -Unique)
+					}
+				}
+			} else {
+				Write-Verbose "No steam API key available for dependency detail lookup"
+			}
+
 			# Loop over each mod's details in the response
 			foreach ($details in $response.response.publishedfiledetails) {
 				WriteProgress -progressObject $progressObject
+				Write-Debug "Processing details for mod ID $($details.publishedfileid): $($details | ConvertTo-Json -Depth 5)"
 				if ($null -eq $details) {
 					WriteMessage -warning "No details found for mod ID $($details.publishedfileid)"
 					$modInfo = @{
@@ -3768,6 +3869,7 @@ function Get-ModInfo {
 						Subscriptions = 0
 						Visibility    = "Unknown"
 						Tags          = ""
+						Dependencies  = @()
 						Description   = ""
 						Created       = ""
 						Updated       = ""
@@ -3785,6 +3887,7 @@ function Get-ModInfo {
 							Subscriptions = 0
 							Visibility    = "Unlisted"
 							Tags          = ""
+							Dependencies  = @()
 							Description   = ""
 							Created       = ""
 							Updated       = ""
@@ -3804,6 +3907,12 @@ function Get-ModInfo {
 					$subscriptions = $details.subscriptions
 					$visibility = $details.visibility
 					$tags = $details.tags | ForEach-Object { $_.tag } | Where-Object { $_ -match "^[0-9]+\.[0-9]+$" } | Sort-Object
+					$dependencies = @()
+					if ($dependencyMap.ContainsKey("$($details.publishedfileid)")) {
+						$dependencies = @($dependencyMap["$($details.publishedfileid)"])
+					} else {
+						$dependencies = @($details.children | ForEach-Object { "$($_.publishedfileid)" } | Where-Object { $_ -match '^\d+$' } | Sort-Object -Unique)
+					}
 					$visibility = switch ($visibility) {
 						0 {
 							"Public"
@@ -3831,6 +3940,7 @@ function Get-ModInfo {
 						Subscriptions = $subscriptions
 						Visibility    = $visibility
 						Tags          = $tags
+						Dependencies  = $dependencies
 						Description   = $details.description
 						Created       = (Get-Date "1970-01-01").AddSeconds($details.time_created).ToLocalTime()
 						Updated       = (Get-Date "1970-01-01").AddSeconds($details.time_updated).ToLocalTime()
@@ -3846,6 +3956,7 @@ function Get-ModInfo {
 						Subscriptions = 0
 						Visibility    = "Unknown"
 						Tags          = ""
+						Dependencies  = @()
 						Description   = ""
 						Created       = ""
 						Updated       = ""
@@ -3855,6 +3966,11 @@ function Get-ModInfo {
 					Write-Verbose "Response details: $($details | ConvertTo-Json -Depth 5)"
 					Write-Debug "Response body: $($response | ConvertTo-Json -Depth 5)"
 
+				}
+				if ($modInfo -is [System.Collections.IDictionary]) {
+					if (-not $modInfo.Contains("Dependencies") -or $null -eq $modInfo["Dependencies"]) {
+						$modInfo["Dependencies"] = @()
+					}
 				}
 				if ($expandAuthor -and $modInfo.Author -and $modInfo.Author -ne "Unknown") {
 					$modInfo.Author = Get-AuthorInformation -authorId $modInfo.Author
@@ -7083,7 +7199,8 @@ function Update-Translations {
 		[switch]$skipDefInject,
 		[switch]$test,
 		[switch]$silent,
-		[switch]$force
+		[switch]$force,
+		[switch]$skipCache
 	)
 
 	if (-not $modObject) {
@@ -7151,7 +7268,7 @@ function Update-Translations {
 						New-Item -Path $targetFolder -ItemType Directory -Force | Out-Null
 					}
 					WriteMessage -progress "Updating $($file.Name) for $language"
-					if (Update-TranslationFile -sourceFilePath $file.FullName -targetFilePath $targetFilePath -language $language -modObject $modObject -test:$test) {
+					if (Update-TranslationFile -sourceFilePath $file.FullName -targetFilePath $targetFilePath -language $language -modObject $modObject -test:$test -skipCache:$skipCache) {
 						$languageUpdated = $true
 					}
 				}
@@ -7248,7 +7365,8 @@ function Update-TranslationFile {
 		$targetFilePath,
 		$language,
 		$modObject,
-		[switch]$test
+		[switch]$test,
+		[switch]$skipCache
 	)
 
 	# Check if the source file path contains RulePackDef, if so skip it
@@ -7292,26 +7410,31 @@ function Update-TranslationFile {
 	$nodeCount = 0
 	foreach ($childNode in $sourceContent.LanguageData.ChildNodes) {
 		$nodeCount++
-		if ($targetContent.LanguageData."$($childNode.Name)") {
+		$retranslate = $false
+		$existingNode = $null
+		if ($childNode.NodeType -ne "Comment") {
+			$existingNode = $targetContent.LanguageData.ChildNodes | Where-Object { $_.NodeType -eq "Element" -and $_.Name -eq $childNode.Name } | Select-Object -First 1
+		}
+		if ($existingNode -or ($targetContent.LanguageData."$($childNode.Name)" -and $childNode.NodeType -eq "Comment")) {
 			if ($childNode.NodeType -ne "Comment") {
 				# Check if the node text contains {} and if they do not match, open the file in a text editor and warn the user
 				$sourceText = "$($childNode.'#text')"
-				$targetText = "$($targetContent.LanguageData."$($childNode.Name)").'#text')"
+				$targetText = "$($existingNode.'#text')"
 				if ($sourceText -match "\{.*\}" -and $targetText -notmatch "\{.*\}") {
-					$applicationPath = $settings.text_editor_path
-					$arguments = """$targetFilePath"""
-					Start-Process -FilePath $applicationPath -ArgumentList $arguments
-					WriteMessage -warning "Mismatched placeholders in node $nodeCount with name $($childNode.Name) in $targetFilePath. Opened file for manual fixing."
-					ReadHost -query "Press Enter to continue after fixing the file"
-					continue
+					WriteMessage -warning "Mismatched placeholders in node $nodeCount with name $($childNode.Name) in $targetFilePath. `nRetranslating"
+					$retranslate = $true
+					$targetContent.LanguageData.RemoveChild($existingNode) | Out-Null
 				}
 
-				Write-Debug "Node $nodeCount with name $($childNode.Name) already exists in $targetFilePath, skipping"
-				continue
-			}
-			if ($targetContent.LanguageData.ChildNodes | Where-Object { $_.Name -eq "#comment" -and $_.Value -eq $childNode.Value }) {
-				Write-Debug "Comment $($childNode.Value) already exists in $targetFilePath, skipping"
-				continue
+				if (-not $retranslate) {
+					Write-Debug "Node $nodeCount with name $($childNode.Name) already exists in $targetFilePath, skipping"
+					continue
+				}
+			} else {
+				if ($targetContent.LanguageData.ChildNodes | Where-Object { $_.Name -eq "#comment" -and $_.Value -eq $childNode.Value }) {
+					Write-Debug "Comment $($childNode.Value) already exists in $targetFilePath, skipping"
+					continue
+				}
 			}
 		}
 		if (-not $commentExists) {
@@ -7353,7 +7476,7 @@ function Update-TranslationFile {
 				WriteMessage -progress "Would have translated '$textToTranslate' to $translateTo and added it to $targetFilePath"
 				continue
 			}
-			$translatedString = Get-DeeplTranslation -text $textToTranslate -selectedTo $translateTo -silent:$silent -context $context
+			$translatedString = Get-DeeplTranslation -text $textToTranslate -selectedTo $translateTo -silent:$silent -context $context -skipCache:($skipCache -or $retranslate)
 		} else {
 			$textStrings = @()
 			$numbers = @()
@@ -7380,12 +7503,12 @@ function Update-TranslationFile {
 			if ($textStrings[0] -eq "<") {
 				$translatedString = ""
 			} else {
-				$translatedString = Get-DeeplTranslation -text $textStrings[0] -selectedTo $translateTo -silent:$silent -context $context
+				$translatedString = Get-DeeplTranslation -text $textStrings[0] -selectedTo $translateTo -silent:$silent -context $context -skipCache:($skipCache -or $retranslate)
 			}
 			for ($i = 0; $i -lt $numbers.Count; $i++) {
 				$translatedString += " { $($numbers[$i]) }"
 				if ($textStrings[$i + 1] -and $textStrings[$i + 1] -ne "<") {
-					$translatedString += Get-DeeplTranslation -text $textStrings[$i + 1] -selectedTo $translateTo -silent:$silent -context $context
+					$translatedString += Get-DeeplTranslation -text $textStrings[$i + 1] -selectedTo $translateTo -silent:$silent -context $context -skipCache:($skipCache -or $retranslate)
 				}
 			}
 		}
@@ -7448,7 +7571,8 @@ function Get-DeeplTranslation {
 		$selectedTo,
 		$context,
 		[switch]$chooseLanguage,
-		[switch]$silent
+		[switch]$silent,
+		[switch]$skipCache
 	)
 
 	if (-not $text) {
@@ -7511,10 +7635,12 @@ function Get-DeeplTranslation {
 		$urlSuffix += "&source_lang=$selectedFrom"
 	}
 
-	$translatedText = Get-TranslationFromCacheDb -Text $text -TargetLang $selectedTo
-	if ($translatedText) {
-		WriteMessage -progress "Cache hit for '$text' to $selectedTo"
-		return $translatedText
+	if (-not $skipCache) {
+		$translatedText = Get-TranslationFromCacheDb -Text $text -TargetLang $selectedTo
+		if ($translatedText) {
+			WriteMessage -progress "Cache hit for '$text' to $selectedTo"
+			return $translatedText
+		}
 	}
 
 	$urlSuffix += "&text=$text"

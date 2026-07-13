@@ -1,5 +1,4 @@
 {
-  "version": "2026-06-13T20:02:11Z",
   "rules": [
     {
       "oldWorkshopId": "1076950211",
@@ -4691,11 +4690,8 @@
         "1.4"
       ],
       "newVersions": [
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4",
-        "1.5"
+        "1.5",
+        "1.6"
       ]
     },
     {
@@ -20311,26 +20307,6 @@
       ]
     },
     {
-      "oldWorkshopId": "2182305386",
-      "oldName": "Moyo-From the depth(Legacy)",
-      "oldAuthor": "Nemonian",
-      "oldPackageId": "Nemonian.MY",
-      "newWorkshopId": "3240244292",
-      "newName": "[1.6] Moyo - from the depth",
-      "newAuthor": "󠀡󠀡",
-      "newPackageId": "Nemonian.MY",
-      "oldVersions": [
-        "1.1",
-        "1.2",
-        "1.3",
-        "1.4"
-      ],
-      "newVersions": [
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
       "oldWorkshopId": "2183122582",
       "oldName": "【1.2】Ferian Story",
       "oldAuthor": "AmliFurx",
@@ -22647,24 +22623,6 @@
         "1.3",
         "1.4",
         "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "2346328970",
-      "oldName": "Minecraft",
-      "oldAuthor": "Stinkaap",
-      "oldPackageId": "Paul.Minecraft",
-      "newWorkshopId": "3605541244",
-      "newName": "Minecraft 1.6(Forked)",
-      "newAuthor": "GreenMushroom",
-      "newPackageId": "GreenMushroom.Paul.Minecraft",
-      "oldVersions": [
-        "1.0",
-        "1.1",
-        "1.2"
-      ],
-      "newVersions": [
         "1.6"
       ]
     },
@@ -30050,24 +30008,6 @@
       ]
     },
     {
-      "oldWorkshopId": "2730090328",
-      "oldName": "Moyo-Light in the Abyss",
-      "oldAuthor": "AOBA",
-      "oldPackageId": "AOBA.RedMoyo",
-      "newWorkshopId": "3241061880",
-      "newName": "[1.6] Moyo - Light in the Abyss",
-      "newAuthor": "󠀡󠀡",
-      "newPackageId": "AOBA.RedMoyo",
-      "oldVersions": [
-        "1.3",
-        "1.4"
-      ],
-      "newVersions": [
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
       "oldWorkshopId": "2732876934",
       "oldName": "Infection Info",
       "oldAuthor": "colinfang",
@@ -31392,24 +31332,6 @@
       ]
     },
     {
-      "oldWorkshopId": "2822103470",
-      "oldName": "Moyo-The cartel arrives",
-      "oldAuthor": "Nemonian",
-      "oldPackageId": "Nemonian.MYCartel",
-      "newWorkshopId": "3241067462",
-      "newName": "[1.6] Moyo - The Cartel Arrives",
-      "newAuthor": "󠀡󠀡",
-      "newPackageId": "Nemonian.MYCartel",
-      "oldVersions": [
-        "1.3",
-        "1.4"
-      ],
-      "newVersions": [
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
       "oldWorkshopId": "2824571490",
       "oldName": "World Expanded - EasternLamps",
       "oldAuthor": "Xiuminh",
@@ -32440,24 +32362,6 @@
       "newVersions": [
         "1.4",
         "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "2879835262",
-      "oldName": "Anima Bionics - Forked",
-      "oldAuthor": "Victor",
-      "oldPackageId": "Seti.Victor.AnimaBodies",
-      "newWorkshopId": "3546005700",
-      "newName": "Anima Bionics - Forked - Continued",
-      "newAuthor": "Seti, Magenta_Ivy, Victor, NOTDemo",
-      "newPackageId": "Seti.Victor.NOTDemo.AnimaBodies",
-      "oldVersions": [
-        "1.4",
-        "1.5",
-        "1.6"
-      ],
-      "newVersions": [
         "1.6"
       ]
     },
@@ -35519,24 +35423,6 @@
       ]
     },
     {
-      "oldWorkshopId": "2968492092",
-      "oldName": "Philippine Sovereign Uniforms",
-      "oldAuthor": "Lord Felix",
-      "oldPackageId": "Philippine.sovereign",
-      "newWorkshopId": "3440250849",
-      "newName": "Philippine Sovereign Uniforms | Fork by [ETF]",
-      "newAuthor": "Elijah",
-      "newPackageId": "Philippine.sovereign",
-      "oldVersions": [
-        "1.4"
-      ],
-      "newVersions": [
-        "1.4",
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
       "oldWorkshopId": "2968750452",
       "oldName": "Kraltech Industries",
       "oldAuthor": "BlackMarket420",
@@ -35996,23 +35882,6 @@
         "1.3",
         "1.6"
       ]
-    },
-    {
-      "newVersions": [
-        "1.4",
-        "1.5",
-        "1.6"
-      ],
-      "newWorkshopId": "2983955822",
-      "oldWorkshopId": "3612570959",
-      "oldVersions": [
-        "1.6"
-      ],
-      "newName": "Blocky Core",
-      "oldName": "Blocky Core 1.6(fork)",
-      "newAuthor": "Zed",
-      "newPackageId": "Blocky.Core",
-      "oldPackageId": "Blocky.Core"
     },
     {
       "oldWorkshopId": "2984120010",
@@ -39642,7 +39511,7 @@
       "oldAuthor": "Arodoid",
       "oldPackageId": "arodoid.semirandomprogression",
       "newWorkshopId": "3505290557",
-      "newName": "Semi Random Research: Progression Fork",
+      "newName": "Semi Random Research: Progression Fork (DEVELOPMENT CEASED)",
       "newAuthor": " Original author: Captain Muscles (Nathan Harbour)\n    Since this fork: Arodoid\n    ",
       "newPackageId": "arodoid.semirandomprogression",
       "oldVersions": [
@@ -40384,28 +40253,6 @@
         "1.6"
       ],
       "newVersions": [
-        "1.4",
-        "1.5",
-        "1.6"
-      ]
-    },
-    {
-      "oldWorkshopId": "3538089575",
-      "oldName": "Stargates (Temp Continued)",
-      "oldAuthor": "CatCraftYT, CommanderJroc",
-      "oldPackageId": "CommanderJroc.StargatesMod",
-      "newWorkshopId": "2831698056",
-      "newName": "Stargates!",
-      "newAuthor": "catcraft",
-      "newPackageId": "CCYT.StargatesMod",
-      "oldVersions": [
-        "1.3",
-        "1.4",
-        "1.5",
-        "1.6"
-      ],
-      "newVersions": [
-        "1.3",
         "1.4",
         "1.5",
         "1.6"
@@ -41483,7 +41330,6 @@
         "1.5"
       ],
       "newVersions": [
-        "1.0",
         "1.1",
         "1.2",
         "1.3",
@@ -45078,7 +44924,7 @@
       "oldWorkshopId": "2006296698"
     },
     {
-      "newName": "EvolvedOrgansRedux 1.6",
+      "newName": "EvolvedOrgansRedux",
       "newAuthor": "LateralBoi",
       "oldAuthor": "StatistNo1",
       "oldPackageId": "StatistNo1.EvolvedOrgansRedux",
@@ -45156,7 +45002,7 @@
       "newAuthor": "Veltaris",
       "oldAuthor": "Veltaris",
       "oldPackageId": "Veltaris.MechStations",
-      "oldName": "[AV] Mechanoid Spots",
+      "oldName": "[AV] Mechanoid Spots [Legacy 1.5]",
       "oldVersions": [
         "1.5"
       ],
@@ -45399,7 +45245,7 @@
         "1.6"
       ],
       "newWorkshopId": "3656734628",
-      "newName": "Jade floors for Jewelry (1.6)"
+      "newName": "Jade and Obsidian floors for Jewelry"
     },
     {
       "oldName": "Monster Hunter RimWorld",
@@ -46898,7 +46744,7 @@
       ]
     },
     {
-      "newName": "Area Inclusion & Exclusion(1.4 unofficial)",
+      "newName": "Area Inclusion &amp; Exclusion(1.4 unofficial)",
       "oldPackageId": "gguake.areaninclusionexclusion",
       "newVersions": [
         "1.4"
@@ -46929,7 +46775,7 @@
       "oldPackageId": "gguake.areaninclusionexclusion",
       "oldAuthor": "Hyomoto",
       "newAuthor": "gguake",
-      "oldName": "Area Inclusion & Exclusion(1.4 unofficial)"
+      "oldName": "Area Inclusion &amp; Exclusion(1.4 unofficial)"
     },
     {
       "newName": "Argonians of Blackmarsh",
@@ -51800,7 +51646,7 @@
         "1.6"
       ],
       "newAuthor": "Uuugggg",
-      "oldName": "Crazy Cat Lady (Cont.)",
+      "oldName": "[Discontinued] Crazy Cat Lady (Cont.)",
       "newPackageId": "Memegoddess.CrazyCatLady",
       "newWorkshopId": "3736132171",
       "oldWorkshopId": "3598246442",
@@ -51929,7 +51775,7 @@
         "1.4"
       ],
       "newPackageId": "astryl.antiairartillery16",
-      "oldName": "Anti-Air Artillery [Unofficial Update]",
+      "oldName": "Anti-Air Artillery [Unofficial] [Obsolete]",
       "newName": "Anti-Air Artillery 1.6",
       "oldWorkshopId": "2045686960",
       "newWorkshopId": "3740800859",
@@ -52276,6 +52122,645 @@
       "newAuthor": "Mlie",
       "oldPackageId": "Milkwater.PipeGuns",
       "oldAuthor": "Milkwater"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "2324533248",
+      "oldAuthor": "Maarx",
+      "oldPackageId": "maarx.smarterdoctors",
+      "oldVersions": [
+        "1.2",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3744377058",
+      "oldName": "SmarterDoctors",
+      "newName": "SmarterDoctors (Continued)",
+      "newPackageId": "zal.smarterdoctors"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "2595697397",
+      "oldAuthor": "nookii",
+      "oldPackageId": "nookii.psyplus",
+      "oldVersions": [
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3747537690",
+      "oldName": "psyPlus",
+      "newName": "psyPlus (Continued)",
+      "newPackageId": "zal.psyplus"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "3321956163",
+      "oldAuthor": "Admiralthrawnbar",
+      "oldPackageId": "thrawnbar.animaForest",
+      "oldVersions": [
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3747549252",
+      "oldName": "Anima Forest Biome",
+      "newName": "Anima Forest Biome (Continued)",
+      "newPackageId": "zal.animaforest"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "2877845748",
+      "oldAuthor": "velcroboy333",
+      "oldPackageId": "PrimitiveCore.velcroboy333",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3751286931",
+      "oldName": "Primitive Core",
+      "newName": "Primitive Core (Continued)",
+      "newPackageId": "zal.primitivecore"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "2327252470",
+      "oldAuthor": "velcroboy333",
+      "oldPackageId": "PrimitiveProduction.velcroboy333",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3751287735",
+      "oldName": "Primitive Workbenches",
+      "newName": "Primitive Workbenches (Continued)",
+      "newPackageId": "zal.primitiveproduction"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "2352893469",
+      "oldAuthor": "velcroboy333",
+      "oldPackageId": "PrimitiveTools.velcroboy333",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3751288694",
+      "oldName": "Primitive Tools",
+      "newName": "Primitive Tools (Continued)",
+      "newPackageId": "zal.primitivetools"
+    },
+    {
+      "newAuthor": "Captain Muscles (original) — unofficial 1.6 continuation",
+      "oldWorkshopId": "2359566858",
+      "oldAuthor": "Captain Muscles",
+      "oldPackageId": "CaptainMuscles.WheresDaddyGoing",
+      "oldVersions": [
+        "1.2",
+        "1.3"
+      ],
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3749920847",
+      "oldName": "Where's Daddy Going?",
+      "newName": "Where's Daddy Going? (Unofficial 1.6)",
+      "newPackageId": "Reesea.WheresDaddyGoing.Unofficial16"
+    },
+    {
+      "newAuthor": "aliveinyourmind",
+      "oldWorkshopId": "2835677485",
+      "oldAuthor": "Schutte",
+      "oldPackageId": "Schutte.BalaclavaWithHelmet",
+      "oldVersions": [
+        "1.3"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3747181949",
+      "oldName": "Balaclava with Helmet",
+      "newName": "Balaclava With Helmet (Continued)",
+      "newPackageId": "aliveinyourmind.BalaclavaWithHelmetContinued"
+    },
+    {
+      "newAuthor": "lejunior4",
+      "oldWorkshopId": "2143758723",
+      "oldAuthor": "tammybee",
+      "oldPackageId": "tammybee.colonisthistory",
+      "oldVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.6"
+      ],
+      "newWorkshopId": "3743979386",
+      "oldName": "Colonist History[1.1-1.4]",
+      "newName": "Colonist History (1.6 Port)",
+      "newPackageId": "lejunior4.colonisthistory"
+    },
+    {
+      "newAuthor": "SarahLambar ",
+      "oldWorkshopId": "2935868796",
+      "oldAuthor": "Catherine",
+      "oldPackageId": "SarahLambar.VOEMOPatch",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3744640103",
+      "oldName": "Vanilla Outpost Expanded Medieval Overhaul Patch",
+      "newName": "Vanilla Outpost Expanded Medieval Overhaul Patch (continued)",
+      "newPackageId": "stfau.vanillaoutpostmedievalpatch16"
+    },
+    {
+      "newAuthor": "daz96050",
+      "oldWorkshopId": "3635681481",
+      "oldAuthor": "Stoneman",
+      "oldPackageId": "Stoneman.CombatExtendedInfiniteAmmo",
+      "oldVersions": [
+        "1.6"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3745212154",
+      "oldName": "Combat Extended - Infinite Ammo",
+      "newName": "Combat Extended - Infinite Ammo (Continued)",
+      "newPackageId": "daz96050.CombatExtendedInfiniteAmmo"
+    },
+    {
+      "newAuthor": "Thog/Caninmyham",
+      "oldWorkshopId": "2785178595",
+      "oldAuthor": "caninmyham",
+      "oldPackageId": "Caninmyham.ThogsGunsLeadAndPowderPackReprimed",
+      "oldVersions": [
+        "1.3"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3747246071",
+      "oldName": "Thog's Guns - Lead and Powder Pack REPRIMED (ON HAITUS - SHOULD STILL WORK FOR 1.4)",
+      "newName": "Thog's Guns - Lead and Powder Pack REPRIMED (Unofficial) 1.6",
+      "newPackageId": "Caninmyham.ThogsGunsLeadAndPowderPackReprimedfixed"
+    },
+    {
+      "newAuthor": "SteveZero(1.2-1.5) Foehammer(1.6)",
+      "oldWorkshopId": "2504098278",
+      "oldAuthor": "SteveZero",
+      "oldPackageId": "SteveZero.AdvFlakArmor",
+      "oldVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newVersions": [
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3748552445",
+      "oldName": "Flak Armor: SpecOps Edition",
+      "newName": "Flak Armor: SpecOps Edition",
+      "newPackageId": "Foehammer.AdvFlakArmor"
+    },
+    {
+      "newAuthor": "Evil Tactician/虎纹鲨鱼",
+      "oldWorkshopId": "1544557152",
+      "oldAuthor": "Evil Tactician",
+      "oldPackageId": "ETRT.MedicineProduction",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3752561313",
+      "oldName": "ETRT: Medicine Production",
+      "newName": "ETRT: Medicine Production(continued)",
+      "newPackageId": "ETRT.MedicineProduction.continued"
+    },
+    {
+      "oldName": "Idle Dungeon Looting",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "newAuthor": "Sypher†",
+      "newWorkshopId": "3753897816",
+      "newPackageId": "sypherred.IdleDungeonLooting",
+      "oldWorkshopId": "3161700370",
+      "oldPackageId": "AlexNares.IdleDungeonLooting",
+      "newVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Idle Dungeon Looting - Continued",
+      "oldAuthor": "Alex Nares"
+    },
+    {
+      "oldName": "ZPH - Judge Dredd Armory",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "newAuthor": "HIGGS (Updated by SocialistPig)",
+      "newWorkshopId": "3754011438",
+      "newPackageId": "higgs.judgedredd.fork",
+      "oldWorkshopId": "2383858727",
+      "oldPackageId": "higgs.judgedredd",
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Judge Dredd Armory (Rimworld 1.6 Fork)",
+      "oldAuthor": "Iron Cheferu"
+    },
+    {
+      "newPackageId": "odysseylotus.malekurin",
+      "oldWorkshopId": "2817299943",
+      "oldAuthor": "OdysseyLotus",
+      "newName": "Male Kurin 1.6 (Unofficial)",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldName": "Male Kurin",
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldPackageId": "odysseylotus.malekurin",
+      "newAuthor": "lagking, OdysseyLotus",
+      "newWorkshopId": "3754566745"
+    },
+    {
+      "newAuthor": "Zaljerem",
+      "oldWorkshopId": "1576667416",
+      "newWorkshopId": "3755551711",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "The Drow Race [Game version 1.0]",
+      "oldAuthor": null,
+      "oldVersions": [
+        "1.0"
+      ],
+      "oldPackageId": "",
+      "newPackageId": "zal.ottodrow",
+      "newName": "The Drow Race (Continued)"
+    },
+    {
+      "newAuthor": "",
+      "oldWorkshopId": "3002440680",
+      "newWorkshopId": "3755554485",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "The Drow - Biotech Edition",
+      "oldAuthor": "Kekvit Irae",
+      "oldVersions": [
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "kekvit.drow.race",
+      "newPackageId": "zal.drowbiotech",
+      "newName": "The Drow - Biotech Edition (Continued)"
+    },
+    {
+      "newAuthor": "Chicken Plucker",
+      "oldWorkshopId": "1864031417",
+      "newWorkshopId": "3755618190",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "[RH] Faction: Last Man Contingent",
+      "oldAuthor": "Chicken Plucker",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2"
+      ],
+      "oldPackageId": "RH.Faction.Last.Man.Contingent",
+      "newPackageId": "RH.Faction.Last.Man.Contingent",
+      "newName": "[RH] Faction: Last Man Contingent (Continued)"
+    },
+    {
+      "newAuthor": "BlackMarket420",
+      "oldWorkshopId": "3625664332",
+      "newWorkshopId": "3755546832",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Kraltech Industries (1.6)",
+      "oldAuthor": "Grimwolf12",
+      "oldVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "KraltechIndustries.Nexus",
+      "newPackageId": "KraltechIndustries.Nexus",
+      "newName": "Kraltech Industries (1.6) (unofficial)"
+    },
+    {
+      "oldName": "SeedsPlease: Lite Redux Unofficial",
+      "oldWorkshopId": "3755587758",
+      "oldVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3523459853",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "SeedsPlease: Lite Redux",
+      "oldAuthor": "Xerow",
+      "oldPackageId": "Xerow.SeedsPleaseLiteReduxUnofficial",
+      "newAuthor": "Aridd",
+      "newPackageId": "Evyatar108.SeedsPleaseLiteRedux"
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "Kraltech Industries (1.6) (unofficial)",
+      "newWorkshopId": "3755546832",
+      "oldWorkshopId": "3755546832",
+      "oldPackageId": "KraltechIndustries.Nexus",
+      "oldAuthor": "BlackMarket420",
+      "oldVersions": [
+        "1.6"
+      ],
+      "newName": "Kraltech Industries (1.6) (unofficial)",
+      "newPackageId": "KraltechIndustries.Nexus",
+      "newAuthor": "BlackMarket420"
+    },
+    {
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "SeedsPlease: Lite Redux",
+      "newWorkshopId": "3755587758",
+      "oldWorkshopId": "3523459853",
+      "oldPackageId": "Evyatar108.SeedsPleaseLiteRedux",
+      "oldAuthor": "Aridd",
+      "oldVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "SeedsPlease: Lite Redux Unofficial",
+      "newPackageId": "Xerow.SeedsPleaseLiteReduxForked",
+      "newAuthor": "Xerow"
+    },
+    {
+      "newWorkshopId": "3755914323",
+      "oldPackageId": "Meru.MetroArmory",
+      "oldAuthor": "SynthUsami",
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "Calvinhood",
+      "oldWorkshopId": "1897373620",
+      "newPackageId": "Calvinhood.MetroArmoryRebalancedUpdated",
+      "newName": "Metro Exodus Armory (1.6 Fork)",
+      "oldName": "Metro Exodus Armory",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3"
+      ]
+    },
+    {
+      "newWorkshopId": "3755816295",
+      "oldPackageId": "RH.Faction.The.Ghosts",
+      "oldAuthor": "Chicken Plucker",
+      "newVersions": [
+        "1.6"
+      ],
+      "newAuthor": "Chicken Plucker",
+      "oldWorkshopId": "1567074403",
+      "newPackageId": "RH.Faction.The.Ghosts",
+      "newName": "[RH] Faction: The Ghosts (Continued)",
+      "oldName": "[RH] Faction: The Ghosts",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2"
+      ]
+    },
+    {
+      "oldAuthor": "Nemonian",
+      "oldWorkshopId": "3251469618",
+      "oldPackageId": "Nemonian.MY2.Beta",
+      "oldVersions": [
+        "1.5",
+        "1.6"
+      ],
+      "newPackageId": "Nemonian.MY2",
+      "newName": "Moyo2.0-Blood stained business",
+      "newVersions": [
+        "1.6"
+      ],
+      "newWorkshopId": "3756132017",
+      "oldName": "Moyo2.0-Blood stained business",
+      "newAuthor": "Nemonian"
+    },
+    {
+      "newAuthor": "LuniX (fork), Major Hoff (original RimThreaded)",
+      "oldPackageId": "majorhoff.rimthreaded",
+      "newWorkshopId": "3756967401",
+      "newName": "RimThreaded - Continued",
+      "oldVersions": [
+        "1.4"
+      ],
+      "newVersions": [
+        "1.6"
+      ],
+      "oldName": "RimThreaded",
+      "oldWorkshopId": "2222907981",
+      "oldAuthor": "Major Hoff",
+      "newPackageId": "boksu.rimthreadedttr"
+    },
+    {
+      "newAuthor": "Seti, Magenta_Ivy, Victor",
+      "oldVersions": [
+        "1.6"
+      ],
+      "oldPackageId": "Seti.Victor.NOTDemo.AnimaBodies",
+      "oldName": "Anima Bionics - Forked - Continued",
+      "newPackageId": "Seti.Victor.AnimaBodies",
+      "oldWorkshopId": "3546005700",
+      "newWorkshopId": "2879835262",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newName": "Anima Bionics - Forked",
+      "oldAuthor": null
+    },
+    {
+      "newAuthor": "Akaired",
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldName": "[CP] Rimmu-Nation - Gloves N' Boots",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "CP.RimmuNation.GlovesNBoots",
+      "newName": "[CP] Rimmu-Nation - Gloves N' Boots - 1.6 temp port",
+      "oldWorkshopId": "1836963709",
+      "newWorkshopId": "3759005701",
+      "newPackageId": "CP.RimmuNation.GlovesNBoots",
+      "oldAuthor": "Chicken Plucker"
+    },
+    {
+      "newAuthor": "Akaired",
+      "newVersions": [
+        "1.3",
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "oldName": "[LYN] Impassable Fences for VFE Architect",
+      "oldVersions": [
+        "1.3",
+        "1.4",
+        "1.5"
+      ],
+      "oldPackageId": "LadyCookie.Untitled",
+      "newName": "[LYN] Impassable Fences for VFE Architect 1.6 temp port",
+      "oldWorkshopId": "2613324850",
+      "newWorkshopId": "3759006422",
+      "newPackageId": "LadyCookie.Untitled",
+      "oldAuthor": "Lyn the Cookie"
+    },
+    {
+      "newAuthor": "Helixien - Xen",
+      "newVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4",
+        "1.6"
+      ],
+      "oldName": "RimGate - Jaffa, Kree! (Continued)",
+      "oldVersions": [
+        "1.0",
+        "1.1",
+        "1.2",
+        "1.3",
+        "1.4"
+      ],
+      "oldPackageId": "Mlie.RimGateJaffaKree",
+      "newName": "RimGate - Jaffa, Kree! (Updated 1.6)",
+      "oldWorkshopId": "2395671127",
+      "newWorkshopId": "3759441429",
+      "newPackageId": "CraveMode.RimGateJaffaKree",
+      "oldAuthor": "Mlie"
+    },
+    {
+      "newName": "Gwen's Hemogenes (Continued)",
+      "oldAuthor": "GwenBlanketSpecter",
+      "oldWorkshopId": "2884212047",
+      "oldVersions": [
+        "1.4"
+      ],
+      "oldPackageId": "GwenBlanketSpecter.HemogenPowers",
+      "newPackageId": "GwenBlanketSpecter.HemogenPowers",
+      "oldName": "Gwen's Hemogenes",
+      "newAuthor": "GwenBlanketSpecter",
+      "newVersions": [
+        "1.4",
+        "1.5",
+        "1.6"
+      ],
+      "newWorkshopId": "3760037781"
+    },
+    {
+      "newWorkshopId": "3761028060",
+      "oldAuthor": "*katana",
+      "newName": "Scenario Amender [1.6 Fixed]",
+      "oldWorkshopId": "3236547440",
+      "oldPackageId": "katana.scenarioamender",
+      "oldName": "Scenario Amender [1.5 - 1.6]",
+      "newPackageId": "plusblankplus.scenarioamenderfork",
+      "newAuthor": "PlusBlankPlus",
+      "newVersions": [
+        "1.6"
+      ],
+      "oldVersions": [
+        "1.5",
+        "1.6"
+      ]
     }
-  ]
+  ],
+  "version": "2026-07-12T12:32:12Z"
 }
